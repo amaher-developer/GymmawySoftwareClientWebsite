@@ -1,5 +1,7 @@
 {
-    "Access": true,
-    "Generic": true,
-    "Crud": true
+    "Sixtyminutes": true,
+    "Stepfitness": true,
+    "Common": true,
+    "Zonegym": true,
+    "Almadagym": true
 }

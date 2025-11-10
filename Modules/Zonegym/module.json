@@ -1,0 +1,11 @@
+{
+    "name": "Zonegym",
+    "alias": "zonegym",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Zonegym\\Providers\\ZonegymServiceProvider"
+    ],
+    "files": []
+}

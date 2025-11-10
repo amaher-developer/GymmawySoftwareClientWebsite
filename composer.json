@@ -25,6 +25,7 @@
         "psr-4": {
             "App\\": "app/",
             "App\\Modules\\": "Modules/",
+            "Modules\\": "Modules/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
@@ -73,6 +74,15 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "merge-plugin": {
+            "include": [
+                "Modules/*/composer.json"
+            ],
+            "recurse": false,
+            "replace": false,
+            "merge-extra": false,
+            "merge-extra-deep": false
         }
     },
     "config": {

@@ -1,0 +1,1 @@
+@extends('zonegym::layouts.master')

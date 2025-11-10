@@ -15,7 +15,8 @@ return Application::configure(
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'front' => \App\Modules\Generic\Http\Middleware\Front::class,
+            'tenant' => \App\Http\Middleware\TenantResolver::class,
+            'front' => \App\Http\Middleware\FrontModulesMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

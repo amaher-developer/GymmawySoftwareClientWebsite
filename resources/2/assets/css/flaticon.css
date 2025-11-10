@@ -1,0 +1,137 @@
+@font-face {
+    font-family: "flaticon";
+    src: url("../fonts/Flaticon.ttf?403dc1a25dbf4e29788f530069d86ff4") format("truetype"),
+url("../fonts/Flaticon.woff?403dc1a25dbf4e29788f530069d86ff4") format("woff"),
+url("../fonts/Flaticon.woff2?403dc1a25dbf4e29788f530069d86ff4") format("woff2"),
+url("../fonts/Flaticon.eot?403dc1a25dbf4e29788f530069d86ff4#iefix") format("embedded-opentype"),
+url("../fonts/Flaticon.svg?403dc1a25dbf4e29788f530069d86ff4#flaticon") format("svg");
+}
+
+i[class^="flaticon-"]:before, i[class*=" flaticon-"]:before {
+    font-family: flaticon !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.flaticon-play-button-arrowhead:before {
+    content: "\f101";
+}
+.flaticon-chat-bubbles-with-ellipsis:before {
+    content: "\f102";
+}
+.flaticon-lungs:before {
+    content: "\f103";
+}
+.flaticon-barbell:before {
+    content: "\f104";
+}
+.flaticon-drug:before {
+    content: "\f105";
+}
+.flaticon-exercise-bike:before {
+    content: "\f106";
+}
+.flaticon-treadmill:before {
+    content: "\f107";
+}
+.flaticon-dumbbell:before {
+    content: "\f108";
+}
+.flaticon-brawn:before {
+    content: "\f109";
+}
+.flaticon-horizontal-bar:before {
+    content: "\f10a";
+}
+.flaticon-iron-shoots:before {
+    content: "\f10b";
+}
+.flaticon-cardio:before {
+    content: "\f10c";
+}
+.flaticon-paper-plane:before {
+    content: "\f10d";
+}
+.flaticon-pulling-up:before {
+    content: "\f10e";
+}
+.flaticon-heart:before {
+    content: "\f10f";
+}
+.flaticon-ticket:before {
+    content: "\f110";
+}
+.flaticon-shopping-bags:before {
+    content: "\f111";
+}
+.flaticon-visibility:before {
+    content: "\f112";
+}
+.flaticon-phone-call:before {
+    content: "\f113";
+}
+.flaticon-trainer-rod:before {
+    content: "\f114";
+}
+.flaticon-dumbbell-1:before {
+    content: "\f115";
+}
+.flaticon-weight:before {
+    content: "\f116";
+}
+.flaticon-fitness:before {
+    content: "\f117";
+}
+.flaticon-stationary-bike:before {
+    content: "\f118";
+}
+.flaticon-balanced-diet:before {
+    content: "\f119";
+}
+.flaticon-boxing-gloves:before {
+    content: "\f11a";
+}
+.flaticon-gym:before {
+    content: "\f11b";
+}
+.flaticon-barbell-1:before {
+    content: "\f11c";
+}
+.flaticon-squad:before {
+    content: "\f11d";
+}
+.flaticon-fitness-1:before {
+    content: "\f11e";
+}
+.flaticon-body-scale:before {
+    content: "\f11f";
+}
+.flaticon-treadmill-1:before {
+    content: "\f120";
+}
+.flaticon-personal:before {
+    content: "\f121";
+}
+.flaticon-training:before {
+    content: "\f122";
+}
+.flaticon-trainer:before {
+    content: "\f123";
+}
+.flaticon-six-pack:before {
+    content: "\f124";
+}
+.flaticon-treadmills:before {
+    content: "\f125";
+}
+.flaticon-muscle:before {
+    content: "\f126";
+}
+.flaticon-trainer-1:before {
+    content: "\f127";
+}

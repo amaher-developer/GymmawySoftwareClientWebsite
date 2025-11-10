@@ -1,0 +1,11 @@
+{
+    "name": "Almadagym",
+    "alias": "almadagym",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Almadagym\\Providers\\AlmadagymServiceProvider"
+    ],
+    "files": []
+}

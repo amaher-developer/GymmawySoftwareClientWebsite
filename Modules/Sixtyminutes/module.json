@@ -1,0 +1,11 @@
+{
+    "name": "Sixtyminutes",
+    "alias": "sixtyminutes",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Sixtyminutes\\Providers\\SixtyminutesServiceProvider"
+    ],
+    "files": []
+}

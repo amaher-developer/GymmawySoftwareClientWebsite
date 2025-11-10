@@ -1,0 +1,11 @@
+{
+    "name": "Stepfitness",
+    "alias": "stepfitness",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Stepfitness\\Providers\\StepfitnessServiceProvider"
+    ],
+    "files": []
+}

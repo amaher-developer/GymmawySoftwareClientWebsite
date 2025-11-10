@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\EnvActivator;
 use Nwidart\Modules\Activators\FileActivator;
 use Nwidart\Modules\Providers\ConsoleServiceProvider;
 
@@ -292,7 +293,11 @@ return [
             'class' => FileActivator::class,
             'statuses-file' => base_path('modules_statuses.json'),
         ],
+        'env' => [
+            'class' => EnvActivator::class,
+            'statuses-file' => base_path('modules_statuses.json'),
+        ],
     ],
 
-    'activator' => 'file',
+    'activator' => 'env',
 ];
