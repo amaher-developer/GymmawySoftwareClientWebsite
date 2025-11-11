@@ -1,0 +1,31 @@
+{
+    "name": "nwidart/Cakorinas",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Cakorinas\\": "app/",
+            "Modules\\Cakorinas\\Database\\Factories\\": "database/factories/",
+            "Modules\\Cakorinas\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Cakorinas\\Tests\\": "tests/"
+        }
+    }
+}
+

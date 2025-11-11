@@ -1,0 +1,12 @@
+{
+    "name": "Redbone",
+    "alias": "redbone",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Redbone\\Providers\\RedboneServiceProvider"
+    ],
+    "files": []
+}
+

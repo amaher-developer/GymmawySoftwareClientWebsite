@@ -1,0 +1,12 @@
+{
+    "name": "Cakorinas",
+    "alias": "Cakorinas",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Cakorinas\\Providers\\CakorinasServiceProvider"
+    ],
+    "files": []
+}
+
