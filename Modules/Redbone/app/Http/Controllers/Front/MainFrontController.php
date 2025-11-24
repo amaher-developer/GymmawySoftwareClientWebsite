@@ -7,6 +7,10 @@ use App\Modules\Access\Models\User;
 use App\Modules\Redbone\app\Http\Requests\ContactRequest;
 use App\Modules\Redbone\app\Models\Activity;
 use App\Modules\Redbone\app\Models\Banner;
+use App\Modules\Redbone\app\Models\City;
+use App\Modules\Redbone\app\Models\Contact;
+use App\Modules\Redbone\app\Models\District;
+use App\Modules\Redbone\app\Models\Feedback;
 use App\Modules\Redbone\app\Models\PTClass;
 use App\Modules\Redbone\app\Models\PTSubscription;
 use App\Modules\Redbone\app\Models\Setting;
@@ -29,6 +33,7 @@ class MainFrontController extends GenericFrontController
 
     public function __construct()
     {
+
         $this->video_banner = '';
         parent::__construct();
     }
@@ -39,7 +44,7 @@ class MainFrontController extends GenericFrontController
         $record = $this->mainSettings;
         $title = $record['name'];
         $lang = $this->lang;
-        $banners = Banner::where("title", "!=", "schedule_banner")->where('is_web', true)->limit(5)->get()->pluck('image');
+        $banners = Banner::where('is_web', true)->limit(5)->get();
         $schedule_banner = Banner::where('is_web', true)->where('title', 'schedule_banner')->first();
         $images = (array)$record['images'];
         $subscriptions = Subscription::where('is_web', true)->limit(12)->get();
@@ -184,13 +189,6 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
-    public function wa()
-    {
-        if($this->mainSettings->phone)
-            return redirect()->away('https://wa.me/'.$this->mainSettings->phone);
-
-        return redirect()->route('home');
-    }
     public function searchRedirect(Request $request)
     {
         if ($request->get('type') == 2) {
@@ -249,4 +247,3 @@ class MainFrontController extends GenericFrontController
     }
 
 }
-

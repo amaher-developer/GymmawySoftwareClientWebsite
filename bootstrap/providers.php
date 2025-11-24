@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\ClientModuleServiceProvider::class,
+    Gecche\Multidomain\Queue\QueueServiceProvider::class,
 ];

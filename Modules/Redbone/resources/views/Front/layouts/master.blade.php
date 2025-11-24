@@ -1,27 +1,32 @@
+
+
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if($lang == 'ar') dir="rtl" @endif>
 <head>
-
+    @php 
+    $template_version = env('TEMPLATE_NUM', '1');
+    @endphp
+    <!--====== Required meta tags ======-->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{$mainSettings['meta_description']}}">
     <meta name="keywords" content="{{$mainSettings['meta_keywords']}}">
     <meta name="author" content="{{$mainSettings['name']}}">
-    <meta name="robots" content="index, follow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
     <!-- Facebook Meta Tags -->
     <meta property="og:url" content="{{asset('/'.$lang)}}">
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('resources/' . $template_version . '/assets/img/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('resources/' . $template_version . '/assets/img/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -35,263 +40,302 @@
     <meta name="rating" content="general"/>
     <meta name="robots" content="all"/>
     <meta http-equiv="Cache-control" content="public"/>
-    @php 
-    $template_version = env('TEMPLATE_NUM', '1');
-    @endphp
+    
 
     <title>{{$mainSettings['name']}}</title>
 
+    <!--====== Favicon Icon ======-->
     <!-- Favicon -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/favicon.ico')}}" rel="icon" type="image/png">
-
-    <!-- Bootstrap Core CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/style.css') }}" rel="stylesheet">
-
-    <!-- Responsive CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/responsive.css') }}" rel="stylesheet">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <style>
-        .one-line{
-            clear: both;
-            display: inline-block;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .gallery-image-res {
-            height: 260px;
-            object-fit: cover;
-        }
-        .testimonial-item h4 {
-            color: #645c5c;
-        }
-        @media only screen and (max-width: 768px) {
-            .logo.logo-width-1 a img {
-                height: 50px !important;
-                object-fit: cover;
-            }
-            .visible-mobile {
-                display: block !important;
-            }
-            .visible-pc {
-                display: none !important;
-            }
-        }
-        @media only screen and (min-width: 768px ) {
-            .visible-mobile {
-                display: none !important;
-            }
-            .visible-pc{
-                display: block !important;
-            }
-        }
-
-        .rtl-theme .main-nav .navbar-nav>li>a {
-            margin-right: 22px;
-            font-size: 16px;
-        }
-    </style>
+    <link href="{{asset('resources/' . $template_version . '/assets/img/logo.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('resources/' . $template_version . '/assets/img/logo.png')}}" rel="icon" type="image/png">
+    <!--====== Bootstrap css ======-->
+    @if($lang == 'ar')
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/bootstrap.rtl.min.css" rel="stylesheet">
+    @else
+        <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/bootstrap.min.css" rel="stylesheet">
+    @endif
+        <!--====== Mmenu css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/mmenu.css" rel="stylesheet">
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/mmenu.all.css" rel="stylesheet">
+    <!--====== icon css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/line-awesome.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/flaticon.css" rel="stylesheet">
+    <!--====== Animate  css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/animate.min.css" rel="stylesheet">
+    <!--====== Owl carousel css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/owl.carousel.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{asset('resources/' . $template_version . '/')}}/assets/css/owl.theme.default.min.css">
+    <!--====== Odometer Min  css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/odometer.min.css" rel="stylesheet">
+    <!--====== Swiper css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/swiper-bundle.min.css" rel="stylesheet">
+    <!--====== nice-select css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/css/nice-select.css" rel="stylesheet">
+    <!--====== Style css ======-->
+    <link href="{{asset('resources/' . $template_version . '/')}}/assets/scss/style.css" rel="stylesheet">
 
     @yield('style')
+    <style>
+        .product-img {
+            text-align: center;
+            object-fit: cover;
+            height: 350px;
+        }
+    </style>
 </head>
-
-<body <?php if($lang=='ar'){?> class="rtl-theme" <?php } ?> id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
-
+<body>
 <!-- Preloader start -->
-<div id="preloader"></div>
+<div class="proloader">
+    <div class="loader_34">
+        <!-- Preloader Elements -->
+        <img src="{{asset('resources/' . $template_version . '/')}}/assets/img/preloader.gif" alt="Image">
+    </div>
+</div>
+<!-- Preloader end -->
 
+<!-- Theme Switcher Start -->
+<div class="switch-theme-mode">
+    <label id="switch" class="switch">
+        <input type="checkbox" onchange="toggleTheme()" id="slider">
+        <span class="slider round"></span>
+    </label>
+</div>
+<!-- Theme Switcher End -->
 
-<!-- Main Header start -->
-<header class="main-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- Navigation -->
-                <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav" style="padding-top:0px!important;padding-bottom:0px !important;">
-                    <div class="container">
-                        <div class="navbar-brand">
-                            <a href="#page-top" class="js-scroll-trigger"><img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
+<!-- page wrapper Start -->
+<div class="page-wrapper">
+    <!-- Header  start -->
+    <header class="header-wrap v1 s2 bg-black">
+        <div class="header-top">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-5 d-lg-inline-block d-none">
+{{--                        <p class="mb-0">New Membership Deals Going On! Join Now For $0 Initiation. </p>--}}
+                    </div>
+                    <div class="col-lg-7 col-md-12">
+                        <div class="header-top-right">
+                            <div class="close-header-top">
+                                <button type="button"><i class="las la-times"></i></button>
+                            </div>
+                            <div class="header-top-contact">
+                                <p><i class="las la-map-marker-alt"></i>{{$mainSettings['address']}}</p>
+                                <a href="callto:{{$mainSettings['phone']}}"><i class="flaticon-phone-call"></i>{{$mainSettings['phone']}}</a>
+                            </div>
+                            <div class="lang_selctor v2">
+                                <i class="las la-globe"></i>
+                                <select id="languageSwitcher">
+                                    <option value="en" @if($lang == 'en') selected="" @endif>English</option>
+                                    <option value="ar" @if($lang == 'ar') selected="" @endif>العربية</option>
+                                </select>
+                            </div>
+{{--                            <div class="header_btn xl-none">--}}
+{{--                                <a href="#" class="btn v1">Make A Visit</a>--}}
+{{--                            </div>--}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-2 col-md-3 col-8">
+                        <div class="logo v2">
+                            <a href="{{asset('/')}}">
+                                <img class="logo-dark" src="{{asset('resources/' . $template_version . '/')}}/assets/img/logo.png" alt="Image">
+                                <img class="logo-light" src="{{asset('resources/' . $template_version . '/')}}/assets/img/logo.png" alt="Image">
                             </a>
                         </div>
-                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <!-- Collect the nav links, forms, and other content for toggling -->
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="nav navbar-nav mr-auto">
-                                <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#page-top">{{trans('front.home')}}</a>
+                    </div>
+                    <div class="col-lg-7 col-md-1 col-4 order-lg-1 order-md-2 order-2">
+                        <nav id="menu" class="main-menu  text-center">
+                            <ul>
+                                <li ><a class="active" href="{{asset($lang)}}#page-top">{{trans('front.home')}}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
+                                <li><a href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
                                 </li>
-                                <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">الدورات</a>-->
-                                <!--                                </li>-->
-
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#subscriptions">{{trans('front.subscriptions')}}</a>
+                                <li><a href="{{asset($lang)}}#subscriptions">{{trans('front.subscriptions')}}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#gallery">{{trans('front.gallery')}}</a>
+                                <li><a href="{{asset($lang)}}#gallery">{{trans('front.gallery')}}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#schedule">{{trans('front.activities')}}</a>
+{{--                                <li><a href="{{asset($lang)}}#schedule">{{trans('front.activities')}}</a>--}}
+{{--                                </li>--}}
+{{--                                <li><a href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>--}}
+{{--                                </li>--}}
+                                <li><a href="{{asset($lang)}}#activities">{{trans('front.activities')}}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
-                                </li>
-
-                                <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
-                                <!--                                </li>-->
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#contact">{{trans('front.contact_us')}}</a>
-                                </li>
-                                <li class="nav-item">
-                                    @if(@$currentUser)
-                                        <a class="nav-link js-scroll-trigger" href="{{route('showProfile')}}"  style="margin-left: 10px !important;">| <i class="fa fa-user"></i> {{trans('front.profile')}} </a>
-                                    @else
-                                        <a class="nav-link js-scroll-trigger" href="{{route('login')}}"  style="margin-left: 10px !important;">| <i class="fa fa-user"></i> {{trans('front.login')}} </a>
-                                    @endif
+                                <li><a href="{{asset($lang)}}#contact">{{trans('front.contact_us')}}</a>
                                 </li>
                             </ul>
+                        </nav>
+                        <div class="mobile-menu">
+                            <a href='#menu'><i class="las la-bars"></i></a>
                         </div>
-                        <!-- /.navbar-collapse -->
                     </div>
-                    <!-- /.container -->
-                    <div class="time-top-box">
-                        <a href="mailto:{{$mainSettings['support_email']}}"> <p class="one-line"><i class="fa fa-envelope-o" aria-hidden="true"></i>{{$mainSettings['support_email']}}</p></a>
-                    </div>
-                    <div class="call-top-box">
-                        <a href="callto:{{$mainSettings['phone']}}"> <p class="one-line"><i class="fa fa-phone" aria-hidden="true"></i>{{$mainSettings['phone']}}</p></a>
-                    </div>
-                </nav>
+                </div>
             </div>
         </div>
-    </div>
-</header>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-1 col-md-4  col-5 mpx-0">
+                </div>
+                <div class="col-lg-11 col-md-8 col-7">
+                </div>
+            </div>
+        </div>
+    </header>
+   <!-- Header  end -->
+    @yield('content')
+    <!-- Footer  start -->
+    <footer class="footer-wrap v2" id="contact">
+        <div class="footer-top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-4 col-lg-4 col-md-12 col-12">
+                        <div class="footer-widget">
+{{--                            <div class="footer-widget-title">--}}
+{{--                                <h5>{{trans('front.about')}}</h5>--}}
+{{--                            </div>--}}
+{{--                            <div class="comp-text">--}}
+{{--                                <p>{{strip_tags($mainSettings['about'])}}</p>--}}
+{{--                            </div>--}}
+                            <div class="comp-address-wrap">
+                                <div class="com-address-item">
+                                    <div class="com-address-icon">
+                                        <i class="las la-envelope"></i>
+                                    </div>
+                                    <div class="comp-address-info">
+                                        <p>{{trans('sw.email')}}:</p>
+                                        <a href="mailTo:<?php echo $mainSettings['support_email'] ?>"><span class="__cf_email__" data-cfemail="71000418121a020401011e0305311718081f5f121e1c"><?php echo $mainSettings['support_email'] ?></span></a>
+                                    </div>
+                                </div>
+                                <div class="com-address-item">
+                                    <div class="com-address-icon">
+                                        <i class="las la-phone"></i>
+                                    </div>
+                                    <div class="comp-address-info">
+                                        <p>{{trans('sw.phone')}}:
+                                        </p>
+                                        <a href="tel:<?php echo $mainSettings['phone'] ?>"><?php echo $mainSettings['phone'] ?></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="social-profile">
+                                <ul>
+                                    <?php if ($mainSettings['facebook']) { ?><li><a target="_blank" href="<?php echo $mainSettings['facebook'] ?>"><i class="lab la-facebook-f"></i></a></li><?php } ?>
+                                        <?php if ($mainSettings['instagram']) { ?><li><a target="_blank" href="<?php echo $mainSettings['instagram'] ?>"><i class="lab la-instagram"></i></a></li><?php } ?>
+                                        <?php if ($mainSettings['twitter']) { ?><li><a target="_blank" href="<?php echo $mainSettings['twitter'] ?>"><i class="lab la-twitter"></i></a></li><?php } ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-3 col-md-12 col-12">
+                        <div class="footer-widget">
+                            <div class="footer-widget-title">
+{{--                                <h5>Useful Links</h5>--}}
+                            </div>
+                            <div class="footer-menu">
+                                <ul>
+                                    <li><a class="link v3" href="{{route('home')}}#page-top">{{trans('front.home')}}</a></li>
+                                    <li><a class="link v3" href="{{route('home')}}#about">{{trans('front.about')}}</a></li>
+                                    <li><a class="link v3" href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a></li>
+                                    <li><a class="link v3" href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a></li>
+{{--                                    <li><a class="link v3" href="{{route('home')}}#schedule">{{trans('front.activities')}}</a></li>--}}
+{{--                                    <li><a class="link v3" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a></li>--}}
+                                    <li><a class="link v3" href="{{route('home')}}#activities">{{trans('front.activities')}}</a></li>
+                                    <li><a class="link v3" href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a></li>
+{{--                                    <li><a class="link v3" href="{{route('terms')}}">{{trans('front.terms')}}</a></li>--}}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-5 col-lg-5 col-md-12 col-12">
+                        <div class="footer-widget">
+                            <div class="footer-widget-title">
+                                <h5>{{trans('front.contact_info')}}</h5>
+                            </div>
+                            <div class="comp-location-wrap row">
+                                <div class="col-lg-12">
+                                    <div class="comp-location">
+                                        <div class="loc-icon">
+                                            <i class="las la-map-marker-alt"></i>
+                                        </div>
+{{--                                        <h6>New York </h6>--}}
+                                        <span><?php echo $mainSettings['address'] ?></span>
+                                        <p><a href="tel:<?php echo $mainSettings['phone'] ?>"> <?php echo $mainSettings['phone'] ?></a></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="copyright-text">
+                            <p> {{trans('front.dev_des')}} <a href="https://demo.gymmawy.com" target="_blank"><img style="width: 24px;" src="https://gymmawy.com/resources/assets/front/img/logo/favicon.ico"/> {{trans('front.gymmawy')}}
+                                </a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer  end -->
 
-
-@yield('content')
-
-<!-- Scroll Up -->
-<div class="goto-top-section">
-    <span class="triangle"></span>
-    <a class="js-scroll-trigger" href="#page-top">
-        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-    </a>
 </div>
-
-
-<!-- Footer section -->
-<footer class="main-footer over-layer-black">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-12">
-                <div class="footer-about-col col-default-mb30">
-                    <h4>{{trans('front.about')}}</h4>
-                    <p>{{strip_tags($mainSettings['about'])}}</p>
-                    <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> الأحد - الجمعة (10:00 - 22:00)</p>-->
-                    <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص. إن كنت تريد أن تستخدم نص لوريم إيبسوم ما، عليك أن تتحقق أولاً أن ليس هناك أي كلمات أو عبارات محرجة أو غير لائقة مخبأة في هذا النص. بينما تعمل </p>-->
-
-                    <div class="social text-left">
-                        <?php if ($mainSettings['facebook']) { ?><a href="<?php echo $mainSettings['facebook'] ?>"><i
-                                    class="fa fa-facebook" aria-hidden="true"></i></a><?php } ?>
-                        <?php if ($mainSettings['twitter']) { ?><a href="<?php echo $mainSettings['twitter'] ?>"><i
-                                    class="fa fa-twitter" aria-hidden="true"></i></a><?php } ?>
-                        <?php if ($mainSettings['instagram']) { ?><a href="<?php echo $mainSettings['instagram'] ?>"><i
-                                    class="fa fa-instagram" aria-hidden="true"></i></a><?php } ?>
-                    <!--                        -->
-                        <?php //if($record['facebook']){ ?><!--<a href="#"><i class="fa fa-dribbble" aria-hidden="true"></i></a>--><?php //} ?>
-                    <!--                        -->
-                        <?php //if($record['facebook']){ ?><!--<a href="#"><i class="fa fa-google-plus" aria-hidden="true"></i></a>--><?php //} ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 col-sm-12">
-                <div class="footer-Tag-col col-default-mb30">
-                    <!--                    <h4>القائمة</h4>-->
-                    <div class="tag-group clearfix">
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#page-top">{{trans('front.home')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#about">{{trans('front.about')}}</a>
-                        <a class="tag-btn js-scroll-trigger"
-                           href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#schedule">{{trans('front.activities')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('terms')}}">{{trans('front.terms')}}</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5 col-md-12 col-sm-12">
-                <div class="footer-subscribe-col col-default-mb30">
-                    <h4>{{trans('front.contact_info')}}</h4>
-                    <p><i class="fa fa-map-marker" aria-hidden="true"></i> <?php echo $mainSettings['address'] ?> </p>
-                    <p><i class="fa fa-envelope-o" aria-hidden="true"></i> <?php echo $mainSettings['support_email'] ?> </p>
-                    <p><i class="fa fa-phone" aria-hidden="true"></i> <?php echo $mainSettings['phone'] ?> </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</footer>
-
-<!-- Copyright section -->
-<section class="copyright">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <p> {{trans('front.dev_des')}} <a href="https://demo.gymmawy.com" target="_blank"><img
-                                style="width: 24px;"
-                                src="https://gymmawy.com/resources/assets/front/img/logo/favicon.ico"/> {{trans('front.gymmawy')}}
-                    </a></p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- jQuery -->
-<script src="{{ asset('resources/' . $template_version . '/assets/js/jquery.min.js') }}"></script>
-
-<!-- Bootstrap Core JavaScript -->
-<script src="{{ asset('resources/' . $template_version . '/assets/js/bootstrap.bundle.min.js') }}"></script>
-
-<!-- All Included JavaScript -->
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jquery.easing.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jquery.pogo-slider.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/animated-text.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/slick.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jarallax.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/css3-animate-it.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/counter.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jarallax.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/css3-animate-it.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/featherlight.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/featherlight.gallery.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/bootstrap-portfilter.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/particles.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/particles-app.js') }}"></script>
-
-<!-- Google map -->
-
-<!-- Custom Js -->
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/main.js') }}"></script>
-
+<!-- Page wrapper end -->
+<!-- Back-to-top button start -->
+<a href="#" class="back-to-top bounce"><i class="las la-arrow-up"></i></a>
+<!-- Back-to-top button end -->
+<!--====== jquery js ======-->
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{asset('resources/' . $template_version . '/')}}/assets/js/jquery.min.js"></script>
+<!--====== Bootstrap js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/bootstrap.bundle.min.js"></script>
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/bootstrap-validator.min.js"></script>
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/form-validation.js"></script>
+<!--====== Jquery mmenu js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/mmenu.js"></script>
+<!--====== Owl carousel js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/owl.carousel.min.js"></script>
+<!--====== Swiper js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/swiper-bundle.min.js"></script>
+<!--====== Mixitup js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/mixitup.min.js"></script>
+<!--====== Fslightbox js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/fslightbox.js"></script>
+<!--====== Odometer Min js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/jquery.appear.js"></script>
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/odometer.min.js"></script>
+<!--======Comparison to js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/comparison-slider.js"></script>
+<!--====== Nice-selcet js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/jquery.nice-select.min.js"></script>
+<!--====== Main js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/main.js"></script>
+<!--====== Tweenmax js ======-->
+<script src="{{asset('resources/' . $template_version . '/')}}/assets/js/tweenmax.min.js"></script>
 @yield('script')
-</body>
+<script>
+    $('#languageSwitcher').on('change', function () {
+        const selectedLang = $(this).val();
+        let currentUrl = window.location.href;
+        // Replace language part in the URL
+        if (selectedLang === 'en') {
+            currentUrl = currentUrl.replace('/ar', '/en');
+        } else if (selectedLang === 'ar') {
+            currentUrl = currentUrl.replace('/en', '/ar');
+        }
 
+        // Redirect to the new URL
+        window.location.href = currentUrl;
+    });
+</script>
+</body>
 </html>
+
+
 

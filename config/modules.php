@@ -291,11 +291,11 @@ return [
     'activators' => [
         'file' => [
             'class' => FileActivator::class,
-            'statuses-file' => base_path('modules_statuses.json'),
+            'statuses-file' => [env('CLIENT_ACTIVE_MODULE'), 'Common'],
         ],
         'env' => [
             'class' => EnvActivator::class,
-            'statuses-file' => base_path('modules_statuses.json'),
+            'statuses-file' => [env('CLIENT_ACTIVE_MODULE'), 'Common'],
         ],
     ],
 
