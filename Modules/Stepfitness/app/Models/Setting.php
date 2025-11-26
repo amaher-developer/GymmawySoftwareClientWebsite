@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Models;
+namespace Modules\Stepfitness\app\Models;
 
 
 use Illuminate\Support\Facades\Cache;

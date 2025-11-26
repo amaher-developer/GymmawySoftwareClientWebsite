@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Controllers;
+namespace Modules\Stepfitness\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use File;

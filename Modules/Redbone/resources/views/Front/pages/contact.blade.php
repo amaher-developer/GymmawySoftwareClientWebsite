@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('redbone::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
 <style>
@@ -61,7 +61,7 @@
                         <p>{{trans('global.contact_msg')}}</p>
                         <div id="message-contact"></div>
 
-                        @include('generic::errors')
+                        @include('redbone::errors')
 
                         <form method="post" action="{{route('contact')}}"  autocomplete="off">
                             {{ csrf_field() }}

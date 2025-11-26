@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Middleware;
+namespace Modules\Stepfitness\Http\Middleware;
 
-use App\Modules\Access\Models\User;
+use Modules\Access\Models\User;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;

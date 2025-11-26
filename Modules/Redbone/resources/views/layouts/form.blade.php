@@ -1,4 +1,4 @@
-@extends('generic::layouts.master')
+@extends('redbone::layouts.master')
 @section('styles')
 {{--    <link href="{{asset('resources/assets/admin/global/plugins/fancybox/source/jquery.fancybox.css')}}"--}}
 {{--          rel="stylesheet" type="text/css"/>--}}
@@ -31,7 +31,7 @@
         <!-- BEGIN PAGE BASE CONTENT -->
         <div class="row">
             <div class="col-md-12">
-                @include('generic::errors')
+                @include('redbone::errors')
                         <!-- BEGIN SAMPLE FORM PORTLET-->
                 <div class="portlet light bordered">
                     <div class="portlet-title">
@@ -172,4 +172,3 @@
     </script>
     @yield('sub_scripts')
 @endsection
-

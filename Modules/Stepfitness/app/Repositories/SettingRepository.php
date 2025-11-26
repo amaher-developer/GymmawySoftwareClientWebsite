@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Repositories;
+namespace Modules\Stepfitness\app\Repositories;
 
 use Illuminate\Support\Facades\Cache;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\app\Models\Setting;
 
 
-class SettingRepository extends GenericRepository
+class SettingRepository extends StepfitnessRepository
 {
 
     /**

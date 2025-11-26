@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Controllers\Front;
+namespace Modules\Stepfitness\app\Http\Controllers\Front;
 
 use App\Http\Requests;
-use App\Modules\Stepfitness\app\Http\Controllers\GenericController;
-use App\Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\app\Http\Controllers\GenericController;
+use Modules\Stepfitness\app\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 
@@ -35,7 +35,7 @@ class GenericFrontController extends GenericController
             $this->lang = 'ar';
             if (request()->hasSession()) {
                 request()->session()->put('lang', 'ar');
-                app()->setLocale(request()->session()->get('lang'));
+                app()->setLocale('ar');
             } else {
                 app()->setLocale('ar');
             }

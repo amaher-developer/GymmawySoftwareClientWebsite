@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Middleware;
+namespace Modules\Stepfitness\Http\Middleware;
 
 use App\Exceptions\ApplicationClosed;
-use App\Modules\Stepfitness\Models\Setting;
+use Modules\Stepfitness\Models\City;
+use Modules\Stepfitness\Models\District;
+use Modules\Stepfitness\Models\Setting;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;

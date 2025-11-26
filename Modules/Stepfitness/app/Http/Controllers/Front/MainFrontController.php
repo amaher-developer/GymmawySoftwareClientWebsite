@@ -1,35 +1,34 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Controllers\Front;
+namespace Modules\Stepfitness\app\Http\Controllers\Front;
 
-use App\Modules\Access\Models\User;
-
-use App\Modules\Stepfitness\app\Http\Requests\ContactRequest;
-use App\Modules\Stepfitness\app\Models\Activity;
-use App\Modules\Stepfitness\app\Models\Banner;
-use App\Modules\Stepfitness\app\Models\PTClass;
-use App\Modules\Stepfitness\app\Models\PTSubscription;
-use App\Modules\Stepfitness\app\Models\Setting;
-
-use App\Modules\Stepfitness\app\Models\Store;
-use App\Modules\Stepfitness\app\Models\Subscription;
+use Modules\Access\Models\User;
+use Modules\Stepfitness\app\Http\Controllers\Front\GenericFrontController;
+use Modules\Stepfitness\app\Http\Requests\ContactRequest;
+use Modules\Stepfitness\app\Models\Activity;
+use Modules\Stepfitness\app\Models\City;
+use Modules\Stepfitness\app\Models\Contact;
+use Modules\Stepfitness\app\Models\District;
+use Modules\Stepfitness\app\Models\Feedback;
+use Modules\Stepfitness\app\Models\PTSubscription;
+use Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\app\Models\Banner;
+use Modules\Stepfitness\app\Models\Store;
+use Modules\Stepfitness\app\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\View;
-
+use Milon\Barcode\DNS1D;
+use Milon\Barcode\DNS2D;
+use Thujohn\Rss\Rss;
 
 class MainFrontController extends GenericFrontController
 {
-
-
-    public $video_banner;
-
     public function __construct()
     {
-        $this->video_banner = '';
         parent::__construct();
     }
 
@@ -37,32 +36,19 @@ class MainFrontController extends GenericFrontController
     public function index()
     {
         $record = $this->mainSettings;
-        $title = $record['name'];
+        $title = @$record->name;
         $lang = $this->lang;
-        $banners = Banner::where("title", "!=", "schedule_banner")->where('is_web', true)->limit(5)->get()->pluck('image');
-        $schedule_banner = Banner::where('is_web', true)->where('title', 'schedule_banner')->first();
+        $cover_images = @(array)$record['cover_images'];
         $images = (array)$record['images'];
-        $subscriptions = Subscription::where('is_web', true)->limit(12)->get();
+        $subscriptions = Subscription::where('is_web', true)->get();
         $activities = Activity::where('is_web', true)->get();
-        $pt_classes = PTClass::where('is_web', true)->limit(12)->get();
+//        $pt_subscriptions = PTSubscription::where('is_web', true)->get();
         $stores = Store::where('is_web', true)->get();
-        return view('stepfitness::Front.layouts.home', compact('title', 'record', 'schedule_banner', 'lang', 'banners', 'images', 'subscriptions', 'activities', 'stores', 'pt_classes'));
-    }
-    public function banner(){
-
-        $title = trans('front.schedule_banner');
-        $lang = $this->lang;
-        $banner = Banner::where('is_web', true)->where('title', 'schedule_banner')->first();
-        return view('stepfitness::Front.pages.banner', compact('title', 'banner', 'lang'));
-
+        return view('stepfitness::Front.layouts.home', compact('title', 'record', 'lang', 'cover_images', 'images', 'subscriptions', 'activities', 'stores'));
     }
 
 
-    private function youtube_id($url){
-        parse_str( parse_url( $url, PHP_URL_QUERY ), $my_array_of_vars );
 
-        return @$my_array_of_vars['v'];
-    }
 
 
     public function about()
@@ -70,14 +56,6 @@ class MainFrontController extends GenericFrontController
         return view('stepfitness::Front.pages.about', [
             'title' => trans('global.about_us'),
             'about' => $this->mainSettings->about
-        ]);
-    }
-
-    public function terms()
-    {
-        return view('stepfitness::Front.pages.terms', [
-            'title' => trans('global.terms'),
-            'terms' => $this->mainSettings->terms
         ]);
     }
 
@@ -95,31 +73,32 @@ class MainFrontController extends GenericFrontController
     /**
      * @return string
      */
-    public function contactStore()
+    public function contactStore(ContactRequest $request)
     {
-        $name = @$request->name;
-        $message = @$request->message;
-        $email = @$request->email;
+        $name = $request->name;
+        $phone = $request->phone;
+        $country = $request->country;
+        $email = $request->email;
         $setting = $this->mainSettings;
         //Contact::create(request()->all());
 
         $data = array(
             'name' => $name
+        , 'phone' => $phone
         , 'email' => $email
-        , 'msg' => $message
+        , 'country' => $country
         );
 
-//        Mail::send('emails.contact_us', $data, function ($message) use ($data, $setting) {
-//            $message->from($data['email'], $data['name']);
-//            $message->to($setting->support_email, trans('global.contact_us'))->subject(trans('global.contact_us'));
-//        });
         Mail::send('emails.contact_us', $data, function ($message) use ($data, $setting) {
             $message->from($data['email'], $data['name']);
-            $message->to('eng.a7med.ma7er@gmail.com', @env('APP_NAME_AR')." ".trans('global.contact_us'))->subject(trans('global.contact_us'));
+            $message->to($setting->support_email, trans('global.contact_us'))->subject(trans('global.contact_us'));
         });
-        return 1;
-//        $data['type'] = 1;
-//        Contact::create($data);
+        Mail::send('emails.contact_us', $data, function ($message) use ($data, $setting) {
+            $message->from($data['email'], $data['name']);
+            $message->to('eng.a7med.ma7er@gmail.com', env('APP_NAME_AR')." ".trans('global.contact_us'))->subject(trans('global.contact_us'));
+        });
+        $data['type'] = 1;
+        Contact::create($data);
 //        \mail('eng.a7med.ma7er@gmail.com', 'new contact for gymmawy', implode(', ', $data));
 //        $data['password'] = rand(1000, 9999);
 //        $user = GymUser::where('email' , $data['email'])->orWhere('phone' , $data['phone'])->first();
@@ -184,13 +163,6 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
-    public function wa()
-    {
-        if($this->mainSettings->phone)
-            return redirect()->away('https://wa.me/'.$this->mainSettings->phone);
-
-        return redirect()->route('home');
-    }
     public function searchRedirect(Request $request)
     {
         if ($request->get('type') == 2) {

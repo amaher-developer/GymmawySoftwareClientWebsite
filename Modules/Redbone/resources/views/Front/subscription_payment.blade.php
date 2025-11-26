@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('redbone::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>
@@ -162,14 +162,14 @@
                                         <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/visa_logo.svg')}}">
+                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}">
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/mada-logo.svg')}}">
+                                                 src="{{asset('resources/assets/images/mada-logo.svg')}}">
 
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/american_express_logo.svg')}}">
+                                                 src="{{asset('resources/assets/images/american_express_logo.svg')}}">
                                         </p>
                                     </div>
                                 </div>
@@ -221,4 +221,3 @@
     <script>
     </script>
 @endsection
-

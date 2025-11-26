@@ -1,1 +1,1 @@
-@extends('generic::layouts.master')
+@extends('stepfitness::layouts.master')

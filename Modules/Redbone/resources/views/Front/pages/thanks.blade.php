@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('redbone::Front.layouts.master')
 @section('style')
 <style>
     .thanks-main {
@@ -78,5 +78,4 @@
 
 
     @endsection
-
 

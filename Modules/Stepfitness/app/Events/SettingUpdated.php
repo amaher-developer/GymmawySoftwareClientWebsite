@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Events;
+namespace Modules\Stepfitness\app\Events;
 
-use App\Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\app\Models\Setting;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;

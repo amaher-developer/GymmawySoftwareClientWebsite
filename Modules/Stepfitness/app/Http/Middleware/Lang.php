@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Http\Middleware;
+namespace Modules\Stepfitness\Http\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\View;

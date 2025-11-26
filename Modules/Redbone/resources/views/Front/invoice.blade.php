@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('redbone::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>
@@ -181,7 +181,7 @@
                     <table>
                         <tr>
                             <td class="title " >
-                                <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}"style="width: 100%; max-width: 200px;"/>
+                                <img src="{{asset('resources/assets/images/logo.png')}}"style="width: 100%; max-width: 200px;"/>
                             </td>
                             <td>
                                 <br/><br/>
@@ -272,4 +272,3 @@
 @section('script')
 
 @endsection
-

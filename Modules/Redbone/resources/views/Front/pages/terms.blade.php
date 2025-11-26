@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('redbone::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>
@@ -102,4 +102,3 @@
 @section('script')
 
 @endsection
-

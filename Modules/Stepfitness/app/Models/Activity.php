@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Stepfitness\app\Models;
+namespace Modules\Stepfitness\app\Models;
 
 
-use App\Modules\Stepfitness\app\Events\SettingUpdated;
+use Modules\Stepfitness\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class Activity extends GenericModel
