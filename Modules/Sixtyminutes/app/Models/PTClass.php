@@ -27,11 +27,11 @@ class PTClass extends GenericModel
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return asset(self::$uploads_path.$image);
+            return @env('APP_URL_MASTER').self::$uploads_path.$image;
 
         return asset('placeholder_black.png');
     }
-
+    
 
 
 }
