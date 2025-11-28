@@ -10,7 +10,8 @@
         "gecche/laravel-multidomain": "^12.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "nwidart/laravel-modules": "^12.0"
+        "nwidart/laravel-modules": "^12.0",
+        "stevebauman/location": "^7.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
