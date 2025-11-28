@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\app\Models;
+namespace Modules\Stepfitness\Models;
 
 
 class MoneyBox extends GenericModel

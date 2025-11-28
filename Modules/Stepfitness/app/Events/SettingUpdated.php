@@ -2,7 +2,7 @@
 
 namespace Modules\Stepfitness\app\Events;
 
-use Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\Models\Setting;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;

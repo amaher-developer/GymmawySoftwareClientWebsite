@@ -4,7 +4,7 @@ namespace Modules\Stepfitness\app\Http\Controllers\Front;
 
 use App\Http\Requests;
 use Modules\Stepfitness\app\Http\Controllers\GenericController;
-use Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 

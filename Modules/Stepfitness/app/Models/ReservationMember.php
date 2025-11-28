@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\app\Models;
+namespace Modules\Stepfitness\Models;
 
 
 use Modules\Stepfitness\app\Events\SettingUpdated;

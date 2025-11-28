@@ -17,13 +17,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/img/logo.png')}}">
+    <meta property="og:image" content="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/img/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -45,8 +45,8 @@
     @endphp
     <!--====== Favicon Icon ======-->
     <!-- Favicon -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/img/logo.png')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/img/logo.png')}}" rel="icon" type="image/png">
+    <link href="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" rel="icon" type="image/png">
     <!--====== Bootstrap css ======-->
     @if($lang == 'ar')
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -141,8 +141,8 @@
                     <div class="col-lg-2 col-md-3 col-8">
                         <div class="logo v2">
                             <a href="{{asset('/')}}">
-                                <img class="logo-dark" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/img/logo.png" alt="Image">
-                                <img class="logo-light" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/img/logo.png" alt="Image">
+                                <img class="logo-dark" src="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" alt="Image">
+                                <img class="logo-light" src="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" alt="Image">
                             </a>
                         </div>
                     </div>

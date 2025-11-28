@@ -4,7 +4,7 @@ namespace Modules\Stepfitness\app\Repositories;
 
 use Illuminate\Support\Facades\Cache;
 use Prettus\Repository\Criteria\RequestCriteria;
-use Modules\Stepfitness\app\Models\Setting;
+use Modules\Stepfitness\Models\Setting;
 
 
 class SettingRepository extends StepfitnessRepository

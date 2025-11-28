@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\app\Models;
+namespace Modules\Stepfitness\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

@@ -16,13 +16,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -41,14 +41,14 @@
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
-    <link href="{{asset('favicon.png')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('favicon.png')}}" rel="icon" type="image/png">
+    <link href="{{asset('Modules\Stepfitness\resources\assets\img\favicon.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('Modules\Stepfitness\resources\assets\img\favicon.png')}}" rel="icon" type="image/png">
 
     <!-- Bootstrap Core CSS -->
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/style.css')}}" rel="stylesheet">
+    <link href="{{asset('Modules/Stepfitness/resources/assets/css/style.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/responsive.css')}}" rel="stylesheet">
@@ -62,9 +62,9 @@
 
     <style>
         /*  Fonts --------------------------------*/
-        @import url({{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/fonts/Droid.Arabic.Kufi_DownloadSoftware.iR_.ttf')}});
+        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
         /* font-family:'Droid Arabic Kufi',  Tahoma, Geneva, sans-serif; */
-        @import url({{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/fonts/Droid.Arabic.Kufi_DownloadSoftware.iR_.ttf')}});
+        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
         /* font-family:Arial, Geneva, sans-serif; */
         p, h2 {
             font-family: droid arabic kufi, 'Source Sans Pro', sans-serif;
@@ -114,7 +114,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}" style="width: 135px; height:41px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}" style="width: 135px; height:41px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
