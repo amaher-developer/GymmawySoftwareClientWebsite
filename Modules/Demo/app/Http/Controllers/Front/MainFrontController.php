@@ -2,9 +2,9 @@
 
 namespace Modules\Demo\Http\Controllers\Front;
 
-use App\Modules\Access\Models\User;
+use Modules\Demo\app\Models\User;
 
-use App\Modules\Demo\Models\Setting;
+use Modules\Demo\app\Models\Setting;
 use Modules\Demo\Http\Controllers\Front\GenericFrontController;
 use Illuminate\Http\Request;
 

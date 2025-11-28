@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Demo\Models;
+namespace Modules\Demo\app\Models;
 
 
-use Modules\Demo\Models\GenericModel;
+use Modules\Demo\app\Models\GenericModel;
 use Illuminate\Support\Facades\Cache;
 
 class Setting extends GenericModel

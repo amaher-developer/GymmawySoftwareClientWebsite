@@ -2,10 +2,12 @@
 
 namespace Modules\Demo\Http\Controllers\Front;
 use Modules\Demo\Http\Controllers\GenericController;
-use Modules\Demo\Models\Setting;
-use Illuminate\Http\Request;
+use Modules\Demo\app\Models\Setting;
+
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Stevebauman\Location\Facades\Location;
 
@@ -29,16 +31,19 @@ class GenericFrontController extends GenericController
         parent::__construct();
 
         $this->changeLang = Cache::store('file')->get('changeLang');
-        if ($this->changeLang != request()->segment(1) && request()->hasSession()){
+        if($this->changeLang != request()->segment(1)){
             Cache::store('file')->clear();
             Cache::store('file')->put('changeLang', request()->segment(1), 600);
         }
 
-        $this->lang = request()->segment(1);
-        if (!in_array($this->lang, ['ar', 'en'], true)) {
+        if (request()->segment(1) != 'ar' && request()->segment(1) != 'en') {
             $this->lang = 'ar';
+            request()->session()->put('lang', 'ar');
+            app()->setLocale(request()->session()->get('lang'));
+        } else {
+            request()->session()->put('lang', request()->segment(1));
+            $this->lang = request()->segment(1);
         }
-        app()->setLocale($this->lang);
         $this->limit = 10;
 
         $this->mainSettings = Cache::store('file')->get('mainSettings');
