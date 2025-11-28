@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\Providers;
+namespace Modules\Sixtyminutes\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Lang;
