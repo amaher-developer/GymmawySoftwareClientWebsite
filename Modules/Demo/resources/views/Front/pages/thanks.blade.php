@@ -46,7 +46,7 @@
     <div class="container row">
 
         <div class="col-md-6 col-md-offset-3 col-sm-10 col-sm-offset-1 col-xs-12 thanks-main text-center">
-            <img src="{{asset('resources/assets/front/images/thanks.png')}}">
+            <img src="{{asset('resources/assets/images/thanks.png')}}">
             <h3 style="padding-top: 20px">{{trans('front.thank_you')}}</h3>
 {{--            <p>{{trans('front.thank_you_message')}}</p>--}}
             <div class="clearfix" style="padding-top: 20px"></div>
