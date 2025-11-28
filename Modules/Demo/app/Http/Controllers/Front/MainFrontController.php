@@ -5,6 +5,7 @@ namespace Modules\Demo\Http\Controllers\Front;
 use Modules\Demo\Http\Controllers\Front\GenericFrontController;
 use Modules\Demo\Http\Requests\ContactRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class MainFrontController extends GenericFrontController
 {
