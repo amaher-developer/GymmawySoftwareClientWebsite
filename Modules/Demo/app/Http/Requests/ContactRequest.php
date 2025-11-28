@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Modules\Generic\Http\Requests;
+namespace Modules\Demo\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Facades\Request;
 
 class ContactRequest extends FormRequest
 {
