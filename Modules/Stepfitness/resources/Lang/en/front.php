@@ -8,7 +8,6 @@ return [
     'gallery' => 'Gallery',
     'contact_us' => 'Contact US',
     'join_us' => 'Join US',
-    'pt' => 'Training',
     'welcome' => 'Welcome',
     'schedule_times' => 'Schedule Times',
     'times' => 'Times',
@@ -77,33 +76,6 @@ return [
     'not_available' => 'Sorry, Tabby is unable to approve this purchase. Please use an alternative payment method for your order.',
     'order_amount_too_high' => 'This purchase is above your current spending limit with Tabby, try a smaller cart or use another payment method',
     'order_amount_too_low' => 'The purchase amount is below the minimum amount required to use Tabby, try adding more items or use another payment method',
-    'reserve' => 'Reserve',
-    'reservation_info' => 'Reservation Info',
-    'schedule_banner' => 'Schedule table',
-    'terms' => 'Terms',
-    'products' => 'Products',
-    'download_mobile_app' => 'Download mobile application',
-    'android' => 'Android',
-    'ios' => 'IOS',
-    'captain_talk' => 'My gym journey began early, and it was the spark that sparked a passion that continues to this day. I was searching for strength, confidence, and discipline... Today, I\'m sharing everything I\'ve learned over the years to help you build your body and mind together.',
-    'captain_name' => 'Captain Maged',
-    'captain_title' => 'OWNER',
 
 
-    'banner_title_1' => 'Science-based journey',
-    'banner_content_1' => 'Every piece of information and every movement in your Redbone Gym workouts is based on accurate science. We rely on the latest research in nutrition, training, physiology, and movement systems to ensure safe, effective, and sustainable results.',
-
-    'banner_title_2' => 'Anatomy',
-    'banner_content_2' => 'Every movement in your body has a reason, and every exercise has a purpose. We believe that understanding muscle anatomy is the key to intelligent training and avoiding injury, which is why we train you with science, not randomness.',
-
-    'banner_title_3' => 'Connection',
-    'banner_content_3' => 'We connect your body, your mind, and your goals. We believe that strength isn\'t measured by muscles alone, but by a balance between nutrition, mindset, and exercise. At Redbone Gym, every step of your journey is designed to help you become the best version of yourself.',
-
-    'app_content' => 'Stay connected with us anytime, anywhere!
-Download our mobile app and enjoy a whole new experience.
-Get the latest updates, exclusive offers, and surprises – all in real time.
-Save your time and be the first to know everything new in the world of fitness.
-Now everything you need is just one tap away!',
-    'offer_msg' => 'Ask about the latest offers and join now!',
-    'offer_contact' => 'Call now',
-];
+    ];
