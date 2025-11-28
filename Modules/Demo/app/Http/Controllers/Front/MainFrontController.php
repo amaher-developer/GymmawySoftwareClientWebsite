@@ -2,10 +2,8 @@
 
 namespace Modules\Demo\Http\Controllers\Front;
 
-use Modules\Demo\app\Models\User;
-
-use Modules\Demo\app\Models\Setting;
 use Modules\Demo\Http\Controllers\Front\GenericFrontController;
+use Modules\Demo\Http\Requests\ContactRequest;
 use Illuminate\Http\Request;
 
 class MainFrontController extends GenericFrontController
