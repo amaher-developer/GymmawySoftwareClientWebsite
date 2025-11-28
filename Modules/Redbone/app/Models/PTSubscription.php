@@ -27,9 +27,9 @@ class PTSubscription extends GenericModel
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return asset(self::$uploads_path.$image);
+            return @env('APP_URL_MASTER').self::$uploads_path.$image;
 
-        return asset('resources/assets/front/img/preview_icon.png');
+        return asset('resources/assets/img/preview_icon.png');
     }
 
 

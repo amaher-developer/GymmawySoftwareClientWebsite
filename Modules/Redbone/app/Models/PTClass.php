@@ -23,15 +23,15 @@ class PTClass extends GenericModel
     {
         return $this->getRawOriginal('image');
     }
+    
     public function getImageAttribute()
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return asset(self::$uploads_path.$image);
+            return @env('APP_URL_MASTER').self::$uploads_path.$image;
 
         return asset('placeholder_black.png');
     }
-
 
 
 }
