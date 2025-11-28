@@ -6,6 +6,7 @@ use Modules\Demo\Http\Controllers\Front\GenericFrontController;
 use Modules\Demo\Http\Requests\ContactRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Modules\Demo\Models\Contact;
 
 class MainFrontController extends GenericFrontController
 {
