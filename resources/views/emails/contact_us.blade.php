@@ -9,6 +9,13 @@
             {{$name}}
         @endif
     </p>
+    <p>
+        <label>الهاتف </label>
+        <br/>
+        @if(isset($phone) && !empty($phone))
+            {{$phone}}
+        @endif
+    </p>
 
 
     <p>
