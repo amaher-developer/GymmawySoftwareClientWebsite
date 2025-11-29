@@ -17,6 +17,15 @@
         @endif
     </p>
 
+    
+    <p>
+        <label>الدولة </label>
+        <br/>
+        @if(isset($country) && !empty($country))
+            {{$country}}
+        @endif
+    </p>
+
 
     <p>
         <label>البريد الاليكتروني </label>
