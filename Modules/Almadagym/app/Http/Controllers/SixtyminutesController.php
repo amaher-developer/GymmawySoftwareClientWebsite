@@ -54,3 +54,5 @@ class AlmadagymController extends Controller
      */
     public function destroy($id) {}
 }
+
+

@@ -14,3 +14,4 @@ class AlmadagymDatabaseSeeder extends Seeder
         // $this->call([]);
     }
 }
+

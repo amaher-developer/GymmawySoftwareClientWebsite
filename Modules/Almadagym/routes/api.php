@@ -1,8 +1,4 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Modules\Almadagym\Http\Controllers\AlmadagymController;
+use Illuminate\Support\Facades\File;
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    Route::apiResource('almadagyms', AlmadagymController::class)->names('almadagym');
-});
