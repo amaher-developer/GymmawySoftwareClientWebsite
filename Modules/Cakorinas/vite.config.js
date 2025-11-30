@@ -56,4 +56,3 @@ export default defineConfig({
 //    'Modules/Cakorinas/resources/assets/js/app.js',
 //];
 
-

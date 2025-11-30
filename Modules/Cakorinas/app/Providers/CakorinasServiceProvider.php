@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Cakorinas\app\Providers;
+namespace Modules\Cakorinas\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Lang;
@@ -8,8 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Modules\Cakorinas\app\Providers\EventServiceProvider;
-use Modules\Cakorinas\app\Providers\RouteServiceProvider;
+use Modules\Cakorinas\Providers\EventServiceProvider;
+use Modules\Cakorinas\Providers\RouteServiceProvider;
 
 class CakorinasServiceProvider extends ServiceProvider
 {
@@ -183,7 +183,5 @@ class CakorinasServiceProvider extends ServiceProvider
         return $paths;
     }
 }
-
-
 
 

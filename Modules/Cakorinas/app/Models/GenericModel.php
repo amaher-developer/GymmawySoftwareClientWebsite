@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Cakorinas\app\Models;
+namespace App\Modules\Cakorinas\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -50,6 +50,4 @@ class GenericModel extends Model
 //    }
 
 }
-
-
 

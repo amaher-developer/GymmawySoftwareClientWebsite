@@ -1,7 +1,7 @@
 <?php
 
-namespace  Modules\Cakorinas\app\Http\Controllers;
-use Illuminate\Routing\Controller;
+namespace App\Modules\Cakorinas\app\Http\Controllers;
+use App\Http\Controllers\Controller;
 
 class GenericController extends Controller
 {
@@ -13,6 +13,4 @@ class GenericController extends Controller
     }
 
 }
-
-
 

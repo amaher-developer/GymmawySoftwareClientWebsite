@@ -145,7 +145,7 @@
 {{--                                                               placeholder="{{trans('front.birthdate')}}" required="">--}}
 {{--                                                        <input type="text" name="address" class="form-control"--}}
 {{--                                                               placeholder="{{trans('front.address')}}" required="">--}}
-                                                        <!--                                <input type="text" class="form-control" placeholder="ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯">-->
+                                                        <!--                                <input type="text" class="form-control" placeholder="Ø¹Ø¯Ø¯">-->
 
 
                                                 </div>
@@ -247,8 +247,5 @@
     <script>
     </script>
 @endsection
-
-
-
 
 

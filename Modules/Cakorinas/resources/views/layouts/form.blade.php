@@ -172,4 +172,3 @@
     </script>
     @yield('sub_scripts')
 @endsection
-

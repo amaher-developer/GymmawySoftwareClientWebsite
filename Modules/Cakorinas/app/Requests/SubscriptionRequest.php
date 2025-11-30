@@ -39,5 +39,3 @@ class SubscriptionRequest extends FormRequest
     }
 }
 
-
-

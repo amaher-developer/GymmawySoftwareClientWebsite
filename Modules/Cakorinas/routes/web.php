@@ -2,21 +2,26 @@
 
 use Illuminate\Support\Facades\File;
 
-Route::name('test')->get('test', [\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'test']);
+Route::get('/payments/verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
+Route::post('/payments/verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
+Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'tabby_payment_verify'])->name('tabby-verify-payment');
+Route::get('/payments/error/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
 
-Route::get('operate', [\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'showHome'])
+Route::name('test')->get('test', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'test']);
+
+Route::get('operate', [\App\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'showHome'])
     ->middleware(['permission:super|dashboard-show']);
 
-Route::name('noJs')->get('noJs', [\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'noJs']);
+Route::name('noJs')->get('noJs', [\App\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'noJs']);
 
-Route::name('backupDB')->get('operate/db-backup', [\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'backupDb'])->middleware(['permission:super|dashboard']);
+Route::name('backupDB')->get('operate/db-backup', [\App\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'backupDb'])->middleware(['permission:super|dashboard']);
 
-Route::name('uploadImageForCKEditorAjax')->post('upload-ckeditor-ajax', [\Modules\Cakorinas\app\Http\Controllers\Admin\GenericAdminController::class, 'uploadImageForCKEditorAjax']) ->middleware(['auth']);
+Route::name('uploadImageForCKEditorAjax')->post('upload-ckeditor-ajax', [\App\Modules\Cakorinas\app\Http\Controllers\Admin\GenericAdminController::class, 'uploadImageForCKEditorAjax']) ->middleware(['auth']);
 
 Route::name('siteOff')
-    ->get('site-off', [\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'site_off'])->middleware(['auth:sw', 'auth']);
+    ->get('site-off', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'site_off'])->middleware(['auth:sw', 'auth']);
 Route::name('siteOn')
-    ->get('site-on', [\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'site_on'])->middleware(['auth:sw', 'auth']);
+    ->get('site-on', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'site_on'])->middleware(['auth:sw', 'auth']);
 
 //$router->get(config('l5-swagger.routes.api'), [
 //    'as' => 'l5-swagger.api',
@@ -51,6 +56,4 @@ Route::group(['middleware' => 'front','prefix' => (request()->segment(1) == 'ar'
     }
 });
 //Route::name('home')->get('/', 'Front\MainFrontController@index');
-
-
 

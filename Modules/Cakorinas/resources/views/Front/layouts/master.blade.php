@@ -131,7 +131,7 @@
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
                                 </li>
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">Ø§Ù„Ø¯ÙˆØ±Ø§Øª</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">الدورات</a>-->
                                 <!--                                </li>-->
 
                                 <li class="nav-item">
@@ -145,7 +145,7 @@
                                 </li>
 
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">Ù…Ø¯ÙˆÙ†Ø© Ø§Ùˆ Ù…Ø°ÙƒØ±Ø©</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
                                 <!--                                </li>-->
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#contact">{{trans('front.contact_us')}}</a>
@@ -194,8 +194,8 @@
                 <div class="footer-about-col col-default-mb30">
                     <h4>{{trans('front.about')}}</h4>
                     <p>{{strip_tags($mainSettings['about'])}}</p>
-                    <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> Ø§Ù„Ø£Ø­Ø¯ - Ø§Ù„Ø¬Ù…Ø¹Ø© (10:00 - 22:00)</p>-->
-                    <!--                    <p>Ù‡Ù†Ø§Ù„Ùƒ Ø§Ù„Ø¹Ø¯ÙŠØ¯ Ù…Ù† Ø§Ù„Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù…ØªÙˆÙØ±Ø© Ù„Ù†ØµÙˆØµ Ù„ÙˆØ±ÙŠÙ… Ø¥ÙŠØ¨Ø³ÙˆÙ…ØŒ ÙˆÙ„ÙƒÙ† Ø§Ù„ØºØ§Ù„Ø¨ÙŠØ© ØªÙ… ØªØ¹Ø¯ÙŠÙ„Ù‡Ø§ Ø¨Ø´ÙƒÙ„ Ù…Ø§ Ø¹Ø¨Ø± Ø¥Ø¯Ø®Ø§Ù„ Ø¨Ø¹Ø¶ Ø§Ù„Ù†ÙˆØ§Ø¯Ø± Ø£Ùˆ Ø§Ù„ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ø¹Ø´ÙˆØ§Ø¦ÙŠØ© Ø¥Ù„Ù‰ Ø§Ù„Ù†Øµ. Ø¥Ù† ÙƒÙ†Øª ØªØ±ÙŠØ¯ Ø£Ù† ØªØ³ØªØ®Ø¯Ù… Ù†Øµ Ù„ÙˆØ±ÙŠÙ… Ø¥ÙŠØ¨Ø³ÙˆÙ… Ù…Ø§ØŒ Ø¹Ù„ÙŠÙƒ Ø£Ù† ØªØªØ­Ù‚Ù‚ Ø£ÙˆÙ„Ø§Ù‹ Ø£Ù† Ù„ÙŠØ³ Ù‡Ù†Ø§Ùƒ Ø£ÙŠ ÙƒÙ„Ù…Ø§Øª Ø£Ùˆ Ø¹Ø¨Ø§Ø±Ø§Øª Ù…Ø­Ø±Ø¬Ø© Ø£Ùˆ ØºÙŠØ± Ù„Ø§Ø¦Ù‚Ø© Ù…Ø®Ø¨Ø£Ø© ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„Ù†Øµ. Ø¨ÙŠÙ†Ù…Ø§ ØªØ¹Ù…Ù„ </p>-->
+                    <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> الأحد - الجمعة (10:00 - 22:00)</p>-->
+                    <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص. إن كنت تريد أن تستخدم نص لوريم إيبسوم ما، عليك أن تتحقق أولاً أن ليس هناك أي كلمات أو عبارات محرجة أو غير لائقة مخبأة في هذا النص. بينما تعمل </p>-->
 
                     <div class="social text-left">
                         <?php if ($mainSettings['facebook']) { ?><a href="<?php echo $mainSettings['facebook'] ?>"><i
@@ -214,7 +214,7 @@
 
             <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="footer-Tag-col col-default-mb30">
-                    <!--                    <h4>Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©</h4>-->
+                    <!--                    <h4>القائمة</h4>-->
                     <div class="tag-group clearfix">
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#page-top">{{trans('front.home')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#about">{{trans('front.about')}}</a>
@@ -301,4 +301,3 @@
 </body>
 
 </html>
-

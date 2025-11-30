@@ -24,4 +24,3 @@ return [
     'reset_line_2'     => 'If you did not request a password reset, no further action is required.',
 
 ];
-

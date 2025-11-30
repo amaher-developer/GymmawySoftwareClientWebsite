@@ -225,4 +225,3 @@ return [
     'no_branches_msg' => 'Must add gym branch',
 
 ];
-

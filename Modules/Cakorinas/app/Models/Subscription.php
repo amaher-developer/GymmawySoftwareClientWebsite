@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Cakorinas\app\Models;
+namespace App\Modules\Cakorinas\app\Models;
 
 
-use Modules\Cakorinas\app\Events\SettingUpdated;
+use App\Modules\Cakorinas\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class Subscription extends GenericModel
@@ -40,6 +40,4 @@ class Subscription extends GenericModel
     }
 
 }
-
-
 

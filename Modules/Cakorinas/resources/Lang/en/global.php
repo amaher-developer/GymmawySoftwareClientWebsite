@@ -396,4 +396,3 @@ return [
     'home_calories_table_msg' => 'Your guide to a slim body and perfect weight',
     'regards'=> 'Regards'
 ];
-

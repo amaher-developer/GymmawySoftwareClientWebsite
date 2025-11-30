@@ -306,4 +306,3 @@ return [
     'new_entities' => 'New Entities',
 
 ];
-

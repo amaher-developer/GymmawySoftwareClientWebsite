@@ -1,25 +1,25 @@
 <?php
 
-namespace Modules\Cakorinas\app\Http\Controllers\Front;
+namespace App\Modules\Cakorinas\app\Http\Controllers\Front;
 
 use App\Http\Classes\Constants;
 use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
 
-use Modules\Cakorinas\app\Http\Classes\TabbyService;
+use App\Modules\Cakorinas\app\Http\Classes\TabbyService;
 use Modules\Cakorinas\Requests\SubscriptionRequest;
-use Modules\Cakorinas\app\Models\Member;
+use App\Modules\Cakorinas\app\Models\Member;
 
-use Modules\Cakorinas\app\Models\MemberSubscription;
-use Modules\Cakorinas\app\Models\MoneyBox;
-use Modules\Cakorinas\app\Models\PaymentOnlineInvoice;
-use Modules\Cakorinas\app\Models\PTClass;
-use Modules\Cakorinas\app\Models\ReservationMember;
-use Modules\Cakorinas\app\Models\Subscription;
+use App\Modules\Cakorinas\app\Models\MemberSubscription;
+use App\Modules\Cakorinas\app\Models\MoneyBox;
+use App\Modules\Cakorinas\app\Models\PaymentOnlineInvoice;
+use App\Modules\Cakorinas\app\Models\PTClass;
+use App\Modules\Cakorinas\app\Models\ReservationMember;
+use App\Modules\Cakorinas\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
-use Modules\Cakorinas\app\Interfaces\PaymentGatewayInterface;
-use Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController;
+use App\Modules\Cakorinas\app\Interfaces\PaymentGatewayInterface;
+use App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController;
 class SubscriptionPaymentFrontController extends GenericFrontController
 {
 
@@ -207,8 +207,5 @@ class SubscriptionPaymentFrontController extends GenericFrontController
 
 
 }
-
-
-
 
 

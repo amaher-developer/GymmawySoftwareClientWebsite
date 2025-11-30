@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Cakorinas\app\Models;
+namespace App\Modules\Cakorinas\app\Models;
 
 class PaymentOnlineInvoice extends GenericModel
 {
@@ -16,6 +16,4 @@ class PaymentOnlineInvoice extends GenericModel
         return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 }
-
-
 
