@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+﻿import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import { readdirSync, statSync } from 'fs';
 import { join,relative,dirname } from 'path';
@@ -55,4 +55,5 @@ export default defineConfig({
 //    'Modules/Cakorinas/resources/assets/sass/app.scss',
 //    'Modules/Cakorinas/resources/assets/js/app.js',
 //];
+
 

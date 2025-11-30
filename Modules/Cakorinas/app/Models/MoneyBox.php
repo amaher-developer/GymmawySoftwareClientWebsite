@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Models;
+namespace Modules\Cakorinas\app\Models;
 
 
 class MoneyBox extends GenericModel
@@ -44,3 +44,6 @@ class MoneyBox extends GenericModel
     }
 
 }
+
+
+

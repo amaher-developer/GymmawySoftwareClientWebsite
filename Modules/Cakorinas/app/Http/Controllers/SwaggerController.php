@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Controllers;
+namespace Modules\Cakorinas\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use File;
@@ -74,3 +74,6 @@ class SwaggerController extends Controller
         return \File::get(swagger_ui_dist_path('oauth2-redirect.html'));
     }
 }
+
+
+

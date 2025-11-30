@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\Http\Classes;
+namespace Modules\Stepfitness\app\Http\Classes;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;

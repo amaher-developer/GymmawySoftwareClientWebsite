@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Stepfitness\Http\Requests;
+namespace Modules\Stepfitness\app\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Middleware;
+namespace Modules\Cakorinas\app\Http\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\View;
@@ -43,3 +43,6 @@ class Lang
     }
 
 }
+
+
+

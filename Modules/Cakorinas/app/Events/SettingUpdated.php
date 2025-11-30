@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Events;
+namespace Modules\Cakorinas\app\Events;
 
-use App\Modules\Cakorinas\app\Models\Setting;
+use Modules\Cakorinas\app\Models\Setting;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -35,3 +35,6 @@ public $settings;
         return new PrivateChannel('channel-name');
     }
 }
+
+
+

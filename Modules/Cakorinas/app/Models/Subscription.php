@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Models;
+namespace Modules\Cakorinas\app\Models;
 
 
-use App\Modules\Cakorinas\app\Events\SettingUpdated;
+use Modules\Cakorinas\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class Subscription extends GenericModel
@@ -34,9 +34,12 @@ class Subscription extends GenericModel
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return asset(self::$uploads_path.$image);
+            return @env('APP_URL_MASTER').self::$uploads_path.$image;
 
         return asset('resources/assets/front/img/preview_icon.png');
     }
 
 }
+
+
+

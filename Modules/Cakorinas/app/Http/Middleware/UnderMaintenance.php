@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Middleware;
+namespace Modules\Cakorinas\app\Http\Middleware;
 
 use App\Exceptions\ApplicationClosed;
-use App\Modules\Cakorinas\Models\Setting;
+use Modules\Cakorinas\app\Models\Setting;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
@@ -39,3 +39,6 @@ class UnderMaintenance
     }
 
 }
+
+
+

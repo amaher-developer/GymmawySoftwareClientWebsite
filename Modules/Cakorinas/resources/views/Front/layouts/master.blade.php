@@ -2,7 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-
+@php 
+    $template_version = env('TEMPLATE_NUM', '1');
+    @endphp
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,13 +17,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -35,24 +37,22 @@
     <meta name="rating" content="general"/>
     <meta name="robots" content="all"/>
     <meta http-equiv="Cache-control" content="public"/>
-    @php 
-    $template_version = env('TEMPLATE_NUM', '1');
-    @endphp
+
 
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/favicon.ico')}}" rel="icon" type="image/png">
+    <link href="{{asset('Modules/Cakorinas/resources/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('Modules/Cakorinas/resources/assets/images/favicon.ico')}}" rel="icon" type="image/png">
 
     <!-- Bootstrap Core CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/style.css') }}" rel="stylesheet">
+    <link href="{{asset('Modules/Cakorinas/resources/assets/css/style.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
-    <link href="{{ asset('resources/' . $template_version . '/assets/css/responsive.css') }}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/css/responsive.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -94,11 +94,6 @@
                 display: block !important;
             }
         }
-
-        .rtl-theme .main-nav .navbar-nav>li>a {
-            margin-right: 22px;
-            font-size: 16px;
-        }
     </style>
 
     @yield('style')
@@ -119,7 +114,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav" style="padding-top:0px!important;padding-bottom:0px !important;">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="#page-top" class="js-scroll-trigger"><img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
+                            <a href="#page-top" class="js-scroll-trigger"><img src="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -136,7 +131,7 @@
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
                                 </li>
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">الدورات</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">Ø§Ù„Ø¯ÙˆØ±Ø§Øª</a>-->
                                 <!--                                </li>-->
 
                                 <li class="nav-item">
@@ -148,12 +143,9 @@
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#schedule">{{trans('front.activities')}}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
-                                </li>
 
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">Ù…Ø¯ÙˆÙ†Ø© Ø§Ùˆ Ù…Ø°ÙƒØ±Ø©</a>-->
                                 <!--                                </li>-->
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#contact">{{trans('front.contact_us')}}</a>
@@ -202,8 +194,8 @@
                 <div class="footer-about-col col-default-mb30">
                     <h4>{{trans('front.about')}}</h4>
                     <p>{{strip_tags($mainSettings['about'])}}</p>
-                    <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> الأحد - الجمعة (10:00 - 22:00)</p>-->
-                    <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص. إن كنت تريد أن تستخدم نص لوريم إيبسوم ما، عليك أن تتحقق أولاً أن ليس هناك أي كلمات أو عبارات محرجة أو غير لائقة مخبأة في هذا النص. بينما تعمل </p>-->
+                    <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> Ø§Ù„Ø£Ø­Ø¯ - Ø§Ù„Ø¬Ù…Ø¹Ø© (10:00 - 22:00)</p>-->
+                    <!--                    <p>Ù‡Ù†Ø§Ù„Ùƒ Ø§Ù„Ø¹Ø¯ÙŠØ¯ Ù…Ù† Ø§Ù„Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù…ØªÙˆÙØ±Ø© Ù„Ù†ØµÙˆØµ Ù„ÙˆØ±ÙŠÙ… Ø¥ÙŠØ¨Ø³ÙˆÙ…ØŒ ÙˆÙ„ÙƒÙ† Ø§Ù„ØºØ§Ù„Ø¨ÙŠØ© ØªÙ… ØªØ¹Ø¯ÙŠÙ„Ù‡Ø§ Ø¨Ø´ÙƒÙ„ Ù…Ø§ Ø¹Ø¨Ø± Ø¥Ø¯Ø®Ø§Ù„ Ø¨Ø¹Ø¶ Ø§Ù„Ù†ÙˆØ§Ø¯Ø± Ø£Ùˆ Ø§Ù„ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ø¹Ø´ÙˆØ§Ø¦ÙŠØ© Ø¥Ù„Ù‰ Ø§Ù„Ù†Øµ. Ø¥Ù† ÙƒÙ†Øª ØªØ±ÙŠØ¯ Ø£Ù† ØªØ³ØªØ®Ø¯Ù… Ù†Øµ Ù„ÙˆØ±ÙŠÙ… Ø¥ÙŠØ¨Ø³ÙˆÙ… Ù…Ø§ØŒ Ø¹Ù„ÙŠÙƒ Ø£Ù† ØªØªØ­Ù‚Ù‚ Ø£ÙˆÙ„Ø§Ù‹ Ø£Ù† Ù„ÙŠØ³ Ù‡Ù†Ø§Ùƒ Ø£ÙŠ ÙƒÙ„Ù…Ø§Øª Ø£Ùˆ Ø¹Ø¨Ø§Ø±Ø§Øª Ù…Ø­Ø±Ø¬Ø© Ø£Ùˆ ØºÙŠØ± Ù„Ø§Ø¦Ù‚Ø© Ù…Ø®Ø¨Ø£Ø© ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„Ù†Øµ. Ø¨ÙŠÙ†Ù…Ø§ ØªØ¹Ù…Ù„ </p>-->
 
                     <div class="social text-left">
                         <?php if ($mainSettings['facebook']) { ?><a href="<?php echo $mainSettings['facebook'] ?>"><i
@@ -222,7 +214,7 @@
 
             <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="footer-Tag-col col-default-mb30">
-                    <!--                    <h4>القائمة</h4>-->
+                    <!--                    <h4>Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©</h4>-->
                     <div class="tag-group clearfix">
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#page-top">{{trans('front.home')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#about">{{trans('front.about')}}</a>
@@ -230,9 +222,7 @@
                            href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#schedule">{{trans('front.activities')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('terms')}}">{{trans('front.terms')}}</a>
                     </div>
                 </div>
             </div>
@@ -264,33 +254,51 @@
 </section>
 
 <!-- jQuery -->
-<script src="{{ asset('resources/' . $template_version . '/assets/js/jquery.min.js') }}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.min.js"></script>
 
 <!-- Bootstrap Core JavaScript -->
-<script src="{{ asset('resources/' . $template_version . '/assets/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/bootstrap.bundle.min.js"></script>
 
 <!-- All Included JavaScript -->
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jquery.easing.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jquery.pogo-slider.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/animated-text.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/slick.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jarallax.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/css3-animate-it.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/counter.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/jarallax.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/css3-animate-it.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/featherlight.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/featherlight.gallery.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/bootstrap-portfilter.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/particles.js') }}"></script>
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/particles-app.js') }}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.easing.min.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.pogo-slider.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/animated-text.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/slick.min.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jarallax.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/css3-animate-it.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/counter.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jarallax.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/css3-animate-it.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/featherlight.min.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/featherlight.gallery.min.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/bootstrap-portfilter.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/particles.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/particles-app.js"></script>
 
 <!-- Google map -->
 
 <!-- Custom Js -->
-<script type="text/javascript" src="{{ asset('resources/' . $template_version . '/assets/js/main.js') }}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/main.js"></script>
 
 @yield('script')
+
+<script>
+    (function(d,t) {
+        var BASE_URL="https://chat.bevatel.com";
+        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=BASE_URL+"/packs/js/sdk.js";
+        g.defer = true;
+        g.async = true;
+        s.parentNode.insertBefore(g,s);
+        g.onload=function(){
+            window.socialAppSDK.run({
+                websiteToken: 'gxjdA6qbfUEgtdVVBGpBGd2m',
+                baseUrl: BASE_URL
+            })
+        }
+    })(document,"script");
+</script>
 </body>
 
 </html>
+

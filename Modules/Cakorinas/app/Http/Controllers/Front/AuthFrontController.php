@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Controllers\Front;
+namespace Modules\Cakorinas\app\Http\Controllers\Front;
 
-use App\Modules\Cakorinas\app\Http\Controllers\Front\GenericFrontController;
-use App\Modules\Cakorinas\app\Models\Member;
-use App\Modules\Cakorinas\app\Models\MemberSubscription;
+use Modules\Cakorinas\app\Http\Controllers\Front\GenericFrontController;
+use Modules\Cakorinas\app\Models\Member;
+use Modules\Cakorinas\app\Models\MemberSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -215,8 +215,13 @@ class AuthFrontController extends GenericFrontController
             }
             return redirect()->back();
         } else {
-            return $this->falseReturn('المستخدم غير موجود', 'User Not Found');
+            return $this->falseReturn('ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â ÃƒËœÃ‚Â± Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯', 'User Not Found');
         }
     }
 }
+
+
+
+
+
 

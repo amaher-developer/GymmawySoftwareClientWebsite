@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Controllers\Front;
+namespace Modules\Cakorinas\app\Http\Controllers\Front;
 
-use App\Modules\Access\Models\User;
 
-use App\Modules\Cakorinas\app\Http\Requests\ContactRequest;
-use App\Modules\Cakorinas\app\Models\Activity;
-use App\Modules\Cakorinas\app\Models\Banner;
-use App\Modules\Cakorinas\app\Models\PTClass;
-use App\Modules\Cakorinas\app\Models\PTSubscription;
-use App\Modules\Cakorinas\app\Models\Setting;
+use Modules\Cakorinas\app\Http\Requests\ContactRequest;
+use Modules\Cakorinas\app\Models\Activity;
+use Modules\Cakorinas\app\Models\Banner;
+use Modules\Cakorinas\app\Models\PTClass;
+use Modules\Cakorinas\app\Models\PTSubscription;
+use Modules\Cakorinas\app\Models\Setting;
 
-use App\Modules\Cakorinas\app\Models\Store;
-use App\Modules\Cakorinas\app\Models\Subscription;
+use Modules\Cakorinas\app\Models\Store;
+use Modules\Cakorinas\app\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -127,7 +126,7 @@ class MainFrontController extends GenericFrontController
 //            if ($user) {
 //                $user->delete();
 //            }
-//            $user = GymUser::create(['image' => 'gymmawy.png', 'permissions' => [], 'title' => 'مدير', 'is_super_user' => 1, 'password' => $data['password'], 'phone' => $data['phone'], 'name' => $data['name'], 'email' => $data['email']]);
+//            $user = GymUser::create(['image' => 'gymmawy.png', 'permissions' => [], 'title' => 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â±', 'is_super_user' => 1, 'password' => $data['password'], 'phone' => $data['phone'], 'name' => $data['name'], 'email' => $data['email']]);
 //        }
 //
 //        $qrcodes_folder = base_path('uploads/qrcodes/');
@@ -249,3 +248,10 @@ class MainFrontController extends GenericFrontController
     }
 
 }
+
+
+
+
+
+
+

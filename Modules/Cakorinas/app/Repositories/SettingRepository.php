@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Repositories;
+namespace Modules\Cakorinas\app\Repositories;
 
 use Illuminate\Support\Facades\Cache;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Modules\Cakorinas\app\Models\Setting;
+use Modules\Cakorinas\app\Models\Setting;
 
 
 class SettingRepository extends GenericRepository
@@ -39,3 +39,6 @@ class SettingRepository extends GenericRepository
 
 
 }
+
+
+

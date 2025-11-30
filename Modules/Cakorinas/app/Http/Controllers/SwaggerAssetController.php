@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Controllers;
+namespace  Modules\Cakorinas\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Response;
@@ -21,3 +21,6 @@ class SwaggerAssetController extends Controller
         ->setExpires(new \DateTime('+1 year'));
     }
 }
+
+
+

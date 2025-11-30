@@ -56,7 +56,7 @@
                                            placeholder="{{trans('front.phone')}}" required="">
                                     <input type="number" name="code" class="form-control"
                                            placeholder="{{trans('front.code')}}" required="">
-                                    <!--                                <input type="text" class="form-control" placeholder="عدد">-->
+                                    <!--                                <input type="text" class="form-control" placeholder="ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯">-->
                                     <div class="text-center"><button class="btn btn-default simple-btn " name="submit" value="1"
                                                                      type="submit">{{trans('front.login')}}</button></div>
                                 </form>
@@ -82,4 +82,8 @@
 @section('script')
 
 @stop
+
+
+
+
 

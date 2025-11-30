@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Models;
+namespace Modules\Cakorinas\app\Models;
 
 
-use App\Modules\Cakorinas\app\Events\SettingUpdated;
+use Modules\Cakorinas\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class Banner extends GenericModel
@@ -40,3 +40,6 @@ class Banner extends GenericModel
 
 
 }
+
+
+

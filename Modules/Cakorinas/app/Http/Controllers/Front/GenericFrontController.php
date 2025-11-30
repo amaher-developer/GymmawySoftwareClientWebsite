@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Http\Controllers\Front;
+namespace Modules\Cakorinas\app\Http\Controllers\Front;
 
 use App\Http\Requests;
-use App\Modules\Cakorinas\app\Http\Controllers\GenericController;
-use App\Modules\Cakorinas\app\Models\Setting;
+use Modules\Cakorinas\app\Http\Controllers\GenericController;
+use Modules\Cakorinas\app\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 
@@ -128,3 +128,7 @@ class GenericFrontController extends GenericController
 
     }
 }
+
+
+
+

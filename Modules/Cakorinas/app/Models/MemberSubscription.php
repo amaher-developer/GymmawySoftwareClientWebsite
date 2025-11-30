@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Cakorinas\app\Models;
+namespace Modules\Cakorinas\app\Models;
 
 
 use Carbon\Carbon;
@@ -41,3 +41,6 @@ class MemberSubscription extends GenericModel
     }
 
 }
+
+
+
