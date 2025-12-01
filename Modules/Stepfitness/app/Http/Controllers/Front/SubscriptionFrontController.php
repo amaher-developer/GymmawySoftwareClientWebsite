@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 namespace Modules\Stepfitness\app\Http\Controllers\Front;
 
 use App\Http\Classes\Constants;
