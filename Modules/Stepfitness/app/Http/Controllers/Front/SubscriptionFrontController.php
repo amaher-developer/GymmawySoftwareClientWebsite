@@ -358,6 +358,11 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         if (!in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])) {
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = array_merge((array)$payment_invoice->response_code, [
+                'tabby_payment' => (array)$payment,
+            ]);
+            $payment_invoice->save();
             return false;
         }
 
@@ -365,6 +370,12 @@ class SubscriptionFrontController extends GenericFrontController
 
         if (@$capture->status !== Constants::CLOSED) {
             Log::warning('Tabby capture failed on notify', ['tabby_id' => $payment->id, 'status' => @$capture->status]);
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = array_merge((array)$payment_invoice->response_code, [
+                'tabby_payment' => (array)$payment,
+                'tabby_capture' => (array)$capture,
+            ]);
+            $payment_invoice->save();
             return false;
         }
 
@@ -401,6 +412,11 @@ class SubscriptionFrontController extends GenericFrontController
         $payment = $service->getPayment($tabby_payment_id);
 
         if (!$payment || !in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])) {
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = array_merge((array)$payment_invoice->response_code, [
+                'tabby_payment' => (array)$payment,
+            ]);
+            $payment_invoice->save();
             \Session::flash('error', trans('front.error_in_data'));
             return \redirect()->route('subscription', ['id' => $payment_invoice->subscription_id]);
         }
@@ -408,6 +424,12 @@ class SubscriptionFrontController extends GenericFrontController
         $capture = $service->capturePayment($tabby_payment_id, $payment_invoice['amount']);
 
         if (@$capture->status !== Constants::CLOSED) {
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = array_merge((array)$payment_invoice->response_code, [
+                'tabby_payment' => (array)$payment,
+                'tabby_capture' => (array)$capture,
+            ]);
+            $payment_invoice->save();
             \Session::flash('error', trans('front.error_in_data'));
             return \redirect()->route('subscription', ['id' => $payment_invoice->subscription_id]);
         }
@@ -424,6 +446,9 @@ class SubscriptionFrontController extends GenericFrontController
         if ($member_subscription) {
             return \redirect()->route('invoice', ['id' => $member_subscription->id]);
         }
+
+        $payment_invoice->status = Constants::FAILED;
+        $payment_invoice->save();
 
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
