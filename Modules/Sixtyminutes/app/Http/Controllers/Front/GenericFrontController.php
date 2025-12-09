@@ -39,6 +39,7 @@ class GenericFrontController extends GenericController
             } else {
                 app()->setLocale('ar');
             }
+            $this->clearWebsiteCache();
         } else {
             $this->lang = request()->segment(1);
             if (request()->hasSession()) {
@@ -47,6 +48,8 @@ class GenericFrontController extends GenericController
             } else {
                 app()->setLocale($this->lang);
             }
+            
+            $this->clearWebsiteCache();
         }
         $this->limit = 10;
 
