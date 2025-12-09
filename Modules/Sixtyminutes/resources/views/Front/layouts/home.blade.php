@@ -99,7 +99,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="about-title">
-                    <h1> {{trans('front.welcome')}}  <span><?php echo $mainSettings['name']?></span></h1>
+                    <h1> {{trans('front.welcome')}}  <span>{{$mainSettings->name}}</span></h1>
                     <!--                    <p>حافظ على جسمك لائقًا وقويًا</p>-->
                 </div>
             </div>
@@ -107,7 +107,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="blog-box">
-                    <div style="padding: 32px 10px 0 10px;"><?php echo $mainSettings['about']?></div>
+                    <div style="padding: 32px 10px 0 10px;">{!!$mainSettings->about??''!!}</div>
 
                 </div>
 
