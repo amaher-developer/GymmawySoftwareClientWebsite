@@ -104,7 +104,6 @@
                 </div>
             </div>
         </div>
-        {{dd($mainSettings->about)}}
         <div class="row">
             <div class="col-lg-12">
                 <div class="blog-box">
