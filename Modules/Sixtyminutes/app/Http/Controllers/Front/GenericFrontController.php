@@ -60,6 +60,8 @@ class GenericFrontController extends GenericController
             Cache::store('file')->put('mainSettings',$this->mainSettings, 600 );
         }
 
+        // Set the language on the mainSettings object for proper localization
+        $this->mainSettings->lang = $this->lang;
 
         View::share('mainSettings', $this->mainSettings);
         View::share('lang', $this->lang);
