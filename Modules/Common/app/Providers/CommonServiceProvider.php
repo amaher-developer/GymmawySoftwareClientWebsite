@@ -36,6 +36,46 @@ class CommonServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        // Register payment services
+        $this->registerPaymentServices();
+    }
+
+    /**
+     * Register payment service bindings
+     */
+    protected function registerPaymentServices(): void
+    {
+        // Register PaymentInterface with auto-detection
+        $this->app->bind(
+            \Modules\Common\Contracts\PaymentInterface::class,
+            function ($app) {
+                return \Modules\Common\Factories\PaymentServiceFactory::make();
+            }
+        );
+
+        // Register individual payment services
+        $this->app->singleton(
+            \Modules\Common\Services\PaymobPaymentService::class,
+            function ($app) {
+                return new \Modules\Common\Services\PaymobPaymentService();
+            }
+        );
+
+        $this->app->singleton(
+            \Modules\Common\Services\TabbyPaymentService::class,
+            function ($app) {
+                return new \Modules\Common\Services\TabbyPaymentService();
+            }
+        );
+
+        // Register factory
+        $this->app->singleton(
+            \Modules\Common\Factories\PaymentServiceFactory::class,
+            function ($app) {
+                return new \Modules\Common\Factories\PaymentServiceFactory();
+            }
+        );
     }
 
     /**

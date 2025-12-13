@@ -1,1 +1,1 @@
-@extends('generic::layouts.master')
+@extends('almadagym::layouts.master')

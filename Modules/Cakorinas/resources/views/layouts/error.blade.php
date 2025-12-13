@@ -1,1 +1,1 @@
-@extends('generic::layouts.master')
+@extends('cakorinas::layouts.master')

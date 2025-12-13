@@ -183,7 +183,7 @@
                                         </a>
                                     </li>
                                 @endif
-                                @include('generic::layouts.side-bar')
+                                @include('sixtyminutes::layouts.side-bar')
 
 
                             </ul>
@@ -307,8 +307,8 @@
       type="text/css"/>
 <script src="{{asset('resources/assets/admin/global/plugins/sweet-alerts/sweetalert_2.js')}}"
         type="text/javascript"></script>
-@include('generic::flash')
-@include('generic::new_notifications')
+@include('sixtyminutes::flash')
+@include('sixtyminutes::new_notifications')
 <!-- END Sweet Alert SCRIPTS -->
 @yield('scripts')
 </body>

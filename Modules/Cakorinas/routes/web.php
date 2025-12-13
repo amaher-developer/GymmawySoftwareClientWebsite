@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\File;
 Route::get('/payments/verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
 Route::post('/payments/verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
 Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'tabby_payment_verify'])->name('tabby-verify-payment');
+Route::get('/payments/paymob-verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'paymob_payment_verify'])->name('paymob-verify-payment');
 Route::get('/payments/error/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
 
 Route::name('test')->get('test', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'test']);

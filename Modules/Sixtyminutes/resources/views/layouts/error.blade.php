@@ -1,1 +1,1 @@
-@extends('generic::layouts.master')
+@extends('sixtyminutes::layouts.master')

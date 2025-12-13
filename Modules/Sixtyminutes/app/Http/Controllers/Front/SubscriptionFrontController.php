@@ -5,7 +5,8 @@ namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
 use App\Http\Classes\Constants;
 use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
 
-use App\Modules\Sixtyminutes\app\Http\Classes\TabbyService;
+// Use new payment architecture
+use Modules\Common\Factories\PaymentServiceFactory;
 use Modules\Sixtyminutes\Requests\SubscriptionRequest;
 use App\Modules\Sixtyminutes\app\Models\Member;
 
@@ -276,15 +277,12 @@ class SubscriptionFrontController extends GenericFrontController
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
-    // tabby
+    // tabby - Updated to use new payment architecture
     public function tabby_payment($subscription = [], $member = []){
 
-
-        $registered_since = Carbon::now()->toISOString();
-        $updated_at = Carbon::now()->toISOString();
-        $purchased_at = Carbon::now()->toISOString();
         $unique_id = uniqid();
 
+        // Create payment invoice record
         $paymentOnlineInvoice = PaymentOnlineInvoice::create([
             'payment_id' => $unique_id,
             'member_id' => @$this->current_user->id,
@@ -302,80 +300,90 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => $member['payment_method'],
         ]);
 
-
-
-        // add first product
-        $items = collect([]); // array to save your products
-        $items->push([
-            'title' => $subscription['name'],
-            "description" => @$subscription['content'],
-            'quantity' => 1,
-            'unit_price' => $subscription['price'],
-            'category' => 'Membership',
-        ]);
-        $order_data = [
-            'amount'=> @$subscription['price'],
-            'currency' => @env('TABBY_CURRENCY', 'SAR'),
-            'description'=> @$subscription['content'],
-            'full_name'=> $member['name'],
-            'buyer_phone'=> $member['phone'],
-            'buyer_email' => $member['email'] ?? '',
-            'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
-//            'dob' => Carbon::parse($member['dob'])->toDateString(),
-            'address'=> @env('TABBY_ADDRESS'),
-            'city' => @env('TABBY_CITY'),
-            'zip'=> '1234',
-            'order_id'=> '"'.$paymentOnlineInvoice->id.'"',
-            'registered_since' => $registered_since,
-            'updated_at' => $updated_at,
-            'purchased_at' => $purchased_at,
-            'loyalty_level'=> 0,
-            'success-url'=>  route('tabby-verify-payment', ['payment_id' => $unique_id]),
-            'cancel-url' => route('tabby-error-cancel', ['payment_id' => $unique_id]),
-            'failure-url' => route('tabby-error-failure', ['payment_id' => $unique_id]),
-            'items' => $items,
+        // Prepare order data for new payment service
+        $orderData = [
+            'amount' => (float) $subscription['price'],
+            'currency' => env('TABBY_CURRENCY', 'SAR'),
+            'order_id' => 'SIXTYMIN_' . $paymentOnlineInvoice->id . '_' . time(),
+            'description' => $subscription['content'] ?? 'Gym Subscription',
+            'customer' => [
+                'name' => $member['name'],
+                'email' => $member['email'] ?? 'member@sixtyminutes.com',
+                'phone' => $member['phone'],
+                'registered_since' => Carbon::now()->subMonths(1)->toIso8601String(),
+                'loyalty_level' => 0,
+            ],
+            'return_url' => route('tabby-verify-payment', ['payment_id' => $unique_id]),
+            'cancel_url' => route('tabby-error-cancel', ['payment_id' => $unique_id]),
+            'failure_url' => route('tabby-error-failure', ['payment_id' => $unique_id]),
+            'lang' => $this->lang ?? 'en',
+            'items' => [
+                [
+                    'title' => $subscription['name'],
+                    'description' => $subscription['content'] ?? '',
+                    'quantity' => 1,
+                    'unit_price' => (string) $subscription['price'],
+                    'category' => 'Membership',
+                ]
+            ],
+            'metadata' => [
+                'payment_invoice_id' => $paymentOnlineInvoice->id,
+                'subscription_id' => $member['subscription_id'],
+                'member_id' => @$this->current_user->id,
+            ],
         ];
 
-        // step 1: create session
-        $payment = new TabbyService();
-        $payment = $payment->createSession($order_data);
-        $status = @$payment->status;
+        // Use new payment service
+        try {
+            $paymentService = PaymentServiceFactory::make('Sixtyminutes');
+            $result = $paymentService->createPayment($orderData);
 
-        if($status == Constants::REJECTED){
-            \Session::flash('error', trans('front.'.@$payment->configuration->products->installments->rejection_reason));
-            return route('subscription', ['id' => $subscription['id']]);
-        }
+            if (!$result['success'] || empty($result['payment_url'])) {
+                \Session::flash('error', $result['message'] ?? trans('front.error_in_data'));
+                return route('subscription', ['id' => $subscription['id']]);
+            }
 
+            // Store transaction ID
+            $paymentOnlineInvoice->transaction_id = $result['transaction_id'];
+            $paymentOnlineInvoice->response_code = json_encode($result);
+            $paymentOnlineInvoice->save();
 
-//        $id = $payment->payment->id;
-        $redirect_url = @$payment->configuration->available_products->installments[0]->web_url;
+            return $result['payment_url'];
 
-        if(!$redirect_url){
+        } catch (\Exception $e) {
+            \Log::error('Tabby payment creation failed', [
+                'error' => $e->getMessage(),
+                'subscription' => $subscription,
+            ]);
             \Session::flash('error', trans('front.error_in_data'));
             return route('subscription', ['id' => $subscription['id']]);
         }
-
-
-        $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
-        $paymentOnlineInvoice->response_code = @(array)$payment;
-        $paymentOnlineInvoice->save();
-
-
-        return $redirect_url;
     }
 
     public function tabbyNotify(Request $request){
 
-        $payment = new TabbyService();
-        $payment = $payment->getPayment(@$request->id);
+        // Use new payment service to verify payment
+        try {
+            $paymentService = PaymentServiceFactory::make('Sixtyminutes');
+            $verifyResult = $paymentService->verifyPayment($request->all());
 
-        $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
-            $q->withTrashed();
-        }])->where('transaction_id', @$payment->id)->first();
+            if (!$verifyResult['verified']) {
+                \Log::warning('Tabby payment verification failed', $verifyResult);
+                return response()->json(['success' => false], 400);
+            }
 
-        $member = [];
-//        if($payment->status == Constants::AUTHORIZED){
-        if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+                $q->withTrashed();
+            }])->where('transaction_id', $verifyResult['transaction_id'])->first();
+
+            if (!$payment_invoice) {
+                \Log::error('Payment invoice not found', ['transaction_id' => $verifyResult['transaction_id']]);
+                return response()->json(['success' => false], 404);
+            }
+
+            $member = [];
+            // Check if payment is successful (AUTHORIZED or CLOSED status)
+            if($verifyResult['success'] && in_array($verifyResult['status'], ['success', 'authorized', 'closed'])){
 
             // add member and subscription to database and active it
             if(@$payment_invoice['member_id']){
@@ -393,12 +401,10 @@ class SubscriptionFrontController extends GenericFrontController
             }
 
 
-            // step 4: capture payment
-            $capture = new TabbyService();
-            $capture = $capture->capturePayment(@$request->id, $payment_invoice['amount']);
+            // Payment already verified by the new service
+            // Tabby payments are automatically captured when authorized
 
-
-            if($member && ($capture->status == Constants::CLOSED)){
+            if($member){
 
                 $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                     'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
@@ -424,33 +430,46 @@ class SubscriptionFrontController extends GenericFrontController
 
 
                 mail('eng.a7med.ma7er@gmail.com', 'fitnessstep', 'test successfull member: '. $member['name']);
-                return true;
+
+                // Update payment invoice status
+                $payment_invoice->status = Constants::SUCCESS;
+                $payment_invoice->save();
+
+                return response()->json(['success' => true], 200);
             }
+
+            return response()->json(['success' => false, 'message' => 'Member creation failed'], 400);
         }
-        return false;
+
+        return response()->json(['success' => false, 'message' => 'Payment not authorized'], 400);
+
+        } catch (\Exception $e) {
+            \Log::error('Tabby payment notification failed', [
+                'error' => $e->getMessage(),
+                'request' => $request->all(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Processing failed'], 500);
+        }
     }
 
     public function tabby_payment_verify(Request $request)
     {
-        $payment = new TabbyService();
+        // Use new payment service
         $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
             $q->withTrashed();
-        }])->where('transaction_id', $request['payment_id'])->first();
+        }])->where('payment_id', $request['payment_id'])->first();
 
         if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            // step 2: payment verification
-            $payment = $payment->getPayment($request['payment_id']);
-            // step 3: webhook
-            $webhook = new TabbyService();
-            $webhook->getWebHooks($request['payment_id']);
+            try {
+                // Use new payment service to get payment status
+                $paymentService = PaymentServiceFactory::make('Sixtyminutes');
+                $statusResult = $paymentService->getPaymentStatus($payment_invoice->transaction_id);
 
-//            if(@$payment->status == Constants::AUTHORIZED) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
-            $payment_invoice->response_code = (array)($payment);
-            $payment_invoice->save();
+                $payment_invoice->response_code = json_encode($statusResult);
+                $payment_invoice->save();
 
-//            if($payment->status == Constants::AUTHORIZED){
-                if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
+                // Check if payment is successful
+                if($statusResult['success'] && in_array($statusResult['status'], ['success', 'authorized', 'closed'])){
                 // add member and subscription to database and active it
                 $member = @(array)$this->current_user;
                 $type_of_payment = Constants::RenewMember;
@@ -463,13 +482,11 @@ class SubscriptionFrontController extends GenericFrontController
                 }
 
 
-                // step 4: capture payment
-                $capture = new TabbyService();
-                $capture = $capture->capturePayment($request['payment_id'], $payment_invoice['amount']);
+                // Payment is already authorized/captured via the new service
 
-                if($member && ($capture->status == Constants::CLOSED)){
+                if($member){
 
-                    $payment_invoice->response_code  = (array)($capture);
+                    $payment_invoice->status = Constants::SUCCESS;
                     $payment_invoice->save();
 
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
@@ -502,27 +519,34 @@ class SubscriptionFrontController extends GenericFrontController
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }
+
+            } catch (\Exception $e) {
+                \Log::error('Tabby payment verification failed', [
+                    'error' => $e->getMessage(),
+                    'payment_id' => $request['payment_id'],
+                ]);
+            }
         }
 
         // :this process after payment successfully
         // send member info. to system
         // send membership info. to system
 
-        // redirect to infocie
+        // redirect to invoice
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
     public function error_payment(){
         $title = trans('front.invoice');
-        return view('generic::Front.error', compact('title'));
+        return view('sixtyminutes::Front.error', compact('title'));
     }
     public function tabbyFailure(){
         $title = trans('front.invoice');
-        return view('generic::Front.tabby_error_failure', compact('title'));
+        return view('sixtyminutes::Front.tabby_error_failure', compact('title'));
     }
     public function tabbyCancel(){
         $title = trans('front.invoice');
-        return view('generic::Front.tabby_error_cancel', compact('title'));
+        return view('sixtyminutes::Front.tabby_error_cancel', compact('title'));
     }
 
 

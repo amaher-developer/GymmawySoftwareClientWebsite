@@ -18,6 +18,7 @@ use App\Modules\Redbone\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Modules\Common\Services\PaymobService;
 class SubscriptionFrontController extends GenericFrontController
 {
     public function success()
@@ -169,6 +170,56 @@ class SubscriptionFrontController extends GenericFrontController
             }else if(@$request->payment_method == Constants::TABBY){
                 // tabby
                 $payment_url = $this->tabby_payment($subscription->toArray(), $member_data);
+            }else if(@$request->payment_method == Constants::PAYMOB){
+                // Paymob
+                $paymob = app(PaymobService::class);
+                $amount_value = $member_data['amount'] ?? $subscription->price;
+                $amount_cents = (int) round($amount_value * 100);
+
+                $paymentInvoice = PaymentOnlineInvoice::create([
+                    'payment_id' => uniqid('paymob_'),
+                    'transaction_id' => null,
+                    'member_id' => @$this->current_user->id,
+                    'status' => @Constants::PEND,
+                    'subscription_id' => @$member_data['subscription_id'],
+                    'name' => $member_data['name'],
+                    'email' => $member_data['email'],
+                    'phone' => $member_data['phone'],
+                    'dob' => $member_data['dob'],
+                    'address' => $member_data['address'] ?? null,
+                    'gender' => $member_data['gender'] ?? null,
+                    'amount' => $member_data['amount'],
+                    'vat' => $member_data['vat'],
+                    'vat_percentage' => $member_data['vat_percentage'],
+                    'payment_method' => $member_data['payment_method'],
+                ]);
+
+                $order = $paymob->createOrder($amount_cents);
+                if (empty($order) || empty($order['id'])) {
+                    \Session::flash('error', trans('front.error_in_data'));
+                    return redirect()->back();
+                }
+
+                $paymentKey = $paymob->requestPaymentKey((int) $order['id'], $amount_cents, [
+                    'email' => $member_data['email'] ?? '',
+                    'first_name' => $member_data['name'] ?? '',
+                    'last_name' => '',
+                    'phone_number' => $member_data['phone'] ?? '',
+                ]);
+
+                if (empty($paymentKey) || empty($paymentKey['token'])) {
+                    \Session::flash('error', trans('front.error_in_data'));
+                    return redirect()->back();
+                }
+
+                $iframe = $paymob->iframeUrl($paymentKey['token']);
+
+                $paymentInvoice->payment_id = $paymentKey['token'] ?? $paymentInvoice->payment_id;
+                $paymentInvoice->transaction_id = $order['id'] ?? null;
+                $paymentInvoice->response_code = ['order' => $order, 'payment_key' => $paymentKey];
+                $paymentInvoice->save();
+
+                $payment_url = $iframe ?? route('subscription', ['id' => $subscription->id]);
             }
             return redirect($payment_url);
         }

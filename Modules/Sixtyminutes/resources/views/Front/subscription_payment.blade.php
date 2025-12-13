@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('sixtyminutes::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>
@@ -151,26 +151,47 @@
                                 <br/><br>
                             @endif
                             <h5>{{trans('front.choose_payment_methods')}}:</h5>
+
+                            <!-- MADA/PayTab Payment Option -->
                             <div class="highlight-text">
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input mada" id="mada" type="radio"
-                                               name="payment_method" value="1" placeholder="Your name">
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::MADA}}" required>
                                     </div>
 
                                     <div class="col-md-11">
                                         <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/visa_logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/visa_logo.svg')}}">
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/mada-logo.svg')}}">
-
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/mada-logo.svg')}}">
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/american_express_logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/american_express_logo.svg')}}">
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabby Payment Option -->
+                            <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input tabby" id="tabby" type="radio"
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::TABBY}}">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="tabby">{{trans('front.tabby_installment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/tabby-logo.webp')}}">
+                                            <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span>
+                                        </p>
+                                        <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
                                     </div>
                                 </div>
                             </div>

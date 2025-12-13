@@ -106,19 +106,6 @@ class SubscriptionPaymentFrontController extends GenericFrontController
     }
     public function invoiceSubmit(SubscriptionRequest $request)
     {
-        $payment = new SubscriptionFrontController();
-        $payment_data = [
-            "amount_cents" => "4000",
-            "currency" => "EGP",
-            "shipping_data" => [
-                "first_name" => "Test",
-                "last_name"=> "Account",
-                "phone_number"=> "0101010101010",
-                "email"=> "test@account.com"
-            ]
-        ];
-        $payment_url = $payment->paymentProcess($payment_data);
-        dd($payment_url);
         // :this process before payment
         // check on member info.
         // check on member ships
@@ -127,6 +114,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         $member_data = [];
         $subscription_id = $request->subscription_id;
         $subscription = Subscription::where('id', $subscription_id)->first();
+
         if($subscription) {
             if (!$this->current_user) {
                 $member = Member::where('phone', @$request->phone)->first();
@@ -157,33 +145,57 @@ class SubscriptionPaymentFrontController extends GenericFrontController
             }
 
             $member_data['subscription_id'] = @$request->subscription_id;
-            $member_data['payment_method'] = @$request->payment_method;
+            $member_data['payment_method'] = @(int)$request->payment_method;
             $member_data['amount'] = @$request->amount;
             $member_data['vat_percentage'] = @$request->vat_percentage;
-            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
+            $member_data['vat'] = (@$request->vat_percentage / 100) * @$request->amount;
 
-            if(@$request->payment_method == Constants::MADA){
-                // paytabs
-                $payment = new SubscriptionFrontController();
-                $payment_data = [
-                    "amount_cents" => "4000",
-                    "currency" => "EGP",
-                    "shipping_data" => [
-                                        "first_name" => "Test",
-                                        "last_name"=> "Account",
-                                        "phone_number"=> "0101010101010",
-                                        "email"=> "test@account.com"
-                                    ]
-                    ];
-                $payment_url = $payment->paymentProcess($payment_data);
+            // Use SubscriptionFrontController methods for payment processing
+            $subscriptionController = new SubscriptionFrontController();
+
+            // Cakorinas uses Paymob (Egypt - EGP currency)
+            if(@(int)$request->payment_method == Constants::PAYMOB){
+                // Use Paymob payment
+                $payment_url = $subscriptionController->paymob_payment($subscription->toArray(), $member_data);
+                return redirect($payment_url);
+            } else {
+                \Session::flash('error', trans('front.error_in_data'));
+                return redirect()->back();
             }
-            return redirect($payment_url);
+
+            return redirect()->back();
         }
         \Session::flash('error', trans('front.error_in_data'));
         return redirect()->back();
     }
 
 
+
+    /**
+     * Generic payment return handler
+     * This can be used as a return URL for various payment gateways
+     */
+    public function invoiceReturn(Request $request)
+    {
+        // Check if this is a Paymob callback
+        if ($request->has('payment_id') || $request->has('id')) {
+            return $this->paymobVerifyPayment($request);
+        }
+
+        // Default: redirect to error page
+        return redirect()->route('error-payment');
+    }
+
+    /**
+     * Paymob payment verification callback
+     * This method is called by Paymob after payment processing
+     */
+    public function paymobVerifyPayment(Request $request)
+    {
+        // Use SubscriptionFrontController's paymob_payment_verify method
+        $subscriptionController = new SubscriptionFrontController();
+        return $subscriptionController->paymob_payment_verify($request);
+    }
 
     public function error_payment(){
         $title = trans('front.invoice');

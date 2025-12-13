@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('zonegym::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
 

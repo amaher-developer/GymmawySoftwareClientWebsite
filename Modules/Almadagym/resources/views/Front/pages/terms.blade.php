@@ -1,4 +1,4 @@
-@extends('generic::Front.layouts.master')
+@extends('almadagym::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>

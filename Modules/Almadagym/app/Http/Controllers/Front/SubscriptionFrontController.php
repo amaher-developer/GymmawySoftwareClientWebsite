@@ -514,15 +514,15 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function error_payment(){
         $title = trans('front.invoice');
-        return view('generic::Front.error', compact('title'));
+        return view('almadagym::Front.error', compact('title'));
     }
     public function tabbyFailure(){
         $title = trans('front.invoice');
-        return view('generic::Front.tabby_error_failure', compact('title'));
+        return view('almadagym::Front.tabby_error_failure', compact('title'));
     }
     public function tabbyCancel(){
         $title = trans('front.invoice');
-        return view('generic::Front.tabby_error_cancel', compact('title'));
+        return view('almadagym::Front.tabby_error_cancel', compact('title'));
     }
 
 

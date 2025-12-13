@@ -1,13 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionPaymentFrontController;
 
-Route::name('subscription-payment')->get('/subscription-payment/{id}', 'Front\SubscriptionPaymentFrontController@show');
-Route::name('invoice-payment')->get('/invoice-payment/{id}', 'Front\SubscriptionPaymentFrontController@invoice');
-Route::name('invoice-payment')->post('/invoice-payment/{id}', 'Front\SubscriptionPaymentFrontController@invoiceSubmit');
+Route::name('subscription-payment')->get('/subscription-payment/{id}', [SubscriptionPaymentFrontController::class, 'show']);
+Route::name('invoice-payment')->get('/invoice-payment/{id}', [SubscriptionPaymentFrontController::class, 'invoice']);
+Route::name('invoice-payment')->post('/invoice-payment/{id}', [SubscriptionPaymentFrontController::class, 'invoiceSubmit']);
 
-//Route::name('invoiceStore')->any('/invoice-store', 'Front\SubscriptionPaymentFrontController@invoiceStore');
-Route::name('invoice-return')->any('/invoice-return-payment', 'Front\SubscriptionPaymentFrontController@invoiceReturn');
+//Route::name('invoiceStore')->any('/invoice-store', [SubscriptionPaymentFrontController::class, 'invoiceStore']);
+Route::name('invoice-return')->any('/invoice-return-payment', [SubscriptionPaymentFrontController::class, 'invoiceReturn']);
 
 
 

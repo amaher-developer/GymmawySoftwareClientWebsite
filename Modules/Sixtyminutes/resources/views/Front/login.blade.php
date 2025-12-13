@@ -48,15 +48,25 @@
                     <div class="row">
                         <div class="col-md-3 col-md-offset-3"></div>
                         <div class="col-md-6  ">
-                            <?php if(@$error){?><div class="alert alert-danger"><?php echo @$error?></div><?php } ?>
+                            @if(session('error'))
+                                <div class="alert alert-danger">{{session('error')}}</div>
+                            @endif
+                            @if($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        @foreach($errors->all() as $error)
+                                            <li>{{$error}}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                             <div class="col-default-mb30">
                                 <form method="post" action="{{route('loginSubmit')}}">
                                     @csrf
                                     <input type="text" name="phone" class="form-control"
-                                           placeholder="{{trans('front.phone')}}" required="">
-                                    <input type="number" name="code" class="form-control"
-                                           placeholder="{{trans('front.code')}}" required="">
-                                    <!--                                <input type="text" class="form-control" placeholder="عدد">-->
+                                           placeholder="{{trans('front.phone')}}" required value="{{old('phone')}}">
+                                    <input type="text" name="code" class="form-control"
+                                           placeholder="{{trans('front.code')}}" required value="{{old('code')}}">
                                     <div class="text-center"><button class="btn btn-default simple-btn " name="submit" value="1"
                                                                      type="submit">{{trans('front.login')}}</button></div>
                                 </form>

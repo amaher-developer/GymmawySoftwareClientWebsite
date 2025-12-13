@@ -58,12 +58,8 @@
             color: #555555;
         }
 
-        #tabbyCard div:first-child{
-            background-color: #f5f5f5 !important;
-        }
-        #tabbyCard {
-            padding-top: 20px;
-            width: 100%;
+        [type=radio]:not(:checked) + label::before {
+            border: #555555 1px solid;
         }
     </style>
 @endsection
@@ -117,6 +113,8 @@
                                                                placeholder="{{trans('front.name')}}" required="">
                                                         <input type="text" name="phone" class="form-control"
                                                                placeholder="{{trans('front.phone')}}" required="">
+                                                        <input type="email" name="email" class="form-control"
+                                                               placeholder="{{trans('front.email')}}" required="">
                                                         <div class="row text-center">
                                                             <div class="col-md-1"><input type="radio" name="gender" value="{{\App\Http\Classes\Constants::MALE}}"
                                                                                          class="form-control male"
@@ -151,11 +149,13 @@
                                 <br/><br>
                             @endif
                             <h5>{{trans('front.choose_payment_methods')}}:</h5>
+
+                            <!-- MADA/PayTab Payment Option -->
                             <div class="highlight-text">
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input mada" id="mada" type="radio"
-                                               name="payment_method" value="1" placeholder="Your name">
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::MADA}}" required>
                                     </div>
 
                                     <div class="col-md-11">
@@ -167,9 +167,25 @@
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
                                                  src="{{asset('resources/assets/images/mada-logo.svg')}}">
 
-
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
                                                  src="{{asset('resources/assets/images/american_express_logo.svg')}}">
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paymob Payment Option (Egypt) -->
+                            <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input paymob" id="paymob" type="radio"
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::PAYMOB}}">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="paymob">{{trans('front.paymob_payment_msg') ?? 'الدفع عبر بايموب (Paymob)'}}</label></p>
+                                        <p>
+                                            <span style="font-size: 14px;">{{trans('front.paymob_description') ?? 'بوابة دفع آمنة ومضمونة - تدعم جميع البطاقات البنكية المصرية'}}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -206,18 +222,6 @@
 
 @endsection
 @section('script')
-    <script src="https://checkout.tabby.ai/tabby-card.js"></script>
-    <script>
-        new TabbyCard({
-            selector: '#tabbyCard', // empty div for TabbyCard.
-            currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
-            lang: 'ar', // Optional, language of snippet and popups.
-            price: {{$record['price']}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
-            size: 'wide', // required, can be also 'wide', depending on the width.
-            theme: 'black', // required, can be also 'default'.
-            header: false // if a Payment method name present already.
-        });
-    </script>
     <script>
     </script>
 @endsection

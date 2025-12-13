@@ -50,26 +50,25 @@ class AuthFrontController extends GenericFrontController
      */
     public function login(Request $request)
     {
-        $user = '';
-        $this->validate($request, ['phone' => 'required', 'code' => 'required']);
+        $this->validate($request, [
+            'phone' => 'required',
+            'code' => 'required'
+        ]);
+
         $credentials = $request->only(['phone', 'code']);
-        if ($credentials['code'] && $credentials['phone']) {
-            $user = $this->getSubscriptionInfo($credentials['code'], $credentials['phone']);
-            
-            if (request()->hasSession()) {
-                request()->session()->put('user', @$user->member);
-            }
-        }
-        if (!@$user->member) {
+        $user = $this->getSubscriptionInfo($credentials['code'], $credentials['phone']);
+
+        if (!$user || !@$user->member) {
             \Session::flash('error', trans('auth.failed'));
-            return redirect()->back();
+            return redirect()->back()->withInput($request->only('phone'));
         }
-        if (@$user->member) {
-            return redirect()->route('showProfile');
-        } else {
-            \Session::flash('error', trans('auth.failed'));
-            return redirect()->back();
+
+        // Store user in session
+        if (request()->hasSession()) {
+            request()->session()->put('user', $user->member);
         }
+
+        return redirect()->route('showProfile');
     }
 
     /**
@@ -91,6 +90,9 @@ class AuthFrontController extends GenericFrontController
             return null;
         }
 
+        // Set language on member model for proper localization
+        $member->lang = $this->lang;
+
         // Get the latest active subscription for this member
         $memberSubscription = MemberSubscription::with(['subscription'])
             ->where('member_id', $member->id)
@@ -98,8 +100,8 @@ class AuthFrontController extends GenericFrontController
             ->first();
 
         // Get subscription data
-        $subscription = $memberSubscription && $memberSubscription->subscription 
-            ? $memberSubscription->subscription 
+        $subscription = $memberSubscription && $memberSubscription->subscription
+            ? $memberSubscription->subscription
             : null;
 
         // Set language on subscription model if it exists
@@ -109,7 +111,6 @@ class AuthFrontController extends GenericFrontController
 
         // Combine member data with subscription info
         $memberData = $member->toArray();
-        
         if ($memberSubscription && $subscription) {
             // Add subscription-related fields to member data
             // Subscription model has a name accessor that uses the lang attribute

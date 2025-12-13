@@ -65,6 +65,7 @@ class GenericFrontController extends GenericController
 
         View::share('mainSettings', $this->mainSettings);
         View::share('lang', $this->lang);
+        View::share('template_version', env('TEMPLATE_NUM', ''));
 
 //        $this->user = @Auth::user();
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;

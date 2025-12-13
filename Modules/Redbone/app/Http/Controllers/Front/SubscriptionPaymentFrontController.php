@@ -4,6 +4,7 @@ namespace App\Modules\Redbone\app\Http\Controllers\Front;
 
 use App\Http\Classes\Constants;
 use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
+use Illuminate\Support\Facades\Log;
 
 use App\Modules\Redbone\app\Http\Classes\TabbyService;
 use Modules\Redbone\Requests\SubscriptionRequest;
@@ -18,6 +19,7 @@ use App\Modules\Redbone\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Modules\Common\Services\PaymobService;
 use App\Modules\Redbone\app\Interfaces\PaymentGatewayInterface;
 use App\Modules\Redbone\app\Http\Controllers\Front\SubscriptionFrontController;
 class SubscriptionPaymentFrontController extends GenericFrontController
@@ -106,19 +108,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
     }
     public function invoiceSubmit(SubscriptionRequest $request)
     {
-        $payment = new SubscriptionFrontController();
-        $payment_data = [
-            "amount_cents" => "4000",
-            "currency" => "EGP",
-            "shipping_data" => [
-                "first_name" => "Test",
-                "last_name"=> "Account",
-                "phone_number"=> "0101010101010",
-                "email"=> "test@account.com"
-            ]
-        ];
-        $payment_url = $payment->paymentProcess($payment_data);
-        dd($payment_url);
+        // removed stray test call to non-existent paymentProcess method
         // :this process before payment
         // check on member info.
         // check on member ships
@@ -161,22 +151,81 @@ class SubscriptionPaymentFrontController extends GenericFrontController
             $member_data['amount'] = @$request->amount;
             $member_data['vat_percentage'] = @$request->vat_percentage;
             $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
+            // default redirect if payment not handled
+            $payment_url = route('subscription', ['id' => $subscription->id]);
 
             if(@$request->payment_method == Constants::MADA){
-                // paytabs
-                $payment = new SubscriptionFrontController();
-                $payment_data = [
-                    "amount_cents" => "4000",
-                    "currency" => "EGP",
-                    "shipping_data" => [
-                                        "first_name" => "Test",
-                                        "last_name"=> "Account",
-                                        "phone_number"=> "0101010101010",
-                                        "email"=> "test@account.com"
-                                    ]
-                    ];
-                $payment_url = $payment->paymentProcess($payment_data);
+                // paytabs (existing flow) - attempt to reuse SubscriptionFrontController helper
+                try{
+                    $front = new SubscriptionFrontController();
+                    if (method_exists($front, 'paytabs_payment')){
+                        $payment_url = $front->paytabs_payment($subscription->toArray(), $member_data);
+                    } else {
+                        $payment_url = route('subscription', ['id' => $subscription->id]);
+                    }
+                } catch (\Throwable $e){
+                    Log::error('Paytabs redirect error: '.$e->getMessage());
+                    $payment_url = route('subscription', ['id' => $subscription->id]);
+                }
+            } else if (@$request->payment_method == Constants::PAYMOB) {
+                // Paymob flow
+                $paymob = app(PaymobService::class);
+                $amount_value = $member_data['amount'] ?? $subscription->price;
+                $amount_cents = (int) round($amount_value * 100);
+
+                $paymentInvoice = PaymentOnlineInvoice::create([
+                    'payment_id' => uniqid('paymob_'),
+                    'transaction_id' => null,
+                    'member_id' => @$this->current_user->id,
+                    'status' => @Constants::PEND,
+                    'subscription_id' => @$member_data['subscription_id'],
+                    'name' => $member_data['name'],
+                    'email' => $member_data['email'],
+                    'phone' => $member_data['phone'],
+                    'dob' => $member_data['dob'],
+                    'address' => $member_data['address'] ?? null,
+                    'gender' => $member_data['gender'] ?? null,
+                    'amount' => $member_data['amount'],
+                    'vat' => $member_data['vat'],
+                    'vat_percentage' => $member_data['vat_percentage'],
+                    'payment_method' => $member_data['payment_method'],
+                ]);
+
+                $order = $paymob->createOrder($amount_cents);
+                if (empty($order) || empty($order['id'])) {
+                    \Session::flash('error', trans('front.error_in_data'));
+                    return redirect()->back();
+                }
+
+                $paymentKey = $paymob->requestPaymentKey((int) $order['id'], $amount_cents, [
+                    'email' => $member_data['email'] ?? '',
+                    'first_name' => $member_data['name'] ?? '',
+                    'last_name' => '',
+                    'phone_number' => $member_data['phone'] ?? '',
+                ]);
+
+                if (empty($paymentKey) || empty($paymentKey['token'])) {
+                    \Session::flash('error', trans('front.error_in_data'));
+                    return redirect()->back();
+                }
+
+                $iframe = $paymob->iframeUrl($paymentKey['token']);
+
+                $paymentInvoice->payment_id = $paymentKey['token'] ?? $paymentInvoice->payment_id;
+                $paymentInvoice->transaction_id = $order['id'] ?? null;
+                $paymentInvoice->response_code = ['order' => $order, 'payment_key' => $paymentKey];
+                $paymentInvoice->save();
+
+                $payment_url = $iframe ?? route('invoice-payment', ['id' => $subscription->id]);
             }
+            // debug log payment method & resolved URL
+            Log::debug('InvoiceSubmit payment_method', ['payment_method' => @$request->payment_method, 'payment_url' => $payment_url]);
+
+            if (empty($payment_url)){
+                \Session::flash('error', trans('front.error_in_data'));
+                return redirect()->back();
+            }
+
             return redirect($payment_url);
         }
         \Session::flash('error', trans('front.error_in_data'));

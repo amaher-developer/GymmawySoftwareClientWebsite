@@ -5,7 +5,7 @@ namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
 use App\Http\Classes\Constants;
 use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
 
-use App\Modules\Sixtyminutes\app\Http\Classes\TabbyService;
+// Remove old TabbyService import - now using new payment architecture
 use Modules\Sixtyminutes\Requests\SubscriptionRequest;
 use App\Modules\Sixtyminutes\app\Models\Member;
 
@@ -106,19 +106,6 @@ class SubscriptionPaymentFrontController extends GenericFrontController
     }
     public function invoiceSubmit(SubscriptionRequest $request)
     {
-        $payment = new SubscriptionFrontController();
-        $payment_data = [
-            "amount_cents" => "4000",
-            "currency" => "EGP",
-            "shipping_data" => [
-                "first_name" => "Test",
-                "last_name"=> "Account",
-                "phone_number"=> "0101010101010",
-                "email"=> "test@account.com"
-            ]
-        ];
-        $payment_url = $payment->paymentProcess($payment_data);
-        dd($payment_url);
         // :this process before payment
         // check on member info.
         // check on member ships
@@ -127,6 +114,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         $member_data = [];
         $subscription_id = $request->subscription_id;
         $subscription = Subscription::where('id', $subscription_id)->first();
+
         if($subscription) {
             if (!$this->current_user) {
                 $member = Member::where('phone', @$request->phone)->first();
@@ -141,7 +129,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
                 $member_data['address'] = @$request->address;
                 $member_data['dob'] = @Carbon::parse($request->dob);
                 $member_data['gender'] = @$request->gender;
-            }else{
+            } else {
                 $member_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->orderBy('id', 'desc')->first();
                 if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
                     \Session::flash('error', trans('front.error_member_subscription_active'));
@@ -160,25 +148,25 @@ class SubscriptionPaymentFrontController extends GenericFrontController
             $member_data['payment_method'] = @$request->payment_method;
             $member_data['amount'] = @$request->amount;
             $member_data['vat_percentage'] = @$request->vat_percentage;
-            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
+            $member_data['vat'] = (@$request->vat_percentage / 100) * @$request->amount;
+
+            // Use SubscriptionFrontController methods for payment processing
+            $subscriptionController = new SubscriptionFrontController();
 
             if(@$request->payment_method == Constants::MADA){
                 // paytabs
-                $payment = new SubscriptionFrontController();
-                $payment_data = [
-                    "amount_cents" => "4000",
-                    "currency" => "EGP",
-                    "shipping_data" => [
-                                        "first_name" => "Test",
-                                        "last_name"=> "Account",
-                                        "phone_number"=> "0101010101010",
-                                        "email"=> "test@account.com"
-                                    ]
-                    ];
-                $payment_url = $payment->paymentProcess($payment_data);
+                $payment_url = $subscriptionController->paytabs_payment($subscription->toArray(), $member_data);
+            } else if(@$request->payment_method == Constants::TABBY){
+                // tabby
+                $payment_url = $subscriptionController->tabby_payment($subscription->toArray(), $member_data);
+            } else {
+                \Session::flash('error', trans('front.error_in_data'));
+                return redirect()->back();
             }
+
             return redirect($payment_url);
         }
+
         \Session::flash('error', trans('front.error_in_data'));
         return redirect()->back();
     }
