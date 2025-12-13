@@ -35,10 +35,11 @@ class GenericFrontController extends GenericController
             $this->lang = 'ar';
             if (request()->hasSession()) {
                 request()->session()->put('lang', 'ar');
-                app()->setLocale('ar');
+                app()->setLocale(request()->session()->get('lang'));
             } else {
                 app()->setLocale('ar');
             }
+            $this->clearWebsiteCache();
         } else {
             $this->lang = request()->segment(1);
             if (request()->hasSession()) {
@@ -47,6 +48,8 @@ class GenericFrontController extends GenericController
             } else {
                 app()->setLocale($this->lang);
             }
+            
+            $this->clearWebsiteCache();
         }
         $this->limit = 10;
 
@@ -57,9 +60,12 @@ class GenericFrontController extends GenericController
             Cache::store('file')->put('mainSettings',$this->mainSettings, 600 );
         }
 
+        // Set the language on the mainSettings object for proper localization
+        $this->mainSettings->lang = $this->lang;
 
         View::share('mainSettings', $this->mainSettings);
         View::share('lang', $this->lang);
+        View::share('template_version', env('TEMPLATE_NUM', ''));
 
 //        $this->user = @Auth::user();
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;

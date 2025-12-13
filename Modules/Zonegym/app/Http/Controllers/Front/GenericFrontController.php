@@ -33,11 +33,23 @@ class GenericFrontController extends GenericController
 
         if (request()->segment(1) != 'ar' && request()->segment(1) != 'en') {
             $this->lang = 'ar';
-            session()->put('lang', 'ar');
-            app()->setLocale(session()->get('lang'));
+            if (request()->hasSession()) {
+                request()->session()->put('lang', 'ar');
+                app()->setLocale(request()->session()->get('lang'));
+            } else {
+                app()->setLocale('ar');
+            }
+            $this->clearWebsiteCache();
         } else {
-            session()->put('lang', request()->segment(1));
             $this->lang = request()->segment(1);
+            if (request()->hasSession()) {
+                request()->session()->put('lang', $this->lang);
+                app()->setLocale($this->lang);
+            } else {
+                app()->setLocale($this->lang);
+            }
+            
+            $this->clearWebsiteCache();
         }
         $this->limit = 10;
 
@@ -48,12 +60,15 @@ class GenericFrontController extends GenericController
             Cache::store('file')->put('mainSettings',$this->mainSettings, 600 );
         }
 
+        // Set the language on the mainSettings object for proper localization
+        $this->mainSettings->lang = $this->lang;
 
         View::share('mainSettings', $this->mainSettings);
         View::share('lang', $this->lang);
+        View::share('template_version', env('TEMPLATE_NUM', ''));
 
 //        $this->user = @Auth::user();
-        $this->current_user = session()->get('user');
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);
     }
 
