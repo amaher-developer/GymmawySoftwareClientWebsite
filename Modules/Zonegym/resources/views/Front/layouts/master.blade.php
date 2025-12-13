@@ -15,13 +15,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('Modules/Zonegym/resources/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('Modules/Zonegym/resources/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -120,7 +120,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Zonegym/resources/assets/logo.png')}}" style="width: 135px; height:80px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}" style="width: 135px; height:80px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
