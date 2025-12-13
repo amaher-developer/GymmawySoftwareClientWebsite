@@ -17,13 +17,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}">
+    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -45,33 +45,33 @@
     @endphp
     <!--====== Favicon Icon ======-->
     <!-- Favicon -->
-    <link href="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" rel="icon" type="image/png">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}" rel="icon" type="image/png">
     <!--====== Bootstrap css ======-->
     @if($lang == 'ar')
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/bootstrap.rtl.min.css')}}" rel="stylesheet">
     @else
-        <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/bootstrap.min.css" rel="stylesheet">
+        <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
     @endif
         <!--====== Mmenu css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/mmenu.css" rel="stylesheet">
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/mmenu.all.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/mmenu.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/mmenu.all.css')}}" rel="stylesheet">
     <!--====== icon css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/line-awesome.min.css" rel="stylesheet">
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/flaticon.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/line-awesome.min.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/flaticon.css')}}" rel="stylesheet">
     <!--====== Animate  css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/animate.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/animate.min.css')}}" rel="stylesheet">
     <!--====== Owl carousel css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/owl.carousel.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/owl.theme.default.min.css">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/owl.carousel.min.css')}}" rel="stylesheet">
+    <link rel="stylesheet" href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/owl.theme.default.min.css')}}">
     <!--====== Odometer Min  css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/odometer.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/odometer.min.css')}}" rel="stylesheet">
     <!--====== Swiper css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/swiper-bundle.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/swiper-bundle.min.css')}}" rel="stylesheet">
     <!--====== nice-select css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/css/nice-select.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/nice-select.css')}}" rel="stylesheet">
     <!--====== Style css ======-->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/scss/style.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/scss/style.css')}}" rel="stylesheet">
 
     @yield('style')
     <style>
@@ -87,7 +87,7 @@
 <div class="proloader">
     <div class="loader_34">
         <!-- Preloader Elements -->
-        <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/img/preloader.gif" alt="Image">
+        <img src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/preloader.gif')}}" alt="Image">
     </div>
 </div>
 <!-- Preloader end -->
@@ -141,8 +141,8 @@
                     <div class="col-lg-2 col-md-3 col-8">
                         <div class="logo v2">
                             <a href="{{asset('/')}}">
-                                <img class="logo-dark" src="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" alt="Image">
-                                <img class="logo-light" src="{{asset('Modules/Redbone/resources/assets/img/logo.png')}}" alt="Image">
+                                <img class="logo-dark" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}" alt="Image">
+                                <img class="logo-light" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/img/logo.png')}}" alt="Image">
                             </a>
                         </div>
                     </div>
@@ -291,32 +291,32 @@
 <a href="#" class="back-to-top bounce"><i class="las la-arrow-up"></i></a>
 <!-- Back-to-top button end -->
 <!--====== jquery js ======-->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/jquery.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.min.js')}}"></script>
 <!--====== Bootstrap js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/bootstrap.bundle.min.js"></script>
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/bootstrap-validator.min.js"></script>
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/form-validation.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/bootstrap.bundle.min.js')}}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/bootstrap-validator.min.js')}}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/form-validation.js')}}"></script>
 <!--====== Jquery mmenu js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/mmenu.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/mmenu.js')}}"></script>
 <!--====== Owl carousel js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/owl.carousel.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/owl.carousel.min.js')}}"></script>
 <!--====== Swiper js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/swiper-bundle.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/swiper-bundle.min.js')}}"></script>
 <!--====== Mixitup js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/mixitup.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/mixitup.min.js')}}"></script>
 <!--====== Fslightbox js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/fslightbox.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/fslightbox.js')}}"></script>
 <!--====== Odometer Min js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/jquery.appear.js"></script>
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/odometer.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.appear.js')}}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/odometer.min.js')}}"></script>
 <!--======Comparison to js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/comparison-slider.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/comparison-slider.js')}}"></script>
 <!--====== Nice-selcet js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/jquery.nice-select.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.nice-select.min.js')}}"></script>
 <!--====== Main js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/main.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/main.js')}}"></script>
 <!--====== Tweenmax js ======-->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/')}}/assets/js/tweenmax.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/tweenmax.min.js')}}"></script>
 @yield('script')
 <script>
     $('#languageSwitcher').on('change', function () {
