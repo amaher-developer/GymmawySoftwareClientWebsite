@@ -25,3 +25,20 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .claude/settings.local.json
+
+# Documentation (generated during development)
+PAYMOB_*.md
+VERIFICATION_*.md
+PAYMENT_*.md
+SSL_*.md
+TABBY_*.md
+MODULE_*.md
+paymob_get_real_credentials.md
+
+# Windows reserved filenames
+nul
+con
+prn
+aux
+com[1-9]
+lpt[1-9]
