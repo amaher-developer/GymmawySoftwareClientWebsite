@@ -17,13 +17,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -42,17 +42,28 @@
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
-    <link href="{{asset('Modules/Cakorinas/resources/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('Modules/Cakorinas/resources/assets/images/favicon.ico')}}" rel="icon" type="image/png">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/favicon.ico')}}" rel="icon" type="image/png">
 
     <!-- Bootstrap Core CSS -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
+
+    <!-- Slider CSS -->
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/pogo-slider.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/slick-theme.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/animations.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/featherlight.gallery.min.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/featherlight.min.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/portfolio.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/font-awesome.min.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/slick.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/animated-text.css')}}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{asset('Modules/Cakorinas/resources/assets/css/style.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/style.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/css/responsive.css" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/css/responsive.css')}}" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -114,7 +125,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav" style="padding-top:0px!important;padding-bottom:0px !important;">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="#page-top" class="js-scroll-trigger"><img src="{{asset('Modules/Cakorinas/resources/assets/images/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
+                            <a href="#page-top" class="js-scroll-trigger"><img src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -254,31 +265,29 @@
 </section>
 
 <!-- jQuery -->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.min.js')}}"></script>
 
 <!-- Bootstrap Core JavaScript -->
-<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/bootstrap.bundle.min.js"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/bootstrap.bundle.min.js')}}"></script>
 
 <!-- All Included JavaScript -->
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.easing.min.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jquery.pogo-slider.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/animated-text.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/slick.min.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jarallax.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/css3-animate-it.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/counter.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/jarallax.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/css3-animate-it.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/featherlight.min.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/featherlight.gallery.min.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/bootstrap-portfilter.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/particles.js"></script>
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/particles-app.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.easing.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jquery.pogo-slider.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/animated-text.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/slick.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/jarallax.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/css3-animate-it.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/counter.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/featherlight.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/featherlight.gallery.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/bootstrap-portfilter.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/particles.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/particles-app.js')}}"></script>
 
 <!-- Google map -->
 
 <!-- Custom Js -->
-<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/')}}/js/main.js"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/js/main.js')}}"></script>
 
 @yield('script')
 

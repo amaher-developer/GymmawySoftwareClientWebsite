@@ -42,6 +42,9 @@
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
+     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '1') . '/assets/images/favicon.ico')}}" rel="icon" type="image/png">
+
     <link href="{{asset('Modules/Almadagym/resources/assets/images/favicon.ico')}}" rel="shortcut icon" type="image/png">
     <link href="{{asset('Modules/Almadagym/resources/assets/images/favicon.ico')}}" rel="icon" type="image/png">
 
