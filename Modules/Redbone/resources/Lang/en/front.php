@@ -18,7 +18,7 @@ return [
     'period' => 'Training period',
     'session_num' => 'Sessions',
     'day' => 'day',
-    'pound_unit' => 'S.R',
+    'pound_unit' => 'E.P',
     'name' => 'Name',
     'email' => 'Email',
     'address' => 'Address',
