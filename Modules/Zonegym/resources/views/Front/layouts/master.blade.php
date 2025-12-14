@@ -248,6 +248,21 @@
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jquery.pogo-slider.js')}}"></script>
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/animated-text.js')}}"></script>
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/slick.min.js')}}"></script>
+
+<!-- Pogo Slider Initialization -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#pogo-slider').pogoSlider({
+            autoplay: true,
+            autoplayTimeout: 5000,
+            displayProgess: true,
+            preserveTargetSize: true,
+            targetWidth: 1000,
+            targetHeight: 450,
+            responsive: true
+        }).data('plugin_pogoSlider');
+    });
+</script>
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jarallax.js')}}"></script>
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/css3-animate-it.js')}}"></script>
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/counter.js')}}"></script>
