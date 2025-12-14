@@ -1,8 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+@php 
+    $template_version = env('TEMPLATE_NUM', '1');
+    @endphp
 <head>
-    @php($template_version = $template_version ?? env('TEMPLATE_NUM', '1'))
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,13 +16,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{$mainSettings['name']}}">
     <meta property="og:description" content="{{$mainSettings['meta_description']}}">
-    <meta property="og:image" content="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}">
+    <meta property="og:image" content="{{asset('Modules/Zonegym/resources/assets/img/logo.png')}}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{$mainSettings['name']}}">
     <meta name="twitter:description" content="{{$mainSettings['meta_description']}}">
-    <meta name="twitter:image" content="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}">
+    <meta name="twitter:image" content="{{asset('Modules/Zonegym/resources/assets/img/logo.png')}}">
 
     <meta name="robots" content="index, follow"/>
     <meta name="Googlebot" content="index, follow"/>
@@ -40,21 +41,17 @@
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
-    <link href="{{asset('favicon.png')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('favicon.png')}}" rel="icon" type="image/png">
+    <link href="{{asset('Modules\Zonegym\resources\assets\img\favicon.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('Modules\Zonegym\resources\assets\img\favicon.png')}}" rel="icon" type="image/png">
 
     <!-- Bootstrap Core CSS -->
-    <link href="{{asset('resources/' . $template_version . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{asset('resources/' . $template_version . '/assets/css/style.css')}}" rel="stylesheet">
+    <link href="{{asset('Modules/Zonegym/resources/assets/css/style.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
-    <link href="{{asset('resources/' . $template_version . '/assets/css/responsive.css')}}" rel="stylesheet">
-
-    @if(!empty($zonegymInlineCss))
-        <style>{!! $zonegymInlineCss !!}</style>
-    @endif
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/responsive.css')}}" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -65,9 +62,9 @@
 
     <style>
         /*  Fonts --------------------------------*/
-        @import url({{asset('resources/' . $template_version . '/assets/fonts/Droid.Arabic.Kufi_DownloadSoftware.iR_.ttf')}});
+        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
         /* font-family:'Droid Arabic Kufi',  Tahoma, Geneva, sans-serif; */
-        @import url({{asset('resources/' . $template_version . '/assets/fonts/Droid.Arabic.Kufi_DownloadSoftware.iR_.ttf')}});
+        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
         /* font-family:Arial, Geneva, sans-serif; */
         p, h2 {
             font-family: droid arabic kufi, 'Source Sans Pro', sans-serif;
@@ -96,9 +93,6 @@
                 display: none;
             }
         }
-        .main-slider-sec {
-    margin-top: 60px;
-}
 
     </style>
 
@@ -120,7 +114,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('resources/' . $template_version . '/assets/images/logo.png')}}" style="width: 135px; height:80px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Zonegym/resources/assets/img/logo.png')}}" style="width: 135px; height:41px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -137,7 +131,7 @@
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
                                 </li>
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">Ã˜Â§Ã™â€žÃ˜Â¯Ã™Ë†Ã˜Â±Ã˜Â§Ã˜Âª</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">الدورات</a>-->
                                 <!--                                </li>-->
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#activities">{{trans('front.activities')}}</a>
@@ -149,7 +143,7 @@
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#subscriptions">{{trans('front.subscriptions')}}</a>
                                 </li>
                                 <!--                                <li class="nav-item">-->
-                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">Ã™â€¦Ã˜Â¯Ã™Ë†Ã™â€ Ã˜Â© Ã˜Â§Ã™Ë† Ã™â€¦Ã˜Â°Ã™Æ’Ã˜Â±Ã˜Â©</a>-->
+                                <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
                                 <!--                                </li>-->
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#contact">{{trans('front.contact_us')}}</a>
@@ -205,7 +199,7 @@
             </div>
             <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="footer-Tag-col col-default-mb30">
-                    <!--                    <h4>Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€žÃ˜Â§Ã™â€¦Ã˜Â§Ã˜Âª</h4>-->
+                    <!--                    <h4>العلامات</h4>-->
                     <div class="tag-group clearfix">
                         <a class="tag-btn " href="{{route('home')}}#page-top">{{trans('front.home')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#about">{{trans('front.about')}}</a>
@@ -244,40 +238,35 @@
 </section>
 
 <!-- jQuery -->
-<script src="{{asset('resources/' . $template_version . '/assets/js/jquery.min.js')}}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jquery.min.js')}}"></script>
 
 <!-- Bootstrap Core JavaScript -->
-<script src="{{asset('resources/' . $template_version . '/assets/js/bootstrap.bundle.min.js')}}"></script>
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/bootstrap.bundle.min.js')}}"></script>
 
 <!-- All Included JavaScript -->
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/jquery.easing.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/jquery.pogo-slider.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/animated-text.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/slick.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/jarallax.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/css3-animate-it.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/counter.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/jarallax.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/css3-animate-it.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/featherlight.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/featherlight.gallery.min.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/bootstrap-portfilter.js')}}"></script>
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/particles.js')}}"></script>
-@if(!empty($zonegymInlineParticlesJs))
-    <script>{!! $zonegymInlineParticlesJs !!}</script>
-@else
-    <script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/particles-app.js')}}"></script>
-@endif
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jquery.easing.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jquery.pogo-slider.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/animated-text.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/slick.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jarallax.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/css3-animate-it.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/counter.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/jarallax.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/css3-animate-it.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/featherlight.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/featherlight.gallery.min.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/bootstrap-portfilter.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/particles.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/particles-app.js')}}"></script>
 
 <!-- Google map -->
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/google-map.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/google-map.js')}}"></script>
 <script type="text/javascript"
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDdEPAHqgxFK5pioDAB3rsvKchAtXxRGO4&callback=myMap"></script>
 
 <!-- Custom Js -->
-<script type="text/javascript" src="{{asset('resources/' . $template_version . '/assets/js/main.js')}}"></script>
+<script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/main.js')}}"></script>
 @yield('script')
 
 </body>
 </html>
-

@@ -1,7 +1,9 @@
 <?php
+
 namespace Modules\Zonegym\Providers;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
@@ -26,28 +28,6 @@ class ZonegymServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
-
-        $this->app['view']->composer('zonegym::Front.layouts.master', function ($view) {
-            $styleOverrides = [
-                module_path('Zonegym', 'resources/assets/css/color-overrides.css'),
-                module_path('Zonegym', 'resources/assets/css/color-overrides-responsive.css'),
-            ];
-
-            $inlineCss = collect($styleOverrides)
-                ->filter(fn ($path) => file_exists($path))
-                ->map(fn ($path) => file_get_contents($path))
-                ->implode("\n");
-
-            $view->with('zonegymInlineCss', $inlineCss);
-        });
-
-        $this->app['view']->composer('zonegym::Front.layouts.master', function ($view) {
-            $particlesPath = module_path('Zonegym', 'resources/assets/js/particles-app.js');
-
-            $inlineJs = file_exists($particlesPath) ? file_get_contents($particlesPath) : null;
-
-            $view->with('zonegymInlineParticlesJs', $inlineJs);
-        });
     }
 
     /**
@@ -80,17 +60,46 @@ class ZonegymServiceProvider extends ServiceProvider
 
     /**
      * Register translations.
+     * Module translations will override global translations when using trans('front.xxx')
+     * by manipulating the translation loader to check module path first
      */
     public function registerTranslations(): void
     {
         $langPath = resource_path('lang/modules/'.$this->nameLower);
+        $moduleLangPath = module_path($this->name, 'resources/Lang');
 
+        // Override the translation loader to check module path first
+        // This is done in booted() to ensure it runs after all providers are loaded
+        $this->app->booted(function () use ($moduleLangPath, $langPath) {
+            $loader = $this->app->make('translation.loader');
+            
+            // Use reflection to access the protected 'paths' property
+            $reflection = new \ReflectionClass($loader);
+            $pathsProperty = $reflection->getProperty('paths');
+            $pathsProperty->setAccessible(true);
+            $paths = $pathsProperty->getValue($loader);
+            
+            // Prepend module paths to the beginning of paths array
+            // This ensures module translations are checked BEFORE global translations
+            if (is_dir($moduleLangPath)) {
+                // Remove if already exists to avoid duplicates
+                $paths = array_filter($paths, fn($p) => $p !== $moduleLangPath);
+                array_unshift($paths, $moduleLangPath);
+            }
+            if (is_dir($langPath)) {
+                $paths = array_filter($paths, fn($p) => $p !== $langPath);
+                array_unshift($paths, $langPath);
+            }
+            
+            $pathsProperty->setValue($loader, array_values($paths));
+        });
+
+        // Also load JSON translations
+        if (is_dir($moduleLangPath)) {
+            $this->loadJsonTranslationsFrom($moduleLangPath);
+        }
         if (is_dir($langPath)) {
-            $this->loadTranslationsFrom($langPath, $this->nameLower);
             $this->loadJsonTranslationsFrom($langPath);
-        } else {
-            $this->loadTranslationsFrom(module_path($this->name, 'lang'), $this->nameLower);
-            $this->loadJsonTranslationsFrom(module_path($this->name, 'lang'));
         }
     }
 
