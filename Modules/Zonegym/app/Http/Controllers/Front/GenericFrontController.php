@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Zonegym\Http\Controllers\Front;
+namespace App\Modules\Zonegym\app\Http\Controllers\Front;
 
 use App\Http\Requests;
-use Modules\Zonegym\Http\Controllers\GenericController;
-use Modules\Zonegym\Models\Setting;
+use App\Modules\Zonegym\app\Http\Controllers\GenericController;
+use App\Modules\Zonegym\app\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 
