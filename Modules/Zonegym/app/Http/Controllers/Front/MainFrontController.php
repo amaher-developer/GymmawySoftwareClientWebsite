@@ -5,14 +5,14 @@ namespace App\Modules\Zonegym\app\Http\Controllers\Front;
 use App\Modules\Access\Models\User;
 
 use App\Modules\Zonegym\app\Http\Requests\ContactRequest;
-use App\Modules\Zonegym\app\Models\Activity;
-use App\Modules\Zonegym\app\Models\Banner;
-use App\Modules\Zonegym\app\Models\PTClass;
-use App\Modules\Zonegym\app\Models\PTSubscription;
-use App\Modules\Zonegym\app\Models\Setting;
+use Modules\Zonegym\Models\Activity;
+use Modules\Zonegym\Models\Banner;
+use Modules\Zonegym\Models\PTClass;
+use Modules\Zonegym\Models\PTSubscription;
+use Modules\Zonegym\Models\Setting;
 
-use App\Modules\Zonegym\app\Models\Store;
-use App\Modules\Zonegym\app\Models\Subscription;
+use Modules\Zonegym\Models\Store;
+use Modules\Zonegym\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
