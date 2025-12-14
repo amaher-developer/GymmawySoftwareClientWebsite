@@ -3,7 +3,7 @@
 namespace App\Modules\Zonegym\app\Http\Controllers\Front;
 
 use App\Http\Requests;
-use App\Modules\Zonegym\app\Http\Controllers\GenericController;
+use Modules\Zonegym\Http\Controllers\GenericController;
 use App\Modules\Zonegym\app\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
