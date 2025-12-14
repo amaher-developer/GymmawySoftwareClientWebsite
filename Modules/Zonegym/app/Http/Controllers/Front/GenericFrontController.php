@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Zonegym\app\Http\Controllers\Front;
+namespace Modules\Zonegym\Http\Controllers\Front;
 
 use App\Http\Requests;
 use Modules\Zonegym\Http\Controllers\GenericController;
