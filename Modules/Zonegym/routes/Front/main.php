@@ -34,9 +34,9 @@
 // });
 
 
-use Modules\Zonegym\Http\Controllers\Front\AuthFrontController;
-use Modules\Zonegym\Http\Controllers\Front\MainFrontController;
-use Modules\Zonegym\Http\Controllers\Front\SubscriptionFrontController;
+use App\Modules\Zonegym\app\Http\Controllers\Front\AuthFrontController;
+use App\Modules\Zonegym\app\Http\Controllers\Front\MainFrontController;
+use App\Modules\Zonegym\app\Http\Controllers\Front\SubscriptionFrontController;
 
 Route::name('home')->get('/', [MainFrontController::class, 'index']);
 
