@@ -7,7 +7,6 @@ use App\Modules\Access\Models\User;
 use App\Modules\Zonegym\app\Http\Requests\ContactRequest;
 use Modules\Zonegym\Models\Activity;
 use Modules\Zonegym\Models\Banner;
-use Modules\Zonegym\Models\PTClass;
 use Modules\Zonegym\Models\PTSubscription;
 use Modules\Zonegym\Models\Setting;
 
@@ -44,7 +43,7 @@ class MainFrontController extends GenericFrontController
         $images = (array)$record['images'];
         $subscriptions = Subscription::where('is_web', true)->limit(12)->get();
         $activities = Activity::where('is_web', true)->get();
-        $pt_classes = PTClass::where('is_web', true)->limit(12)->get();
+        $pt_classes = collect(); // PTClass model doesn't exist, using empty collection
         $stores = Store::where('is_web', true)->get();
         return view('zonegym::Front.layouts.home', compact('title', 'record', 'schedule_banner', 'lang', 'banners', 'images', 'subscriptions', 'activities', 'stores', 'pt_classes'));
     }
