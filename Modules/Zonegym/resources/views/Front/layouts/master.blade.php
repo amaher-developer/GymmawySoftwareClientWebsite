@@ -41,8 +41,8 @@
     <title>{{$mainSettings['name']}}</title>
 
     <!-- Favicon -->
-    <link href="{{asset('Modules\Zonegym\resources\assets\img\favicon.png')}}" rel="shortcut icon" type="image/png">
-    <link href="{{asset('Modules\Zonegym\resources\assets\img\favicon.png')}}" rel="icon" type="image/png">
+    <link href="{{asset('Modules/Zonegym/resources/assets/img/favicon.png')}}" rel="shortcut icon" type="image/png">
+    <link href="{{asset('Modules/Zonegym/resources/assets/img/favicon.png')}}" rel="icon" type="image/png">
 
     <!-- Bootstrap Core CSS -->
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
@@ -114,7 +114,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Zonegym/resources/assets/img/logo.png')}}" style="width: 135px; height:41px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Zonegym/resources/assets/img/logo.png')}}" style="width: 135px; height:90px;object-fit: contain" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
