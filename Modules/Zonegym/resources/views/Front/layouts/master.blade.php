@@ -160,10 +160,10 @@
                         <!-- /.navbar-collapse -->
                     </div>
                     <!-- /.container -->
-                    <div class="time-top-box">
+                    <div class="time-top-box" style="padding-top: 10px;">
                         <a href="mailto:{{$mainSettings['support_email']}}"> <p class="one-line"><i class="fa fa-envelope-o" aria-hidden="true"></i>{{$mainSettings['support_email']}}</p></a>
                     </div>
-                    <div class="call-top-box">
+                    <div class="call-top-box" style="padding-top: 10px;">
                         <a href="callto:{{$mainSettings['phone']}}"> <p class="one-line"><i class="fa fa-phone" aria-hidden="true"></i>{{$mainSettings['phone']}}</p></a>
                     </div>
                 </nav>

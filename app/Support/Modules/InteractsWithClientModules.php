@@ -28,7 +28,6 @@ trait InteractsWithClientModules
         } else {
             $modules = (array) config('client-modules.active_modules', []);
         }
-
         return collect($modules)
             ->map(fn ($module) => Str::studly((string) $module))
             ->filter()
