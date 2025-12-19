@@ -39,7 +39,6 @@
 
 
     <title>{{$mainSettings['name']}}</title>
-
     <!-- Favicon -->
     <link href="{{asset('Modules\Cakorinas\resources\assets\img\favicon.ico')}}" rel="shortcut icon" type="image/png">
     <link href="{{asset('Modules\Cakorinas\resources\assets\img\favicon.ico')}}" rel="icon" type="image/png">
