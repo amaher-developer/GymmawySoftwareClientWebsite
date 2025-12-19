@@ -61,9 +61,9 @@
 
     <style>
         /*  Fonts --------------------------------*/
-        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
+        @import url({{asset('resources/fonts/DroidKufi-Regular.ttf')}});
         /* font-family:'Droid Arabic Kufi',  Tahoma, Geneva, sans-serif; */
-        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
+        @import url({{asset('resources/fonts/DroidKufi-Regular.ttf')}});
         /* font-family:Arial, Geneva, sans-serif; */
         p, h2 {
             font-family: droid arabic kufi, 'Source Sans Pro', sans-serif;
