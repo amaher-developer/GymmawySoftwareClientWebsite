@@ -39,7 +39,6 @@
 
 
     <title>{{$mainSettings['name']}}</title>
-
     <!-- Favicon -->
     <link href="{{asset('Modules\Stepfitness\resources\assets\img\favicon.png')}}" rel="shortcut icon" type="image/png">
     <link href="{{asset('Modules\Stepfitness\resources\assets\img\favicon.png')}}" rel="icon" type="image/png">
@@ -48,7 +47,7 @@
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{asset('Modules/Stepfitness/resources/assets/css/style.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/style_stepfitness.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/responsive.css')}}" rel="stylesheet">
@@ -62,9 +61,9 @@
 
     <style>
         /*  Fonts --------------------------------*/
-        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
+        @import url({{asset('resources/fonts/DroidKufi-Regular.ttf')}});
         /* font-family:'Droid Arabic Kufi',  Tahoma, Geneva, sans-serif; */
-        @import url({{asset('resources\fonts\DroidKufi-Regular.ttf')}});
+        @import url({{asset('resources/fonts/DroidKufi-Regular.ttf')}});
         /* font-family:Arial, Geneva, sans-serif; */
         p, h2 {
             font-family: droid arabic kufi, 'Source Sans Pro', sans-serif;
@@ -114,7 +113,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}" style="width: 135px; height:41px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}" style="width: 135px; height:51px;object-fit: cover" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
