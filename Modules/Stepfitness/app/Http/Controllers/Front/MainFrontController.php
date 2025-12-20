@@ -40,10 +40,10 @@ class MainFrontController extends GenericFrontController
         $lang = $this->lang;
         $cover_images = @(array)$record['cover_images'];
         $images = (array)$record['images'];
-        $subscriptions = Subscription::where('is_web', true)->get();
-        $activities = Activity::where('is_web', true)->get();
-//        $pt_subscriptions = PTSubscription::where('is_web', true)->get();
-        $stores = Store::where('is_web', true)->get();
+        $subscriptions = Subscription::where('is_web', true)->orderBy('id', 'desc')->get();
+        $activities = Activity::where('is_web', true)->orderBy('id', 'desc')->get();
+        //$pt_classes = PTClass::where('is_web', true)->orderBy('id', 'desc')->get();
+        $stores = Store::where('is_web', true)->orderBy('id', 'desc')->get();
         return view('stepfitness::Front.layouts.home', compact('title', 'record', 'lang', 'cover_images', 'images', 'subscriptions', 'activities', 'stores'));
     }
 

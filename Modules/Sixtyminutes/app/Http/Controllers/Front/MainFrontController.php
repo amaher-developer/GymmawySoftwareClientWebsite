@@ -42,10 +42,10 @@ class MainFrontController extends GenericFrontController
         $banners = Banner::where("title", "!=", "schedule_banner")->where('is_web', true)->limit(5)->get()->pluck('image');
         $schedule_banner = Banner::where('is_web', true)->where('title', 'schedule_banner')->first();
         $images = (array)$record['images'];
-        $subscriptions = Subscription::where('is_web', true)->limit(12)->get();
-        $activities = Activity::where('is_web', true)->get();
-        $pt_classes = PTClass::where('is_web', true)->limit(12)->get();
-        $stores = Store::where('is_web', true)->get();
+        $subscriptions = Subscription::where('is_web', true)->orderBy('id', 'desc')->get();
+        $activities = Activity::where('is_web', true)->orderBy('id', 'desc')->get();
+        $pt_classes = PTClass::where('is_web', true)->orderBy('id', 'desc')->get();
+        $stores = Store::where('is_web', true)->orderBy('id', 'desc')->get();
         return view('sixtyminutes::Front.layouts.home', compact('title', 'record', 'schedule_banner', 'lang', 'banners', 'images', 'subscriptions', 'activities', 'stores', 'pt_classes'));
     }
     public function banner(){
