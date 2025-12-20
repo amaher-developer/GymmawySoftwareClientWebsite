@@ -181,7 +181,7 @@
             <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="footer-about-col col-default-mb30">
                     <h4>{{trans('front.about')}}</h4>
-                    <p><?php echo strip_tags($mainSettings['about'])?> </p>
+                    <p><?php echo mb_substr(strip_tags($mainSettings['about']), 0, 200) . (mb_strlen(strip_tags($mainSettings['about'])) > 200 ? '...' : ''); ?> </p>
                     <div class="social text-left">
                         <?php if ($mainSettings['facebook']) { ?><a href="<?php echo $mainSettings['facebook'] ?>"><i
                                     class="fa fa-facebook" aria-hidden="true"></i></a><?php } ?>

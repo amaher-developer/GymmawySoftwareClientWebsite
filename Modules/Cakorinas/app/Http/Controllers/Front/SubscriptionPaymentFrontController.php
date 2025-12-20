@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use App\Modules\Cakorinas\app\Interfaces\PaymentGatewayInterface;
 use App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController;
+use Illuminate\Support\Facades\View;
+
 class SubscriptionPaymentFrontController extends GenericFrontController
 {
 
@@ -37,6 +39,19 @@ class SubscriptionPaymentFrontController extends GenericFrontController
 
     public function show($id)
     {
+        if (request()->hasSession()) {
+            $sessionUser = request()->session()->get('user');
+            if ($sessionUser) {
+                // Ensure it's an object (in case it was stored as array)
+                $this->current_user = is_array($sessionUser) ? (object) $sessionUser : $sessionUser;
+                View::share('currentUser', $this->current_user);
+            } else {
+                $this->current_user = null;
+            }
+        } else {
+            $this->current_user = null;
+        }
+
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
         $subscriptions = @Subscription::where('is_web', true)->get();
@@ -50,12 +65,15 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         $invoice = $record['invoice'];
         $qr_img_invoice = @$record['invoice']->qr_code;
         $title = trans('front.invoice');
-        if($record['success'] == false)
-            return redirect()->route('home');
+        // if($record['success'] == false)
+        //     return redirect()->route('home');
         return view('cakorinas::Front.invoice', compact('title', 'invoice', 'qr_img_invoice'));
     }
 
     public function getInvoiceDetails($invoice_id, $member_id){
+        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id, 'member_id' => $member_id])->first();
+        return $invoice;
+        /*
         $ch = curl_init();
         $certificate_location = "";
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $certificate_location);
@@ -79,6 +97,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         curl_close($ch);
         $result = json_decode($response);
         return (@$result);
+        */
     }
     public function reservationSubmit(SubscriptionRequest $request)
     {
@@ -116,7 +135,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         $subscription = Subscription::where('id', $subscription_id)->first();
 
         if($subscription) {
-            if (!$this->current_user) {
+            if (!@request()->session()->get('user')) {
                 $member = Member::where('phone', @$request->phone)->first();
                 if (@$member) {
                     \Session::flash('error', trans('front.error_member_exist'));
@@ -130,18 +149,18 @@ class SubscriptionPaymentFrontController extends GenericFrontController
                 $member_data['dob'] = @Carbon::parse($request->dob);
                 $member_data['gender'] = @$request->gender;
             }else{
-                $member_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->orderBy('id', 'desc')->first();
-                if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
-                    \Session::flash('error', trans('front.error_member_subscription_active'));
-                    return redirect()->back();
-                }
+                $member_subscription = MemberSubscription::where('member_id', @request()->session()->get('user')->id)->orderBy('id', 'desc')->first();
+                // if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
+                //     \Session::flash('error', trans('front.error_member_subscription_active'));
+                //     return redirect()->back();
+                // }
 
-                $member_data['name'] = @$this->current_user->name;
-                $member_data['phone'] = @$this->current_user->phone;
-                $member_data['email'] = @$this->current_user->email;
-                $member_data['address'] = @$this->current_user->address;
-                $member_data['dob'] = @$this->current_user->dob;
-                $member_data['gender'] = @$this->current_user->gender;
+                $member_data['name'] = @request()->session()->get('user')->name;
+                $member_data['phone'] = @request()->session()->get('user')->phone;
+                $member_data['email'] = @request()->session()->get('user')->email;
+                $member_data['address'] = @request()->session()->get('user')->address;
+                $member_data['dob'] = @request()->session()->get('user')->dob;
+                $member_data['gender'] = @request()->session()->get('user')->gender;
             }
 
             $member_data['subscription_id'] = @$request->subscription_id;
@@ -149,6 +168,39 @@ class SubscriptionPaymentFrontController extends GenericFrontController
             $member_data['amount'] = @$request->amount;
             $member_data['vat_percentage'] = @$request->vat_percentage;
             $member_data['vat'] = (@$request->vat_percentage / 100) * @$request->amount;
+            $member_data['start_date'] = @$request->start_date ? Carbon::parse($request->start_date) : Carbon::now();
+
+            // Check if the selected start_date conflicts with existing subscriptions
+            if (@request()->session()->get('user')) {
+                $requested_start_date = $member_data['start_date'];
+                $requested_end_date = $requested_start_date->copy()->addDays($subscription->period);
+
+                // Check for overlapping subscriptions
+                $overlapping_subscription = MemberSubscription::where('member_id', @request()->session()->get('user')->id)
+                    ->where('status', Constants::Active)
+                    ->where(function($query) use ($requested_start_date, $requested_end_date) {
+                        // Check if new subscription overlaps with existing ones
+                        $query->where(function($q) use ($requested_start_date, $requested_end_date) {
+                            // New subscription starts during an existing subscription
+                            $q->where('joining_date', '<=', $requested_start_date)
+                              ->where('expire_date', '>=', $requested_start_date);
+                        })->orWhere(function($q) use ($requested_start_date, $requested_end_date) {
+                            // New subscription ends during an existing subscription
+                            $q->where('joining_date', '<=', $requested_end_date)
+                              ->where('expire_date', '>=', $requested_end_date);
+                        })->orWhere(function($q) use ($requested_start_date, $requested_end_date) {
+                            // New subscription completely contains an existing subscription
+                            $q->where('joining_date', '>=', $requested_start_date)
+                              ->where('expire_date', '<=', $requested_end_date);
+                        });
+                    })
+                    ->first();
+
+                if ($overlapping_subscription) {
+                    \Session::flash('error', trans('front.error_subscription_date_overlap'));
+                    return redirect()->back();
+                }
+            }
 
             // Use SubscriptionFrontController methods for payment processing
             $subscriptionController = new SubscriptionFrontController();

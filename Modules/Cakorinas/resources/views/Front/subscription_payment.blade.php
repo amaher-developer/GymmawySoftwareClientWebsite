@@ -144,44 +144,49 @@
                                 </div>
                                 <br/><br>
                             @endif
-                            <h5>{{trans('front.choose_payment_methods')}}:</h5>
 
-                            <!-- MADA/PayTab Payment Option -->
-                            <div class="highlight-text">
-                                <div class="row">
-                                    <div class="col-md-1">
-                                        <input class="form-control radio-input mada" id="mada" type="radio"
-                                               name="payment_method" value="{{\App\Http\Classes\Constants::MADA}}" required>
-                                    </div>
-
-                                    <div class="col-md-11">
-                                        <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>
-                                        <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/visa_logo.svg')}}">
-
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/mada-logo.svg')}}">
-
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/american_express_logo.svg')}}">
-                                        </p>
+                            <h5>{{trans('front.start_date')}}:</h5>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="highlight-text" style="border-color: grey !important;">
+                                        <input type="date" name="start_date" class="form-control"
+                                               placeholder="{{trans('front.start_date')}}"
+                                               min="{{\Carbon\Carbon::now()->toDateString()}}"
+                                               max="{{\Carbon\Carbon::now()->addMonth()->toDateString()}}"
+                                               value="{{\Carbon\Carbon::now()->toDateString()}}"
+                                               required>
                                     </div>
                                 </div>
                             </div>
+                            <br/><br>
+
+                            <h5>{{trans('front.choose_payment_methods')}}:</h5>
 
                             <!-- Paymob Payment Option (Egypt) -->
                             <div class="highlight-text">
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input paymob" id="paymob" type="radio"
-                                               name="payment_method" value="{{\App\Http\Classes\Constants::PAYMOB}}">
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::PAYMOB}}" required checked>
                                     </div>
 
                                     <div class="col-md-11">
-                                        <p><label for="paymob">{{trans('front.paymob_payment_msg') ?? 'الدفع عبر بايموب (Paymob)'}}</label></p>
+                                        <p><label for="paymob" style="font-weight: bold; font-size: 16px; color: #333;">
+                                            {{trans('front.paymob_payment_msg')}}
+                                        </label></p>
+                                        <p style="margin-bottom: 15px;">
+                                            <span style="font-size: 14px; color: #666;">{{trans('front.paymob_description')}}</span>
+                                        </p>
                                         <p>
-                                            <span style="font-size: 14px;">{{trans('front.paymob_description') ?? 'بوابة دفع آمنة ومضمونة - تدعم جميع البطاقات البنكية المصرية'}}</span>
+                                            <img style="width: 140px; height: 50px; padding: 10px; margin-left: 10px; background: white; border: solid 2px #e0e0e0; border-radius: 8px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/paymob.png')}}"
+                                                 alt="Paymob">
+                                            <img style="width: 100px; height: 50px; padding: 10px; margin-left: 10px; background: white; border: solid 2px #e0e0e0; border-radius: 8px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}"
+                                                 alt="Visa">
+                                            <img style="width: 100px; height: 50px; padding: 10px; margin-left: 10px; background: white; border: solid 2px #e0e0e0; border-radius: 8px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/mastercard-logo.svg')}}"
+                                                 alt="Mastercard">
                                         </p>
                                     </div>
                                 </div>

@@ -156,9 +156,18 @@
         .total {
             text-align: right;
         }
+        .information table tr td:nth-child(1) {
+            text-align: right;
+        }
+        .information_tr {
+            text-align: right !important;
+        }
         @else
             .information table tr td:nth-child(1) {
-            text-align: right;
+            text-align: left;
+        }
+        .information_tr {
+            text-align: left !important;
         }
         @endif
 
@@ -181,7 +190,7 @@
                     <table>
                         <tr>
                             <td class="title " >
-                                <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png')}}"style="width: 100%; max-width: 200px;"/>
+                                <img src="{{asset('Modules/Cakorinas/resources/assets/img/logo.png')}}"style="width: 100%; max-width: 200px;"/>
                             </td>
                             <td>
                                 <br/><br/>
@@ -200,7 +209,7 @@
             <tr class="information">
                 <td colspan="2">
                     <table>
-                        <tr>
+                        <tr class="information_tr">
                             <td>
                                 <b>{{trans('front.buyer_name')}}:</b><br />
 {{--                                12345 Sunny Road<br />--}}
@@ -221,7 +230,7 @@
             <tr class="heading">
                 <td>{{trans('front.subscription_contract_details')}}</td>
 
-                <td>{{trans('front.total_price')}}</td>
+                <td>{!!str_replace(' ', '&nbsp;', trans('front.total_price'))!!}</td>
             </tr>
 
             <tr class="item">
@@ -241,15 +250,18 @@
                     <td>
                         <table>
                             <tr class="total" >
-                                <td style="font-size: 18px">{{trans('front.total_price')}} <span class="total_for_price">({{trans('front.excluding_vat')}})</span>:  {{number_format(($invoice->amount_paid + @$invoice->amount_remaining - @$invoice->vat),2)}} {{@trans('front.app_currency')}}</td>
+                                <td style="font-size: 18px">{{trans('front.total_price')}} 
+                                <!-- <span class="total_for_price">({{trans('front.excluding_vat')}})</span> -->
+                                :  {{number_format(($invoice->amount_paid + @$invoice->amount_remaining - @$invoice->vat),2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
+                            @if(@$mainSettings->vat_details['vat_percentage'] > 0)
                             <tr class="total" >
                                 <td style="font-size: 18px">{{trans('front.total_price')}} <span class="total_for_price">({{trans('front.including_vat')}})</span>: {{number_format(($invoice->amount_paid + @$invoice->amount_remaining),2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
-
                             <tr class="total" >
                                 <td style="font-size: 18px">{{trans('front.vat')}} <span class="total_for_price">({{@$mainSettings->vat_details['vat_percentage'].'%'}})</span>: {{@number_format($invoice->vat, 2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
+                            @endif
                         </table>
                     </td>
                     <td>

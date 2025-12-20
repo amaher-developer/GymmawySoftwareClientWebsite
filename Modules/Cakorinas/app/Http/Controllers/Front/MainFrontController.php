@@ -35,7 +35,7 @@ class MainFrontController extends GenericFrontController
 
 
     public function index()
-    {
+    {        
         $record = $this->mainSettings;
         $title = $record['name'];
         $lang = $this->lang;

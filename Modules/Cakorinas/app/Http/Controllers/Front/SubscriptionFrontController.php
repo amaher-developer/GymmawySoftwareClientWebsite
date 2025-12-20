@@ -3,8 +3,7 @@
 namespace App\Modules\Cakorinas\app\Http\Controllers\Front;
 
 use App\Http\Classes\Constants;
-use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
-
+use App\Modules\Cakorinas\app\Http\Controllers\Front\AuthFrontController as FrontAuthFrontController;
 // Use new payment architecture
 use Modules\Common\Factories\PaymentServiceFactory;
 use Modules\Cakorinas\Requests\SubscriptionRequest;
@@ -18,9 +17,15 @@ use App\Modules\Cakorinas\app\Models\ReservationMember;
 use App\Modules\Cakorinas\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 use Nafezly\Payments\Classes\PaytabsPayment;
 class SubscriptionFrontController extends GenericFrontController
 {
+    public function __construct()
+    {
+        return parent::__construct();
+    }
     public function success()
     {
 
@@ -61,16 +66,24 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function invoice($invoice_id)
     {
-        $record = (array)$this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
-        $invoice = $record['invoice'];
-        $qr_img_invoice = @$record['invoice']->qr_code;
+        $member_id = @request()->session()->get('user')->id;
+        $record = $this->getInvoiceDetails((int)$invoice_id, (int)$member_id);
+        $invoice = $record;
+        $qr_img_invoice = null;
         $title = trans('front.invoice');
-        if($record['success'] == false)
+        if($record == null)
             return redirect()->route('home');
+
+        View::share('currentUser', @request()->session()->get('user'));
         return view('cakorinas::Front.invoice', compact('title', 'invoice', 'qr_img_invoice'));
     }
 
     public function getInvoiceDetails($invoice_id, $member_id){
+        
+
+        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id, 'member_id' => $member_id])->first();
+        return $invoice;
+        /*
         $ch = curl_init();
         $certificate_location = "";
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $certificate_location);
@@ -94,6 +107,7 @@ class SubscriptionFrontController extends GenericFrontController
         curl_close($ch);
         $result = json_decode($response);
         return (@$result);
+        */
     }
     public function reservationSubmit(SubscriptionRequest $request)
     {
@@ -130,7 +144,7 @@ class SubscriptionFrontController extends GenericFrontController
         $subscription_id = $request->subscription_id;
         $subscription = Subscription::where('id', $subscription_id)->first();
         if($subscription) {
-            if (!$this->current_user) {
+            if (!@request()->session()->get('user')) {
                 $member = Member::where('phone', @$request->phone)->first();
                 if (@$member) {
                     \Session::flash('error', trans('front.error_member_exist'));
@@ -144,7 +158,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $member_data['dob'] = @Carbon::parse($request->dob);
                 $member_data['gender'] = @$request->gender;
             }else{
-                $member_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->orderBy('id', 'desc')->first();
+                $member_subscription = MemberSubscription::where('member_id', @request()->session()->get('user')->id)->orderBy('id', 'desc')->first();
                 if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
                     \Session::flash('error', trans('front.error_member_subscription_active'));
                     return redirect()->back();
@@ -163,6 +177,7 @@ class SubscriptionFrontController extends GenericFrontController
             $member_data['amount'] = @$request->amount;
             $member_data['vat_percentage'] = @$request->vat_percentage;
             $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
+            $member_data['start_date'] = @$request->start_date ? Carbon::parse($request->start_date) : Carbon::now();
 
             if(@$request->payment_method == Constants::MADA){
                 // paytabs
@@ -170,6 +185,9 @@ class SubscriptionFrontController extends GenericFrontController
             }else if(@$request->payment_method == Constants::TABBY){
                 // tabby
                 $payment_url = $this->tabby_payment($subscription->toArray(), $member_data);
+            }else if(@$request->payment_method == Constants::PAYMOB){
+                // paymob
+                $payment_url = $this->paymob_payment($subscription->toArray(), $member_data);
             }
             return redirect($payment_url);
         }
@@ -205,6 +223,7 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
+            'start_date' => @$member['start_date'],
         ]);
 
         return $payment['redirect_url'];
@@ -231,6 +250,7 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
+            'start_date' => @$member['start_date'],
         ]);
 
         // Prepare order data for Paymob
@@ -296,9 +316,10 @@ class SubscriptionFrontController extends GenericFrontController
                 }
 
                 if($member){
+                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+                        'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -361,6 +382,7 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
+            'start_date' => @$member['start_date'],
         ]);
 
 
@@ -461,9 +483,10 @@ class SubscriptionFrontController extends GenericFrontController
 
             if($member && ($capture->status == Constants::CLOSED)){
 
+                $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
                 $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                     'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                    'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+                    'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
 
                 $payment_invoice->member_subscription_id = @$member_subscription->id;
                 $payment_invoice->save();
@@ -533,9 +556,10 @@ class SubscriptionFrontController extends GenericFrontController
                     $payment_invoice->response_code  = (array)($capture);
                     $payment_invoice->save();
 
+                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+                        'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -620,16 +644,15 @@ class SubscriptionFrontController extends GenericFrontController
             ]);
             if($verificationResult['success'] && $verificationResult['verified']){
                 // Payment was successful
-                dd('here');
                 $payment_invoice->status = Constants::SUCCESS;
                 $payment_invoice->response_code = $verificationResult;
                 $payment_invoice->save();
 
                 // Add member and subscription to database
-                $member = @(array)$this->current_user;
+                $member = @request()->session()->get('user');
                 $type_of_payment = Constants::RenewMember;
 
-                if(!@$this->current_user->id){
+                if(!@request()->session()->get('user')->id){
                     // Create new member
                     $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
                     $member = Member::create([
@@ -646,15 +669,16 @@ class SubscriptionFrontController extends GenericFrontController
 
                 if($member){
                     // Create member subscription
+                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
                     $member_subscription = MemberSubscription::create([
                         'subscription_id' => $payment_invoice['subscription_id'],
-                        'member_id' => $member['id'],
+                        'member_id' => @$member->id,
                         'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'],
                         'vat' => @$payment_invoice['vat'],
                         'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(),
-                        'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']),
+                        'joining_date' => $start_date->toDateTimeString(),
+                        'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']),
                         'status' => Constants::Active,
                         'freeze_limit' => @$payment_invoice['subscription']['freeze_limit'],
                         'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'],
@@ -670,7 +694,7 @@ class SubscriptionFrontController extends GenericFrontController
                     $amount_after = SubscriptionFrontController::amountAfter(@$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
                     $notes = trans('sw.member_moneybox_add_msg', [
                         'subscription' => @$payment_invoice->subscription->name,
-                        'member' => @$member['name'],
+                        'member' => @$member->name,
                         'amount_paid' => @$payment_invoice->amount,
                         'amount_remaining' => 0,
                     ]);
@@ -685,16 +709,16 @@ class SubscriptionFrontController extends GenericFrontController
                         'vat' => @$payment_invoice['vat'],
                         'amount_before' => $amount_after,
                         'notes' => $notes,
-                        'member_id' => $member['id'],
+                        'member_id' => @$member->id,
                         'type' => $type_of_payment,
                         'payment_type' => Constants::ONLINE_PAYMENT,
                         'member_subscription_id' => $payment_invoice['subscription_id'],
                         'online_subscription_id' => @$payment_invoice->id
                     ]);
 
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
+                    if(!@request()->session()->get('user')->id){
+                        $auth = new FrontAuthFrontController();
+                        $user = $auth->getSubscriptionInfo($maxId, $member->phone);
                         request()->session()->put('user', $user->member);
                     }
 
@@ -707,7 +731,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $payment_invoice->save();
             }
         }
-dd($payment_invoice, $verificationResult);
+//dd($payment_invoice, $verificationResult);
 
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
