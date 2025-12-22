@@ -101,5 +101,6 @@ return [
     'error_in_data' => 'Error in the entered data',
     'error_member_exist' => 'Member already exists with this number',
     'error_member_subscription_active' => 'You already have an active subscription',
+    'error_subscription_date_overlap' => 'The selected date conflicts with another active subscription',
 
     ];

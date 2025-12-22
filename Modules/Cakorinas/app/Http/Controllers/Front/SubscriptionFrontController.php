@@ -133,102 +133,9 @@ class SubscriptionFrontController extends GenericFrontController
         }
         return redirect()->back()->with('message', trans('front.success_msg'));
     }
-    public function invoiceSubmit(SubscriptionRequest $request)
-    {
-        // :this process before payment
-        // check on member info.
-        // check on member ships
-        // check on all complete data
-        // redirect to payment gateway
-        $member_data = [];
-        $subscription_id = $request->subscription_id;
-        $subscription = Subscription::where('id', $subscription_id)->first();
-        if($subscription) {
-            if (!@request()->session()->get('user')) {
-                $member = Member::where('phone', @$request->phone)->first();
-                if (@$member) {
-                    \Session::flash('error', trans('front.error_member_exist'));
-                    return redirect()->back();
-                }
+    
 
-                $member_data['name'] = @$request->name;
-                $member_data['phone'] = @$request->phone;
-                $member_data['email'] = @$request->email;
-                $member_data['address'] = @$request->address;
-                $member_data['dob'] = @Carbon::parse($request->dob);
-                $member_data['gender'] = @$request->gender;
-            }else{
-                $member_subscription = MemberSubscription::where('member_id', @request()->session()->get('user')->id)->orderBy('id', 'desc')->first();
-                if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
-                    \Session::flash('error', trans('front.error_member_subscription_active'));
-                    return redirect()->back();
-                }
-
-                $member_data['name'] = @$this->current_user->name;
-                $member_data['phone'] = @$this->current_user->phone;
-                $member_data['email'] = @$this->current_user->email;
-                $member_data['address'] = @$this->current_user->address;
-                $member_data['dob'] = @$this->current_user->dob;
-                $member_data['gender'] = @$this->current_user->gender;
-            }
-
-            $member_data['subscription_id'] = @$request->subscription_id;
-            $member_data['payment_method'] = @$request->payment_method;
-            $member_data['amount'] = @$request->amount;
-            $member_data['vat_percentage'] = @$request->vat_percentage;
-            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
-            $member_data['start_date'] = @$request->start_date ? Carbon::parse($request->start_date) : Carbon::now();
-
-            if(@$request->payment_method == Constants::MADA){
-                // paytabs
-                $payment_url = $this->paytabs_payment($subscription->toArray(), $member_data);
-            }else if(@$request->payment_method == Constants::TABBY){
-                // tabby
-                $payment_url = $this->tabby_payment($subscription->toArray(), $member_data);
-            }else if(@$request->payment_method == Constants::PAYMOB){
-                // paymob
-                $payment_url = $this->paymob_payment($subscription->toArray(), $member_data);
-            }
-            return redirect($payment_url);
-        }
-        \Session::flash('error', trans('front.error_in_data'));
-        return redirect()->back();
-    }
-
-    // paytabs
-    public function paytabs_payment($subscription = [], $member = []){
-
-        $payment = new PaytabsPayment();
-        $payment = $payment->pay(@$subscription['price'],
-            2,
-            @$member['name'],
-            "",
-            @$member['email'],
-            @$member['phone'],
-            $source = null);
-
-        PaymentOnlineInvoice::create([
-            'payment_id' => $payment['payment_id'],
-            'transaction_id' => $payment['tran_ref'],
-            'member_id' => @$this->current_user->id,
-            'status' => @Constants::PEND,
-            'subscription_id' => @$member['subscription_id'],
-            'name' => $member['name'],
-            'email' => $member['email'],
-            'phone' => $member['phone'],
-            'dob' => $member['dob'],
-            'address' => $member['address'],
-            'gender' => $member['gender'],
-            'amount' => $member['amount'],
-            'vat' => $member['vat'],
-            'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
-            'start_date' => @$member['start_date'],
-        ]);
-
-        return $payment['redirect_url'];
-    }
-
+    //paymob Step 3
     // Paymob payment using new payment architecture
     public function paymob_payment($subscription = [], $member = []){
 
@@ -290,318 +197,14 @@ class SubscriptionFrontController extends GenericFrontController
         return $result['payment_url'];
     }
 
-    public function payment_verify(Request $request)
-    {
-        $payment = new PaytabsPayment();
-        $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
-            $q->withTrashed();
-        }])->where('payment_id', $request['payment_id'])->first();
+  
 
-        if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            $payment = $payment->verify($request);
-            if($payment['success']) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
-            $payment_invoice->response_code = $payment['process_data'];
-            $payment_invoice->save();
-
-            if($payment['success']){
-                // add member and subscription to database and active it
-                $member = @(array)$this->current_user;
-                $type_of_payment = Constants::RenewMember;
-                if(!@$this->current_user->id){
-                    // must generate code and make user id nullable
-                    $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
-                    $type_of_payment = Constants::CreateMember;
-                }
-
-                if($member){
-                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
-                    $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                        'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                    $payment_invoice->member_subscription_id = @$member_subscription->id;
-                    $payment_invoice->save();
-
-                    $amount_box = MoneyBox::first();
-                    $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg',
-                        [
-                            'subscription' => @$payment_invoice->subscription->name,
-                            'member' => @$member['name'],
-                            'amount_paid' => @$payment_invoice->amount,
-                            'amount_remaining' => 0,
-                        ]);
-
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
-
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
-
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
-                        request()->session()->put('user', $user->member);
-                    }
-                    return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
-                }
-            }
-        }
-
-        // :this process after payment successfully
-        // send member info. to system
-        // send membership info. to system
-
-        // redirect to infocie
-        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
-    }
-
-    // tabby
-    public function tabby_payment($subscription = [], $member = []){
-
-
-        $registered_since = Carbon::now()->toISOString();
-        $updated_at = Carbon::now()->toISOString();
-        $purchased_at = Carbon::now()->toISOString();
-        $unique_id = uniqid();
-
-        $paymentOnlineInvoice = PaymentOnlineInvoice::create([
-            'payment_id' => $unique_id,
-            'member_id' => @$this->current_user->id,
-            'status' => @Constants::PEND,
-            'subscription_id' => @$member['subscription_id'],
-            'name' => $member['name'],
-            'email' => $member['email'],
-            'phone' => $member['phone'],
-            'dob' => $member['dob'],
-            'address' => $member['address'],
-            'gender' => $member['gender'],
-            'amount' => $member['amount'],
-            'vat' => $member['vat'],
-            'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
-            'start_date' => @$member['start_date'],
-        ]);
-
-
-
-        // add first product
-        $items = collect([]); // array to save your products
-        $items->push([
-            'title' => $subscription['name'],
-            "description" => @$subscription['content'],
-            'quantity' => 1,
-            'unit_price' => $subscription['price'],
-            'category' => 'Membership',
-        ]);
-        $order_data = [
-            'amount'=> @$subscription['price'],
-            'currency' => @env('TABBY_CURRENCY', 'SAR'),
-            'description'=> @$subscription['content'],
-            'full_name'=> $member['name'],
-            'buyer_phone'=> $member['phone'],
-            'buyer_email' => $member['email'] ?? '',
-            'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
-//            'dob' => Carbon::parse($member['dob'])->toDateString(),
-            'address'=> @env('TABBY_ADDRESS'),
-            'city' => @env('TABBY_CITY'),
-            'zip'=> '1234',
-            'order_id'=> '"'.$paymentOnlineInvoice->id.'"',
-            'registered_since' => $registered_since,
-            'updated_at' => $updated_at,
-            'purchased_at' => $purchased_at,
-            'loyalty_level'=> 0,
-            'success-url'=>  route('tabby-verify-payment', ['payment_id' => $unique_id]),
-            'cancel-url' => route('tabby-error-cancel', ['payment_id' => $unique_id]),
-            'failure-url' => route('tabby-error-failure', ['payment_id' => $unique_id]),
-            'items' => $items,
-        ];
-
-        // step 1: create session
-        $payment = new TabbyService();
-        $payment = $payment->createSession($order_data);
-        $status = @$payment->status;
-
-        if($status == Constants::REJECTED){
-            \Session::flash('error', trans('front.'.@$payment->configuration->products->installments->rejection_reason));
-            return route('subscription', ['id' => $subscription['id']]);
-        }
-
-
-//        $id = $payment->payment->id;
-        $redirect_url = @$payment->configuration->available_products->installments[0]->web_url;
-
-        if(!$redirect_url){
-            \Session::flash('error', trans('front.error_in_data'));
-            return route('subscription', ['id' => $subscription['id']]);
-        }
-
-
-        $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
-        $paymentOnlineInvoice->response_code = @(array)$payment;
-        $paymentOnlineInvoice->save();
-
-
-        return $redirect_url;
-    }
-
-    public function tabbyNotify(Request $request){
-
-        $payment = new TabbyService();
-        $payment = $payment->getPayment(@$request->id);
-
-        $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
-            $q->withTrashed();
-        }])->where('transaction_id', @$payment->id)->first();
-
-        $member = [];
-//        if($payment->status == Constants::AUTHORIZED){
-        if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
-
-            // add member and subscription to database and active it
-            if(@$payment_invoice['member_id']){
-                $member = Member::where('id', $payment_invoice['member_id'])->first();
-            }
-
-            $type_of_payment = Constants::RenewMember;
-            $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-
-            if(!@$member && !@$member['id']){
-                // must generate code and make user id nullable
-                $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
-                $member = $member->toArray();
-                $type_of_payment = Constants::CreateMember;
-            }
-
-
-            // step 4: capture payment
-            $capture = new TabbyService();
-            $capture = $capture->capturePayment(@$request->id, $payment_invoice['amount']);
-
-
-            if($member && ($capture->status == Constants::CLOSED)){
-
-                $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
-                $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                    'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                    'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                $payment_invoice->member_subscription_id = @$member_subscription->id;
-                $payment_invoice->save();
-
-                $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                $notes = trans('sw.member_moneybox_add_msg',
-                    [
-                        'subscription' => @$payment_invoice['subscription']->name,
-                        'member' => @$member['name'],
-                        'amount_paid' => @$payment_invoice['amount'],
-                        'amount_remaining' => 0,
-                    ]);
-                if(@$payment_invoice['vat_percentage']){
-                    $notes = $notes.' - '.trans('sw.vat_added');
-                }
-
-                MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice['id']]);
-
-
-                mail('eng.a7med.ma7er@gmail.com', 'fitnessstep', 'test successfull member: '. $member['name']);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function tabby_payment_verify(Request $request)
-    {
-        $payment = new TabbyService();
-        $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
-            $q->withTrashed();
-        }])->where('transaction_id', $request['payment_id'])->first();
-
-        if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            // step 2: payment verification
-            $payment = $payment->getPayment($request['payment_id']);
-            // step 3: webhook
-            $webhook = new TabbyService();
-            $webhook->getWebHooks($request['payment_id']);
-
-//            if(@$payment->status == Constants::AUTHORIZED) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
-            $payment_invoice->response_code = (array)($payment);
-            $payment_invoice->save();
-
-//            if($payment->status == Constants::AUTHORIZED){
-                if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
-                // add member and subscription to database and active it
-                $member = @(array)$this->current_user;
-                $type_of_payment = Constants::RenewMember;
-                if(!@$member->id){
-                    // must generate code and make user id nullable
-                    $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
-                    $member = $member->toArray();
-                    $type_of_payment = Constants::CreateMember;
-                }
-
-
-                // step 4: capture payment
-                $capture = new TabbyService();
-                $capture = $capture->capturePayment($request['payment_id'], $payment_invoice['amount']);
-
-                if($member && ($capture->status == Constants::CLOSED)){
-
-                    $payment_invoice->response_code  = (array)($capture);
-                    $payment_invoice->save();
-
-                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
-                    $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                        'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => $start_date->toDateTimeString(), 'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                    $payment_invoice->member_subscription_id = @$member_subscription->id;
-                    $payment_invoice->save();
-
-                    $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                    $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg',
-                        [
-                            'subscription' => @$payment_invoice->subscription->name,
-                            'member' => @$member['name'],
-                            'amount_paid' => @$payment_invoice->amount,
-                            'amount_remaining' => 0,
-                        ]);
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
-
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
-
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
-                        request()->session()->put('user', $user->member);
-                    }
-                    return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
-                }
-            }
-        }
-
-        // :this process after payment successfully
-        // send member info. to system
-        // send membership info. to system
-
-        // redirect to infocie
-        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
-    }
-
+    //paymob Step 4 : return callback
     // Paymob payment verification using new payment architecture
     public function paymob_payment_verify(Request $request)
     {
         // Log what Paymob sends for debugging
-        \Log::info('Paymob callback received', ['data' => $request->all()]);
+        //\Log::info('Paymob callback received', ['data' => $request->all()]);
 
         // Extract IDs from Paymob callback
         // Paymob sends: "id" (transaction_id) and "order" (order_id as string)
@@ -620,12 +223,12 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         // Log what we found
-        \Log::info('Paymob - Payment invoice lookup', [
-            'transaction_id' => $transaction_id,
-            'order_id' => $order_id,
-            'invoice_found' => $payment_invoice ? 'yes' : 'no',
-            'invoice_id' => $payment_invoice ? $payment_invoice->id : null
-        ]);
+        // \Log::info('Paymob - Payment invoice lookup', [
+        //     'transaction_id' => $transaction_id,
+        //     'order_id' => $order_id,
+        //     'invoice_found' => $payment_invoice ? 'yes' : 'no',
+        //     'invoice_id' => $payment_invoice ? $payment_invoice->id : null
+        // ]);
 
         if($payment_invoice){
             // Use PaymentServiceFactory to get Paymob service
@@ -635,14 +238,15 @@ class SubscriptionFrontController extends GenericFrontController
             $verificationResult = $paymentService->verifyPayment($request->all());
 
             // Log verification result for debugging
-            \Log::info('Paymob verification result', [
-                'success' => $verificationResult['success'] ?? false,
-                'verified' => $verificationResult['verified'] ?? false,
-                'transaction_id' => $verificationResult['transaction_id'] ?? null,
-                'message' => $verificationResult['message'] ?? null,
-                'error_occurred' => $verificationResult['error_occurred'] ?? false
-            ]);
-            if($verificationResult['success'] && $verificationResult['verified']){
+            // \Log::info('Paymob verification result', [
+            //     'success' => $verificationResult['success'] ?? false,
+            //     'verified' => $verificationResult['verified'] ?? false,
+            //     'transaction_id' => $verificationResult['transaction_id'] ?? null,
+            //     'message' => $verificationResult['message'] ?? null,
+            //     'error_occurred' => $verificationResult['error_occurred'] ?? false
+            // ]);
+            
+            if(@$verificationResult['raw_data']  &&  (@$verificationResult['raw_data']['success'] == "true")){
                 // Payment was successful
                 $payment_invoice->status = Constants::SUCCESS;
                 $payment_invoice->response_code = $verificationResult;
@@ -651,8 +255,7 @@ class SubscriptionFrontController extends GenericFrontController
                 // Add member and subscription to database
                 $member = @request()->session()->get('user');
                 $type_of_payment = Constants::RenewMember;
-
-                if(!@request()->session()->get('user')->id){
+                if(!@request()->session()->get('user') && !@request()->session()->get('user')->id){
                     // Create new member
                     $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
                     $member = Member::create([
@@ -663,10 +266,9 @@ class SubscriptionFrontController extends GenericFrontController
                         'address' => $payment_invoice['address'],
                         'dob' => $payment_invoice['dob']
                     ]);
-                    $member = $member->toArray();
+                    //$member = $member->toArray();
                     $type_of_payment = Constants::CreateMember;
                 }
-
                 if($member){
                     // Create member subscription
                     $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
@@ -731,12 +333,13 @@ class SubscriptionFrontController extends GenericFrontController
                 $payment_invoice->save();
             }
         }
-//dd($payment_invoice, $verificationResult);
 
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
     public function error_payment(){
+        View::share('currentUser', @request()->session()->get('user'));
+
         $title = trans('front.invoice');
         return view('cakorinas::Front.error', compact('title'));
     }

@@ -36,6 +36,7 @@ class MainFrontController extends GenericFrontController
 
     public function index()
     {        
+        View::share('currentUser', @request()->session()->get('user'));
         $record = $this->mainSettings;
         $title = $record['name'];
         $lang = $this->lang;

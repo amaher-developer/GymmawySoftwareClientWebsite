@@ -120,5 +120,6 @@ return [
     'error_in_data' => 'خطأ في البيانات المدخلة',
     'error_member_exist' => 'عضو موجود بالفعل بهذا الرقم',
     'error_member_subscription_active' => 'لديك اشتراك نشط بالفعل',
+    'error_subscription_date_overlap' => 'التاريخ المحدد يتعارض مع اشتراك نشط آخر',
 
 ];

@@ -36,7 +36,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         return view('payment-failed');
     }
 
-
+    //paymob Step 1
     public function show($id)
     {
         if (request()->hasSession()) {
@@ -99,30 +99,9 @@ class SubscriptionPaymentFrontController extends GenericFrontController
         return (@$result);
         */
     }
-    public function reservationSubmit(SubscriptionRequest $request)
-    {
-        // :this process before payment
-        // check on member info.
-        // check on member ships
-        // check on all complete data
-        // redirect to payment gateway
-        $member_data = [];
-        $subscription_id = $request->subscription_id;
-        $subscription = Subscription::where('id', $subscription_id)->first();
-        if($subscription) {
+    
 
-            $member_data['name'] = @$request->name;
-            $member_data['phone'] = @$request->phone;
-            $member_data['subscription_id'] = @$request->subscription_id;
-            $member_data['type'] = 0;
-//            $member_data['amount'] = @$request->amount;
-//            $member_data['vat_percentage'] = @$request->vat_percentage;
-//            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
-            ReservationMember::create($member_data);
-
-        }
-        return redirect()->back()->with('message', trans('front.success_msg'));
-    }
+    //paymob Step 2
     public function invoiceSubmit(SubscriptionRequest $request)
     {
         // :this process before payment
