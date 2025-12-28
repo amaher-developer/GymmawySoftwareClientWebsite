@@ -4,6 +4,7 @@ namespace Modules\Stepfitness\app\Http\Classes;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TabbyService
 {
@@ -29,7 +30,7 @@ class TabbyService
 
     public function getSession($payment_id)
     {
-        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
+        $http = Http::withToken($this->pk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $url = 'checkout/'.$payment_id;
@@ -43,6 +44,8 @@ class TabbyService
             $http = $http->withoutVerifying();
         $url = 'payments/'.$payment_id;
         $response = $http->get($url);
+
+        Log::info('TABBY PAYMENT STATUS', $response->json());
         return $response->object();
     }
 
@@ -68,12 +71,20 @@ class TabbyService
 //        return false;
     }
 
-    public function capturePayment($payment_id, $amount){
-        $body = ['amount' => $amount];
-        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
-        if(@env('TABBY_IS_TEST'))
+    public function capturePayment($paymentId, $amount, $items = [])
+    {
+        $http = Http::withToken($this->sk_test)
+            ->baseUrl($this->base_url . 'v2/');
+
+        if (env('TABBY_IS_TEST')) {
             $http = $http->withoutVerifying();
-        $response = $http->post('payments/'.$payment_id.'/captures',$body);
+        }
+
+        $response = $http->post("payments/{$paymentId}/captures", [
+            'amount'   => (string) $amount,
+            'currency' => 'SAR',
+        ]);
+
         return $response->object();
     }
 

@@ -76,6 +76,10 @@ return [
     'not_available' => 'Sorry, Tabby is unable to approve this purchase. Please use an alternative payment method for your order.',
     'order_amount_too_high' => 'This purchase is above your current spending limit with Tabby, try a smaller cart or use another payment method',
     'order_amount_too_low' => 'The purchase amount is below the minimum amount required to use Tabby, try adding more items or use another payment method',
+    'joining_date_required' => 'Subscription start date is required',
+    'joining_date_must_be_valid_date' => 'Subscription start date must be a valid date',
+    'joining_date_cannot_be_in_past' => 'Subscription start date cannot be in the past',
+    'joining_date_cannot_exceed_one_month' => 'Subscription start date cannot exceed one month from today',
 
 
     ];

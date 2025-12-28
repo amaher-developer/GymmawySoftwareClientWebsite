@@ -81,7 +81,9 @@ class SubscriptionFrontController extends GenericFrontController
     public function getInvoiceDetails($invoice_id, $member_id){
         
 
-        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id, 'member_id' => $member_id])->first();
+//        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id, 'member_id' => $member_id])->first();
+
+        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id])->first();
         return $invoice;
         /*
         $ch = curl_init();

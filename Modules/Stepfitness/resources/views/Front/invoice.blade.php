@@ -181,7 +181,7 @@
                     <table>
                         <tr>
                             <td class="title " >
-                                <img src="{{asset('resources/assets/images/logo.png')}}"style="width: 100%; max-width: 200px;"/>
+                                <img src="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}"style="width: 100%; max-width: 200px;"/>
                             </td>
                             <td>
                                 <br/><br/>
@@ -243,13 +243,14 @@
                             <tr class="total" >
                                 <td style="font-size: 18px">{{trans('front.total_price')}} <span class="total_for_price">({{trans('front.excluding_vat')}})</span>:  {{number_format(($invoice->amount_paid + @$invoice->amount_remaining - @$invoice->vat),2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
+                            @if(@$mainSettings->vat_details['vat_percentage'] > 0)
                             <tr class="total" >
                                 <td style="font-size: 18px">{{trans('front.total_price')}} <span class="total_for_price">({{trans('front.including_vat')}})</span>: {{number_format(($invoice->amount_paid + @$invoice->amount_remaining),2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
-
                             <tr class="total" >
                                 <td style="font-size: 18px">{{trans('front.vat')}} <span class="total_for_price">({{@$mainSettings->vat_details['vat_percentage'].'%'}})</span>: {{@number_format($invoice->vat, 2)}} {{@trans('front.app_currency')}}</td>
                             </tr>
+                            @endif
                         </table>
                     </td>
                     <td>

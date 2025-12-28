@@ -44,6 +44,7 @@ class Constants {
     const Add = 0;
     const Sub = 1;
 
+    const CREATED = "CREATED";
     const AUTHORIZED = "AUTHORIZED";
     const CLOSED = "CLOSED";
 }

@@ -90,7 +90,21 @@
                 <div class="col-lg-8">
                     <div class="blog-box">
                         <div class="blog-content">
-                            <h4>{{$record['name']}} <span style="color: #f97d04;float: left;;font-size: 16px;padding: 10px;background-color: #6c757d26;border-radius: 5px">{{trans('front.price')}}: {{$record['price']}} {{trans('front.pound_unit')}}</span></h4>
+                            @php
+                                $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
+                                $priceBeforeVat = $record['price'];
+                                $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+                                $priceWithVat = $priceBeforeVat + $vatAmount;
+                            @endphp
+                            <h4>{{$record['name']}}
+                                <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
+                                    {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
+                                    @if($vatPercentage > 0)
+                                        <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                        <strong>{{trans('global.total')}}: {{number_format($priceWithVat, 2)}} {{trans('front.pound_unit')}}</strong>
+                                    @endif
+                                </span>
+                            </h4>
 {{--                            <p>It is a long established fact that a reader </p>--}}
                             <div class="clearfix"><br/></div>
                             @if(\Session::has('error'))

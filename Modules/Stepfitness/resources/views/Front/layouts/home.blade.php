@@ -479,7 +479,19 @@
                                 <li> {{trans('front.period')}}: {{$subscription->period}} {{trans('front.day')}} </li>
                                 <li> {{trans('front.session_num')}}: {{$subscription->workouts}}</li>
                             </ul>
-                            <h3>{{$subscription->price}} {{trans('front.pound_unit')}} </h3>
+                            @php
+                                $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
+                                $priceBeforeVat = $subscription->price;
+                                $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+                                $priceWithVat = $priceBeforeVat + $vatAmount;
+                            @endphp
+                            <h3>{{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}</h3>
+                            @if($vatPercentage > 0)
+                                <small style="font-size: 12px;color: #999;">+ {{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                <strong style="font-size: 14px;">{{trans('global.total')}}: {{number_format($priceWithVat, 2)}} {{trans('front.pound_unit')}}</strong>
+                                <br>
+                            @endif
+                            <br>
                             <a class="btn btn-default sing-up-btn" style="border: 1px solid;" type="button" href="{{route('subscription', ['id' => $subscription->id])}}">{{trans('front.subscribe')}}</a>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 <?php
 
+use Modules\Stepfitness\app\Http\Controllers\Front\AuthFrontController;
 use Modules\Stepfitness\app\Http\Controllers\Front\GenericFrontController;
 use Modules\Stepfitness\app\Http\Controllers\Front\MainFrontController;
 use Illuminate\Support\Facades\Route;
