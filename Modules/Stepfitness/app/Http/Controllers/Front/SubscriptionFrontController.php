@@ -298,9 +298,9 @@ class SubscriptionFrontController extends GenericFrontController
             'amount'=> (@$subscription['price'] + $vatAmount),
             'currency' => @env('TABBY_CURRENCY', 'SAR'),
             'description'=> @$subscription['content'],
-            'full_name'=> 'Test User',//$member['name'],
-            'buyer_phone'=> '500000001',//$member['phone'],
-            'buyer_email' => 'test@tabby.ai',//$member['email'] ?? '',
+            'full_name'=> $member['name'],
+            'buyer_phone'=> $member['phone'],
+            'buyer_email' => $member['email'] ?? '',
             'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
 //            'dob' => Carbon::parse($member['dob'])->toDateString(),
             'address'=> @env('TABBY_ADDRESS'),
