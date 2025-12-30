@@ -30,6 +30,12 @@ class SubscriptionFrontController extends GenericFrontController
     {
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
+
+        if (!$record) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('home');
+        }
+
         $subscriptions = @Subscription::where('is_web', true)->get();
         $title = $record['name'];
         return view('stepfitness::Front.subscription', compact('title', 'record', 'subscriptions'));
@@ -39,6 +45,12 @@ class SubscriptionFrontController extends GenericFrontController
     {
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
+
+        if (!$record) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('home');
+        }
+
         $subscriptions = @Subscription::where('is_web', true)->get();
         $title = $record['name'];
         return view('stepfitness::Front.subscription_test', compact('title', 'record', 'subscriptions'));
