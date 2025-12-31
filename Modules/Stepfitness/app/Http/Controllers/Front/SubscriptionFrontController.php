@@ -148,8 +148,8 @@ class SubscriptionFrontController extends GenericFrontController
             $member_data['subscription_id'] = @$request->subscription_id;
             $member_data['joining_date'] = @$request->joining_date;
             $member_data['payment_method'] = @$request->payment_method;
-            $member_data['amount'] = @$request->amount;
-            $member_data['vat_percentage'] = @$request->vat_percentage;
+            $member_data['amount'] = (float)(@$request->amount ?? 0);
+            $member_data['vat_percentage'] = (float)(@$request->vat_percentage ?? 0);
             $member_data['vat'] = ((float)(@$request->vat_percentage ?? 0) / 100) * (float)(@$request->amount ?? 0);
 
             if(@$request->payment_method == Constants::MADA){
