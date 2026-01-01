@@ -95,7 +95,7 @@
                                 $priceBeforeVat = $record['price'];
                                 $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
                                 $priceWithVat = $priceBeforeVat + $vatAmount;
-                                $priceWithVat = (float)$priceWithVat;
+                                $priceWithVat = (float)round($priceWithVat, 2);
                             @endphp
                             <h4>{{$record['name']}}
                                 <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
@@ -117,7 +117,7 @@
                             <form method="post" action="{{route('invoice', @$record->id)}}">
                                 {{csrf_field()}}
                                 <input type="hidden" name="subscription_id" value="{{$record['id']}}">
-                                <input type="hidden" name="amount" value="{{number_format($priceWithVat, 2)}}">
+                                <input type="hidden" name="amount" value="{{($priceWithVat}}">
                                 <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
                             <br/><br/>
 
@@ -266,7 +266,7 @@
         $priceBeforeVat = $record['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = $priceBeforeVat + $vatAmount;
-        $priceWithVat = (float)$priceWithVat;
+        $priceWithVat = (float)round($priceWithVat, 2);
 
     @endphp
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
