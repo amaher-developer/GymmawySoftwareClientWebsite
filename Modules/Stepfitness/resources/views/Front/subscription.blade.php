@@ -117,7 +117,7 @@
                             <form method="post" action="{{route('invoice', @$record->id)}}">
                                 {{csrf_field()}}
                                 <input type="hidden" name="subscription_id" value="{{$record['id']}}">
-                                <input type="hidden" name="amount" value="{{($priceWithVat}}">
+                                <input type="hidden" name="amount" value="{{$priceWithVat}}">
                                 <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
                             <br/><br/>
 
