@@ -95,14 +95,14 @@
                                 $priceBeforeVat = $record['price'];
                                 $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
                                 $priceWithVat = $priceBeforeVat + $vatAmount;
-                                $priceWithVat = (float)$priceWithVat;
+                                $priceWithVat = (float)$priceWithVat.toFixed(2);
                             @endphp
                             <h4>{{$record['name']}}
                                 <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
                                     {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
                                     @if($vatPercentage > 0)
                                         <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
-                                        <strong>{{trans('global.total')}}: {{number_format($priceWithVat, 2)}} {{trans('front.pound_unit')}}</strong>
+                                        <strong>{{trans('global.total')}}: {{$priceWithVat}} {{trans('front.pound_unit')}}</strong>
                                     @endif
                                 </span>
                             </h4>
@@ -266,7 +266,7 @@
         $priceBeforeVat = $record['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = $priceBeforeVat + $vatAmount;
-        $priceWithVat = (float)$priceWithVat;
+        $priceWithVat = (float)$priceWithVat.toFixed(2);
 
     @endphp
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
