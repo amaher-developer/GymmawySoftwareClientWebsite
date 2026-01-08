@@ -1250,28 +1250,28 @@
                                     <!-- CLIENT (1) -->
                                     <div class="client ok-md-3 ok-xsd-12 ok-sd-6 ">
                                         <a data-animated-link="fadeOut" href="#">
-                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/images/visa_logo.svg')}}" style="width: 150px;" alt="visa">
+                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/visa_logo.svg')}}" style="width: 150px;" alt="visa">
                                         </a>
                                     </div>
                                     <!--! CLIENT (1) -->
                                     <!-- CLIENT (2) -->
                                     <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
-                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/images/american_express_logo.svg')}}" style="width: 150px;" alt="american express">
+                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/american_express_logo.svg')}}" style="width: 150px;" alt="american express">
                                         </a>
                                     </div>
                                     <!--! CLIENT (2) -->
                                     <!-- CLIENT (3) -->
                                     <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
-                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/images/mada-logo.svg')}}" style="width: 150px;" alt="mada">
+                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/mada-logo.svg')}}" style="width: 150px;" alt="mada">
                                         </a>
                                     </div>
                                     <!--! CLIENT (3) -->
                                     <!-- CLIENT (4) -->
                                     <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
-                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/images/tabby-logo.webp')}}" style="width: 150px;" alt="tabby">
+                                            <img src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/tabby-logo.webp')}}" style="width: 150px;" alt="tabby">
                                         </a>
                                     </div>
                                     <!--! CLIENT (4) -->
