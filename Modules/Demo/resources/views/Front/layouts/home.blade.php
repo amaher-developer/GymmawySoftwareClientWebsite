@@ -1248,33 +1248,41 @@
                             <div class="collection">
                                 <div class="ok-row">
                                     <!-- CLIENT (1) -->
-                                    <div class="client ok-md-3 ok-xsd-12 ok-sd-6 ">
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6 ">
                                         <a data-animated-link="fadeOut" href="#">
                                             <img src="{{asset('resources/assets/images/visa_logo.svg')}}" style="width: 150px;" alt="visa">
                                         </a>
                                     </div>
                                     <!--! CLIENT (1) -->
                                     <!-- CLIENT (2) -->
-                                    <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
                                             <img src="{{asset('resources/assets/images/american_express_logo.svg')}}" style="width: 150px;" alt="american express">
                                         </a>
                                     </div>
                                     <!--! CLIENT (2) -->
                                     <!-- CLIENT (3) -->
-                                    <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
                                             <img src="{{asset('resources/assets/images/mada-logo.svg')}}" style="width: 150px;" alt="mada">
                                         </a>
                                     </div>
                                     <!--! CLIENT (3) -->
                                     <!-- CLIENT (4) -->
-                                    <div class="client ok-md-3 ok-xsd-12 ok-sd-6">
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
                                             <img src="{{asset('resources/assets/images/tabby-logo.webp')}}" style="width: 150px;" alt="tabby">
                                         </a>
                                     </div>
                                     <!--! CLIENT (4) -->
+                                    
+                                    <!-- CLIENT (5) -->
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
+                                        <a data-animated-link="fadeOut" href="#">
+                                            <img src="{{asset('resources/assets/images/paymob.png')}}" style="width: 150px;" alt="tabby">
+                                        </a>
+                                    </div>
+                                    <!--! CLIENT (5) -->
                                 </div>
                             </div>
                             <div class="double-clear"></div>
