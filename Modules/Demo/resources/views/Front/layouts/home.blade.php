@@ -1231,7 +1231,7 @@
             @include('demo::Front.partials.faq')
             <!--! FAQ SECTION -->
 
-            @if($country_name != 'egypt')
+            {{--@if($country_name != 'egypt')--}}
             <!-- CLIENTS SECTION -->
             <section class="section " id="clients">
                 <div class="page-section-content overflow-hidden">
@@ -1284,7 +1284,7 @@
                 </div>
             </section>
             <!-- CLIENTS SECTION -->
-                @endif
+               {{--@endif--}} 
 
             <!-- TRUST BADGES SECTION -->
             {{-- @include('demo::Front.partials.trust-badges') --}}
