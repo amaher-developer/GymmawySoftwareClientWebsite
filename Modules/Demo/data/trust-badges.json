@@ -1,0 +1,46 @@
+[
+    {
+        "title_ar": "شريك معتمد - Google Cloud",
+        "title_en": "Certified Partner - Google Cloud",
+        "description_ar": "شريك معتمد في خدمات Google Cloud للبنية التحتية السحابية",
+        "description_en": "Certified partner in Google Cloud services for cloud infrastructure",
+        "image": "uploads/badges/google-cloud.png",
+        "url": null,
+        "type": "partnership",
+        "order": 1,
+        "active": true
+    },
+    {
+        "title_ar": "ISO 27001 معتمد",
+        "title_en": "ISO 27001 Certified",
+        "description_ar": "شهادة أمن المعلومات الدولية لحماية بيانات العملاء",
+        "description_en": "International information security certification for customer data protection",
+        "image": "uploads/badges/iso-27001.png",
+        "url": null,
+        "type": "certification",
+        "order": 2,
+        "active": true
+    },
+    {
+        "title_ar": "جائزة أفضل نظام إدارة 2025",
+        "title_en": "Best Management System Award 2025",
+        "description_ar": "جائزة أفضل نظام إدارة للأندية الرياضية في المنطقة",
+        "description_en": "Best sports club management system award in the region",
+        "image": "uploads/badges/award-2025.png",
+        "url": null,
+        "type": "award",
+        "order": 3,
+        "active": true
+    },
+    {
+        "title_ar": "نظام دفع آمن معتمد",
+        "title_en": "Secure Payment System",
+        "description_ar": "نظام الدفع الآمن المعتمد من Visa و Mastercard",
+        "description_en": "Approved secure payment system by Visa and Mastercard",
+        "image": "uploads/badges/secure-payment.png",
+        "url": null,
+        "type": "certification",
+        "order": 4,
+        "active": true
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "question_ar": "ما هي مميزات نظام جيماوي؟",
+        "question_en": "What are the features of Gymmawy system?",
+        "answer_ar": "نظام جيماوي يوفر إدارة شاملة للأعضاء، الاشتراكات، الحضور، المدفوعات، التقارير المالية، تطبيق للأعضاء، وأكثر من ذلك بكثير. النظام مصمم خصيصاً للأندية الرياضية في الوطن العربي.",
+        "answer_en": "Gymmawy system provides comprehensive management of members, subscriptions, attendance, payments, financial reports, members app, and much more. The system is specifically designed for sports clubs in the Arab world.",
+        "category_ar": "عن النظام",
+        "category_en": "About System",
+        "order": 1,
+        "active": true
+    },
+    {
+        "question_ar": "هل النظام يدعم اللغة العربية بالكامل؟",
+        "question_en": "Does the system fully support Arabic language?",
+        "answer_ar": "نعم، النظام مصمم خصيصاً للسوق العربي ويدعم اللغة العربية بشكل كامل مع واجهة RTL. جميع التقارير والإشعارات متوفرة باللغة العربية.",
+        "answer_en": "Yes, the system is specifically designed for the Arabic market and fully supports Arabic language with RTL interface. All reports and notifications are available in Arabic.",
+        "category_ar": "عن النظام",
+        "category_en": "About System",
+        "order": 2,
+        "active": true
+    },
+    {
+        "question_ar": "كم تكلفة الاشتراك الشهري؟",
+        "question_en": "How much does the monthly subscription cost?",
+        "answer_ar": "لدينا عدة خطط تبدأ من الباقة الأساسية التي تناسب الأندية الصغيرة والمتوسطة. يمكنك مراجعة قسم الأسعار للتفاصيل الكاملة أو التواصل معنا للحصول على عرض سعر خاص.",
+        "answer_en": "We have several plans starting from the basic package that suits small and medium clubs. You can check the pricing section for full details or contact us for a custom quote.",
+        "category_ar": "الأسعار",
+        "category_en": "Pricing",
+        "order": 3,
+        "active": true
+    },
+    {
+        "question_ar": "هل يوجد تطبيق للهواتف الذكية؟",
+        "question_en": "Is there a smartphone app?",
+        "answer_ar": "نعم، نوفر تطبيق للأعضاء متاح على iOS و Android يمكنهم من خلاله متابعة اشتراكاتهم، حجز الحصص، ومتابعة تقدمهم الرياضي.",
+        "answer_en": "Yes, we provide a members app available on iOS and Android through which they can track their subscriptions, book sessions, and follow their fitness progress.",
+        "category_ar": "التطبيقات",
+        "category_en": "Applications",
+        "order": 4,
+        "active": true
+    },
+    {
+        "question_ar": "هل يمكن تجربة النظام مجاناً؟",
+        "question_en": "Can I try the system for free?",
+        "answer_ar": "نعم، نوفر فترة تجريبية مجانية لمدة 14 يوم بدون الحاجة لبطاقة ائتمانية. يمكنك تجربة جميع ميزات النظام بشكل كامل.",
+        "answer_en": "Yes, we offer a free 14-day trial period without requiring a credit card. You can try all system features completely.",
+        "category_ar": "التجربة المجانية",
+        "category_en": "Free Trial",
+        "order": 5,
+        "active": true
+    },
+    {
+        "question_ar": "هل الدعم الفني متاح باللغة العربية؟",
+        "question_en": "Is technical support available in Arabic?",
+        "answer_ar": "نعم، فريق الدعم الفني لدينا يتحدث العربية ومتاح عبر الواتساب والبريد الإلكتروني من 9 صباحاً حتى 12 منتصف الليل طوال أيام الأسبوع.",
+        "answer_en": "Yes, our technical support team speaks Arabic and is available via WhatsApp and email from 9 AM to 12 midnight every day of the week.",
+        "category_ar": "الدعم الفني",
+        "category_en": "Technical Support",
+        "order": 6,
+        "active": true
+    }
+]

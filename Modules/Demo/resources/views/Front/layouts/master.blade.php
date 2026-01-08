@@ -128,6 +128,9 @@
         gtag('config', 'G-C8XNZW97HT');
     </script>
 
+    <!-- Modern Enhancements CSS -->
+    <link rel="stylesheet" href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/modern-enhancements.css')}}">
+
     @yield('style')
 
 <!-- Google Tag Manager -->
@@ -461,6 +464,10 @@
 <script type="text/javascript"
         src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/')}}/js/specific/revolution-slider/js/jquery.themepunch.revolution.min.js"></script>
 <script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/front/')}}/js/main.js"></script>
+
+<!-- Modern Enhancements JS -->
+<script src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/modern-enhancements.js')}}"></script>
+
 <!--! FOOTER -->
 
 @yield('script')

@@ -19,7 +19,7 @@ class MainFrontController extends GenericFrontController
     public function index()
     {
         $title = env('APP_NAME_'.$this->lang);
-        
+
 //        $dir = ("uploads/gallery/*.jpg");
 //        $images = glob( $dir );
         $dir = ("uploads/systems/*.png");
@@ -32,7 +32,28 @@ class MainFrontController extends GenericFrontController
         $memberships = [];
         $images = [];
 
-        return view('demo::Front.layouts.home', compact( 'title', 'activities', 'memberships', 'images', 'system_images', 'client_images'));
+        // Load data from JSON files
+        $testimonials = collect(json_decode(file_get_contents(module_path('Demo', 'data/testimonials.json')), true))
+            ->where('active', true)
+            ->sortBy('order')
+            ->values();
+
+        $faqs = collect(json_decode(file_get_contents(module_path('Demo', 'data/faqs.json')), true))
+            ->where('active', true)
+            ->sortBy('order')
+            ->values();
+
+        $stats = collect(json_decode(file_get_contents(module_path('Demo', 'data/stats.json')), true))
+            ->where('active', true)
+            ->sortBy('order')
+            ->values();
+
+        $trust_badges = collect(json_decode(file_get_contents(module_path('Demo', 'data/trust-badges.json')), true))
+            ->where('active', true)
+            ->sortBy('order')
+            ->values();
+
+        return view('demo::Front.layouts.home', compact( 'title', 'activities', 'memberships', 'images', 'system_images', 'client_images', 'testimonials', 'faqs', 'stats', 'trust_badges'));
     }
 
 

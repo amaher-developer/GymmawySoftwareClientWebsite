@@ -1,0 +1,38 @@
+[
+    {
+        "label_ar": "عميل سعيد",
+        "label_en": "Happy Clients",
+        "value": 500,
+        "suffix": "+",
+        "icon": "fa fa-users",
+        "order": 1,
+        "active": true
+    },
+    {
+        "label_ar": "نادي رياضي",
+        "label_en": "Gyms & Clubs",
+        "value": 250,
+        "suffix": "+",
+        "icon": "fa fa-building",
+        "order": 2,
+        "active": true
+    },
+    {
+        "label_ar": "معدل الرضا",
+        "label_en": "Satisfaction Rate",
+        "value": 98,
+        "suffix": "%",
+        "icon": "fa fa-star",
+        "order": 3,
+        "active": true
+    },
+    {
+        "label_ar": "سنوات الخبرة",
+        "label_en": "Years Experience",
+        "value": 5,
+        "suffix": "+",
+        "icon": "fa fa-calendar",
+        "order": 4,
+        "active": true
+    }
+]

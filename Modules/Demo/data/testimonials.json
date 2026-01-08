@@ -1,0 +1,26 @@
+[
+    {
+        "name_ar": " ",
+        "name_en": " ",
+        "title_ar": " ",
+        "title_en": " ",
+        "content_ar": "جيماوي غير طريقة إدارة النادي بالكامل. النظام سهل ومريح جداً للاستخدام، وساعدنا في تنظيم كل شيء.",
+        "content_en": "Gymmawy completely changed how we manage our gym. The system is very easy and comfortable to use, and helped us organize everything.",
+        "youtube_url": "https://www.youtube.com/embed/oG3QEFLjEvI",
+        "type": "video",
+        "order": 1,
+        "active": true
+    },
+    {
+        "name_ar": " ",
+        "name_en": " ",
+        "title_ar": " ",
+        "title_en": " ",
+        "content_ar": "أفضل نظام إدارة جربته على الإطلاق. الدعم الفني ممتاز والميزات شاملة ومتكاملة.",
+        "content_en": "The best management system I've ever tried. Excellent technical support and comprehensive integrated features.",
+        "youtube_url": "https://www.youtube.com/embed/qynnYZcnTBU",
+        "type": "video",
+        "order": 2,
+        "active": true
+    }
+]

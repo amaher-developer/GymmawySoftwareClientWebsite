@@ -1082,6 +1082,11 @@
                 </div>
             </section>
             <!--! FEATURES SECTION -->
+
+            <!-- STATS SECTION -->
+            {{-- @include('demo::Front.partials.stats') --}}
+            <!--! STATS SECTION -->
+
             <div style="clear: both;float:none;"></div>
             <!-- APP SECTION -->
             <section class="section" id="app">
@@ -1145,6 +1150,9 @@
             </section>
             <!--! APP SECTION -->
 
+            <!-- TESTIMONIALS SECTION -->
+            @include('demo::Front.partials.testimonials')
+            <!--! TESTIMONIALS SECTION -->
 
             <!-- QUOTE SECTION -->
 {{--            <section class="section " id="clients">--}}
@@ -1219,6 +1227,10 @@
             </section>
             <!--! SECTION -->
 
+            <!-- FAQ SECTION -->
+            @include('demo::Front.partials.faq')
+            <!--! FAQ SECTION -->
+
             @if($country_name != 'egypt')
             <!-- CLIENTS SECTION -->
             <section class="section " id="clients">
@@ -1274,6 +1286,9 @@
             <!-- CLIENTS SECTION -->
                 @endif
 
+            <!-- TRUST BADGES SECTION -->
+            {{-- @include('demo::Front.partials.trust-badges') --}}
+            <!--! TRUST BADGES SECTION -->
 
         </div>
         <!--! ALL CONTENTS -->
