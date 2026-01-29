@@ -20,7 +20,7 @@
                     <div class="testimonial-card">
                         @if($testimonial['type'] == 'video' && isset($testimonial['youtube_url']))
                         <div class="testimonial-video-wrapper">
-                            <iframe src="{{$testimonial['youtube_url']}}"
+                            <iframe src="{{$testimonial['youtube_url']}}" style="width: 100%;height: 320px"
                                     title="{{$lang == 'ar' ? $testimonial['name_ar'] : $testimonial['name_en']}}"
                                     frameborder="0"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

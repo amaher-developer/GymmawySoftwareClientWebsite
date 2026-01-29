@@ -1,0 +1,1 @@
+@extends('premier::layouts.master')

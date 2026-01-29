@@ -287,6 +287,14 @@
                     <div class="clear"></div>
                 </div>
             </div>
+
+            
+
+            <!-- TESTIMONIALS SECTION -->
+            @include('demo::Front.partials.testimonials')
+            <!--! TESTIMONIALS SECTION -->
+
+            
             <!--! CALL TO ACTION -->
             <section class="section  section-colored" data-bg="#f5f5f5" id="try">
                 <div class="page-section-content overflow-hidden">
@@ -1149,10 +1157,6 @@
                 </div>
             </section>
             <!--! APP SECTION -->
-
-            <!-- TESTIMONIALS SECTION -->
-            @include('demo::Front.partials.testimonials')
-            <!--! TESTIMONIALS SECTION -->
 
             <!-- QUOTE SECTION -->
 {{--            <section class="section " id="clients">--}}
