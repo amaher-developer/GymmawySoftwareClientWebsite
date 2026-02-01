@@ -51,7 +51,7 @@ class TabbyService
 
     public function createWebHooks(){
         $body = ['url' => route('tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE')])->baseUrl($this->base_url.'v1/');
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $response = $http->post('webhooks',$body);
@@ -61,7 +61,7 @@ class TabbyService
     public function getWebHooks(){
 //        $create = $this->createWebHooks();
 //        if(@$create->id) {
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => env('TABBY_MERCHANT_CODE')])->baseUrl($this->base_url.'v1/');
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $url = 'webhooks' ;
@@ -128,14 +128,13 @@ class TabbyService
                 ],
             ],
             "lang" => app()->getLocale(),
-            "merchant_code" => @env('TABBY_MERCHANT_CODE'),
+            "merchant_code" => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau'),
             "merchant_urls" => [
                 "success" => $data['success-url'],
                 "cancel" => @$data['cancel-url'],
                 "failure" => @$data['failure-url'],
             ]
         ];
-//dd($body);
         return $body;
     }
 }

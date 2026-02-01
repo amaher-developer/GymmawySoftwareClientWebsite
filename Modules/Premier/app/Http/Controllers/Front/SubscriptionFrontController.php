@@ -288,7 +288,7 @@ class SubscriptionFrontController extends GenericFrontController
             'dob' => $member['dob'],
             'address' => $member['address'],
             'gender' => $member['gender'],
-            'amount' => $member['amount'],
+            'amount' => round($member['amount'], 2),
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
@@ -307,7 +307,7 @@ class SubscriptionFrontController extends GenericFrontController
             'category' => 'Membership',
         ]);
         $order_data = [
-            'amount'=> (@$subscription['price'] + $vatAmount),
+            'amount'=> round((@$subscription['price'] + $vatAmount), 2),
             'currency' => @env('TABBY_CURRENCY', 'SAR'),
             'description'=> @$subscription['content'],
             'full_name'=> $member['name'],
@@ -318,7 +318,7 @@ class SubscriptionFrontController extends GenericFrontController
             'address'=> @env('TABBY_ADDRESS'),
             'city' => @env('TABBY_CITY'),
             'zip'=> '1234',
-            'order_id'=> '"'.$paymentOnlineInvoice->id.'"',
+            'order_id'=> $paymentOnlineInvoice->id,
             'registered_since' => $registered_since,
             'updated_at' => $updated_at,
             'purchased_at' => $purchased_at,
@@ -328,7 +328,6 @@ class SubscriptionFrontController extends GenericFrontController
             'failure-url' => route('tabby-error-failure', ['invoice_id' => $unique_id]),
             'items' => $items,
         ];
-
         // step 1: create session
         $payment = new TabbyService();
         $payment = $payment->createSession($order_data);
