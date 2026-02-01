@@ -38,7 +38,7 @@ class MainFrontController extends GenericFrontController
         $record = $this->mainSettings;
         $title = @$record->name;
         $lang = $this->lang;
-        $cover_images = @(array)$record['cover_images'];
+        $banners = Banner::where("title", "!=", "schedule_banner")->where('is_web', true)->limit(5)->get()->pluck('image');
         $images = (array)$record['images'];
         $subscriptions = Subscription::where('is_web', true)->orderBy('id', 'desc')->get();
         $activities = Activity::where('is_web', true)->orderBy('id', 'desc')->get();
