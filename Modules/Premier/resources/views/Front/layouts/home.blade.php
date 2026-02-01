@@ -93,7 +93,7 @@
         <!-- Pogo Silder Start -->
         <div class="pogoSlider" id="pogo-slider">
             @foreach($cover_images as $cover_image)
-            <div class="pogoSlider-slide" data-transition="shrinkReveal" data-duration="1000" style="background-image:url({{env('APP_URL_MASTER').'uploads/settings/gyms/'.$cover_image}});">
+            <div class="pogoSlider-slide" data-transition="shrinkReveal" data-duration="1000" style="background-image:url({{$cover_image}});">
                 <!-- Slider Elements -->
                 <div class="silder-elements">
                     <h2 class="pogoSlider-slide-element slider-main-title" data-in="slideDown" data-out="slideUp" data-duration="750" data-delay="500"> <span class="invisible-mobile ">{{$mainSettings['name']}}</span></h2>
