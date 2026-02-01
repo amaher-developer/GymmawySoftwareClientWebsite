@@ -10,6 +10,7 @@ Route::name('contact')->get('/contact', [\App\Modules\Almadagym\app\Http\Control
 Route::name('contact')->post('/contact', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'contactStore']);
 Route::name('banner')->get('/banner', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'banner']);
 Route::name('terms')->get('/terms', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'terms']);
+Route::name('policy')->get('/policy', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'policy']);
 
 Route::prefix('user')
     ->middleware(['auth'])

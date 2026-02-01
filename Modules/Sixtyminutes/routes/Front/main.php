@@ -10,6 +10,7 @@ Route::name('contact')->get('/contact', [\App\Modules\Sixtyminutes\app\Http\Cont
 Route::name('contact')->post('/contact', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'contactStore']);
 Route::name('banner')->get('/banner', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'banner']);
 Route::name('terms')->get('/terms', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'terms']);
+Route::name('policy')->get('/policy', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'policy']);
 
 Route::prefix('user')
     ->middleware(['auth'])

@@ -18,6 +18,7 @@ Route::name('clearWebsiteCache')->get('/clear-website-cache', [GenericFrontContr
 Route::name('contact')->get('/contact', [MainFrontController::class, 'contactCreate']);
 Route::name('contact')->post('/contact', [MainFrontController::class, 'contactStore']);
 Route::name('terms')->get('/terms', [MainFrontController::class, 'terms']);
+Route::name('policy')->get('/policy', [MainFrontController::class, 'policy']);
 Route::name('feedback')->post('/feedback', [MainFrontController::class, 'feedbackStore']);
 Route::name('newsletter')->post('/newsletter', [MainFrontController::class, 'newsletter']);
 

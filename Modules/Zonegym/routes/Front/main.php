@@ -45,6 +45,7 @@ Route::name('contact')->get('/contact', [MainFrontController::class, 'contactCre
 Route::name('contact')->post('/contact', [MainFrontController::class, 'contactStore']);
 Route::name('banner')->get('/banner', [MainFrontController::class, 'banner']);
 Route::name('terms')->get('/terms', [MainFrontController::class, 'terms']);
+Route::name('policy')->get('/policy', [MainFrontController::class, 'policy']);
 
 Route::prefix('user')
     ->middleware(['auth'])

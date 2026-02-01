@@ -86,7 +86,13 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
-
+    public function policy()
+    {
+        return view('redbone::Front.pages.policy', [
+            'title' => trans('global.policy'),
+            'policy' => $this->mainSettings->policy
+        ]);
+    }
 
     public function contactCreate()
     {

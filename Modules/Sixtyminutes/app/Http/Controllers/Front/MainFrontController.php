@@ -81,7 +81,13 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
-
+    public function policy()
+    {
+        return view('sixtyminutes::Front.pages.policy', [
+            'title' => trans('global.policy'),
+            'policy' => $this->mainSettings->policy
+        ]);
+    }
 
     public function contactCreate()
     {

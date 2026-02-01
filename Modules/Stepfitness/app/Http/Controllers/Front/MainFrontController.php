@@ -59,7 +59,21 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
+    public function terms()
+    {
+        return view('stepfitness::Front.pages.terms', [
+            'title' => trans('global.terms'),
+            'terms' => $this->mainSettings->terms
+        ]);
+    }
 
+    public function policy()
+    {
+        return view('stepfitness::Front.pages.policy', [
+            'title' => trans('global.policy'),
+            'policy' => $this->mainSettings->policy
+        ]);
+    }
 
     public function contactCreate()
     {
