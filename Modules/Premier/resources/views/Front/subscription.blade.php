@@ -89,6 +89,9 @@
             <div class="row">
                 <div class="col-lg-8">
                     <div class="blog-box">
+                        @if(!empty($record['image']))
+                            <img src="{{asset($record['image'])}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 5px; margin-bottom: 20px;">
+                        @endif
                         <div class="blog-content">
                             @php
                                 $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
