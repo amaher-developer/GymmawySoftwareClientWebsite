@@ -90,7 +90,7 @@
                 <div class="col-lg-8">
                     <div class="blog-box">
                         @if(!empty($record['image_name']))
-                            <img src="{{env('APP_URL_MASTER').'uploads/subscriptions/'.$record['image_name']}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 5px; margin-bottom: 20px;">
+                            <img src="{{env('APP_URL_MASTER').'uploads/subscriptions/'.$record['image_name']}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 5px; margin-bottom: 20px;">
                         @endif
                         <div class="blog-content">
                             @php
