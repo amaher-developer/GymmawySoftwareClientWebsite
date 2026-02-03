@@ -112,6 +112,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function invoiceSubmit(SubscriptionRequest $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
         // :this process before payment
         // check on member info.
         // check on member ships
@@ -275,6 +277,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     // tabby
     public function tabby_payment($subscription = [], $member = []){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        
         $vatPercentage = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
         $priceBeforeVat = $subscription['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
@@ -365,6 +369,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabbyNotify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        
         Log::info('Tabby webhook received', $request->all());
 
         $event   = $request->event ?? null;
@@ -549,6 +555,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabby_payment_verify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        
         $invoiceId = $request->invoice_id;      // internal id
         $tabbyPaymentId = $request->payment_id; // Tabby payment.id
 
@@ -681,14 +689,23 @@ class SubscriptionFrontController extends GenericFrontController
 
 
     public function error_payment(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $title = trans('front.invoice');
         return view('premier::Front.error', compact('title'));
     }
     public function tabbyFailure(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+        
         $title = trans('front.invoice');
         return view('premier::Front.tabby_error_failure', compact('title'));
     }
     public function tabbyCancel(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+        
         $title = trans('front.invoice');
         return view('premier::Front.tabby_error_cancel', compact('title'));
     }
