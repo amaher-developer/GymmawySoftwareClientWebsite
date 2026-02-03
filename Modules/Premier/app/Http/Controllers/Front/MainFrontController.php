@@ -30,11 +30,15 @@ class MainFrontController extends GenericFrontController
     public function __construct()
     {
         parent::__construct();
+        
     }
 
 
     public function index()
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $record = $this->mainSettings;
         $title = @$record->name;
         $lang = $this->lang;

@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Illuminate\Support\Facades\View;
+
 
 class SubscriptionFrontController extends GenericFrontController
 {
@@ -28,6 +30,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function show($id)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
 
@@ -58,6 +62,9 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function invoice($invoice_id)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $invoice = $this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
         $title = trans('front.invoice');
 

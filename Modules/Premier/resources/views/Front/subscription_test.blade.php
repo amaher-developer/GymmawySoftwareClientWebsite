@@ -69,7 +69,6 @@
 @endsection
 
 @section('content')
-
     <!-- Page title -->
     <section class="page-title-sec over-layer-black">
         <div id="particles-js"></div>
