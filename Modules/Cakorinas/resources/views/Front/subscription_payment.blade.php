@@ -16,11 +16,11 @@
         }
 
         .blog-single-sec .blog-content p {
-            text-align: right;
+            text-align: {{ $lang == 'ar' ? 'right' : 'left' }};
         }
 
         h4, h5 {
-            text-align: right;
+            text-align: {{ $lang == 'ar' ? 'right' : 'left' }} !important;
         }
 
         .highlight-text {
@@ -28,10 +28,12 @@
             border: solid 1px #f97d04;
             margin-bottom: 20px !important;
             margin-top: 20px !important;
+            direction: {{ $lang == 'ar' ? 'rtl' : 'ltr' }};
+            text-align: {{ $lang == 'ar' ? 'right' : 'left' }};
         }
 
         .simple-btn-div {
-            text-align: right;
+            text-align: {{ $lang == 'ar' ? 'right' : 'left' }};
         }
 
         .radio-input {
@@ -43,10 +45,12 @@
             background: #f5f5f5;
             padding: 20px;
             border-radius: 5px;
+            direction: {{ $lang == 'ar' ? 'rtl' : 'ltr' }};
+            text-align: {{ $lang == 'ar' ? 'right' : 'left' }};
         }
 
         .blog-single-sec .blog-content {
-            padding-right: 0px;
+            {{ $lang == 'ar' ? 'padding-right' : 'padding-left' }}: 0px;
         }
 
         ::placeholder {
@@ -82,7 +86,7 @@
                 <div class="col-lg-8">
                     <div class="blog-box">
                         <div class="blog-content">
-                            <h4>{{$record['name']}} <span style="color: #f97d04;float: left;;font-size: 16px;padding: 10px;background-color: #6c757d26;border-radius: 5px">{{trans('front.price')}}: {{$record['price']}} {{trans('front.pound_unit')}}</span></h4>
+                            <h4>{{$record['name']}} <span style="color: #f97d04;float: {{ $lang == 'ar' ? 'left' : 'right' }};font-size: 16px;padding: 10px;background-color: #6c757d26;border-radius: 5px">{{trans('front.price')}}: {{$record['price']}} {{trans('front.pound_unit')}}</span></h4>
 {{--                            <p>It is a long established fact that a reader </p>--}}
                             <div class="clearfix"><br/></div>
                             @if(\Session::has('error'))
