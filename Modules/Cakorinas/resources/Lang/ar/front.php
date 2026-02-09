@@ -122,4 +122,11 @@ return [
     'error_member_subscription_active' => 'لديك اشتراك نشط بالفعل',
     'error_subscription_date_overlap' => 'التاريخ المحدد يتعارض مع اشتراك نشط آخر',
 
+    // Payment Success
+    'payment_success' => 'تم الدفع بنجاح',
+    'payment_success_title' => 'تم الدفع بنجاح!',
+    'payment_success_msg' => 'تم تفعيل اشتراكك. شكرا لك على الدفع.',
+    'view_invoice' => 'عرض الفاتورة',
+    'back_to_home' => 'العودة للرئيسية',
+
 ];

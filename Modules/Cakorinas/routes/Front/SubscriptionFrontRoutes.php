@@ -2,8 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
+// Route::name('subscription')->get('/subscription/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'show']);
 Route::name('subscription')->get('/subscription/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'show']);
-Route::name('subscription-test')->get('/subscription-test/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'showTest']);
+Route::name('subscription-submit')->post('/subscription/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'invoiceSubmit']);
+Route::name('paymob-verify')->any('/paymob/verify', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'paymobVerify']);
+Route::name('payment-success')->get('/payment-success', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'paymentSuccess']);
 Route::name('invoice')->get('/invoice/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'invoice']);
 Route::name('invoice')->post('/invoice/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'invoiceSubmit']);
 Route::name('reservation')->post('/reservation/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'reservationSubmit']);

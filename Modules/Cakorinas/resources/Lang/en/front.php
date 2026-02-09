@@ -103,4 +103,11 @@ return [
     'error_member_subscription_active' => 'You already have an active subscription',
     'error_subscription_date_overlap' => 'The selected date conflicts with another active subscription',
 
+    // Payment Success
+    'payment_success' => 'Payment Successful',
+    'payment_success_title' => 'Payment Completed Successfully!',
+    'payment_success_msg' => 'Your subscription has been activated. Thank you for your payment.',
+    'view_invoice' => 'View Invoice',
+    'back_to_home' => 'Back to Home',
+
     ];

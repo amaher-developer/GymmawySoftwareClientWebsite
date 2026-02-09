@@ -193,7 +193,7 @@
                                     <li> {{trans('front.session_num')}}: {{$subscription->workouts}}</li>
                                 </ul>
                                 <h3>{{$subscription->price}} {{trans('front.pound_unit')}} </h3>
-                                <a class="btn btn-default sing-up-btn" style="border: 1px solid;" type="button" href="{{route('subscription', ['id' => $subscription->id])}}">{{trans('front.subscribe')}}</a>
+                                <!-- <a class="btn btn-default sing-up-btn" style="border: 1px solid;" type="button" href="{{route('subscription', ['id' => $subscription->id])}}">{{trans('front.subscribe')}}</a> -->
                             </div>
                         </div>
                     </div>

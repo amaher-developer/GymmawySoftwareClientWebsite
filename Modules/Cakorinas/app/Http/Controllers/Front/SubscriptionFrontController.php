@@ -37,14 +37,14 @@ class SubscriptionFrontController extends GenericFrontController
         return view('payment-failed');
     }
 
-    public function show($id)
-    {
-//        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
-        $record = Subscription::where('id', $id)->first();
-        $subscriptions = @Subscription::where('is_web', true)->get();
-        $title = $record['name'];
-        return view('cakorinas::Front.subscription', compact('title', 'record', 'subscriptions'));
-    }
+//     public function show($id)
+//     {
+// //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
+//         $record = Subscription::where('id', $id)->first();
+//         $subscriptions = @Subscription::where('is_web', true)->get();
+//         $title = $record['name'];
+//         return view('cakorinas::Front.subscription', compact('title', 'record', 'subscriptions'));
+//     }
 
     public function showPTClass($id)
     {
@@ -55,13 +55,304 @@ class SubscriptionFrontController extends GenericFrontController
         return view('cakorinas::Front.pt_class', compact('title', 'record','pt_classes'));
     }
 
-    public function showTest($id)
+    public function show($id)
     {
-//        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
+        // Share current user with view for Paymob payment form
+        if (request()->hasSession()) {
+            $sessionUser = request()->session()->get('user');
+            if ($sessionUser) {
+                $this->current_user = is_array($sessionUser) ? (object) $sessionUser : $sessionUser;
+                View::share('currentUser', $this->current_user);
+            } else {
+                $this->current_user = null;
+                View::share('currentUser', null);
+            }
+        } else {
+            $this->current_user = null;
+            View::share('currentUser', null);
+        }
+
         $record = Subscription::where('id', $id)->first();
         $subscriptions = @Subscription::where('is_web', true)->get();
         $title = $record['name'];
-        return view('cakorinas::Front.subscription_test', compact('title', 'record', 'subscriptions'));
+        return view('cakorinas::Front.subscription', compact('title', 'record', 'subscriptions'));
+    }
+
+    /**
+     * Handle test payment form submission
+     * Step 2: Validate and process payment request
+     */
+    public function invoiceSubmit(SubscriptionRequest $request)
+    {
+        $member_data = [];
+        $subscription_id = $request->subscription_id;
+        $subscription = Subscription::where('id', $subscription_id)->first();
+
+        if($subscription) {
+            if (!@request()->session()->get('user')) {
+                $member = Member::where('phone', @$request->phone)->first();
+                if (@$member) {
+                    \Session::flash('error', trans('front.error_member_exist'));
+                    return redirect()->back();
+                }
+
+                $member_data['name'] = @$request->name;
+                $member_data['phone'] = @$request->phone;
+                $member_data['email'] = @$request->email;
+                $member_data['address'] = @$request->address;
+                $member_data['dob'] = @Carbon::parse($request->dob);
+                $member_data['gender'] = @$request->gender;
+            } else {
+                $member_data['name'] = @request()->session()->get('user')->name;
+                $member_data['phone'] = @request()->session()->get('user')->phone;
+                $member_data['email'] = @request()->session()->get('user')->email;
+                $member_data['address'] = @request()->session()->get('user')->address;
+                $member_data['dob'] = @request()->session()->get('user')->dob;
+                $member_data['gender'] = @request()->session()->get('user')->gender;
+            }
+
+            $member_data['subscription_id'] = @$request->subscription_id;
+            $member_data['payment_method'] = @(int)$request->payment_method;
+            $member_data['amount'] = @$request->amount;
+            $member_data['vat_percentage'] = @$request->vat_percentage;
+            $member_data['vat'] = (@$request->vat_percentage / 100) * @$request->amount;
+            $member_data['start_date'] = @$request->start_date ? Carbon::parse($request->start_date) : Carbon::now();
+
+            // Check subscription overlap for logged-in users
+            if (@request()->session()->get('user')) {
+                $requested_start_date = $member_data['start_date'];
+                $requested_end_date = $requested_start_date->copy()->addDays($subscription->period);
+
+                $overlapping_subscription = MemberSubscription::where('member_id', @request()->session()->get('user')->id)
+                    ->where('status', Constants::Active)
+                    ->where(function($query) use ($requested_start_date, $requested_end_date) {
+                        $query->where(function($q) use ($requested_start_date, $requested_end_date) {
+                            $q->where('joining_date', '<=', $requested_start_date)
+                              ->where('expire_date', '>=', $requested_start_date);
+                        })->orWhere(function($q) use ($requested_start_date, $requested_end_date) {
+                            $q->where('joining_date', '<=', $requested_end_date)
+                              ->where('expire_date', '>=', $requested_end_date);
+                        })->orWhere(function($q) use ($requested_start_date, $requested_end_date) {
+                            $q->where('joining_date', '>=', $requested_start_date)
+                              ->where('expire_date', '<=', $requested_end_date);
+                        });
+                    })
+                    ->first();
+
+                if ($overlapping_subscription) {
+                    \Session::flash('error', trans('front.error_subscription_date_overlap'));
+                    return redirect()->back();
+                }
+            }
+
+            // Process Paymob payment
+            if(@(int)$request->payment_method == Constants::PAYMOB){
+                $payment_url = $this->paymobPayment($subscription->toArray(), $member_data);
+                return redirect($payment_url);
+            } else {
+                \Session::flash('error', trans('front.error_in_data'));
+                return redirect()->back();
+            }
+        }
+
+        \Session::flash('error', trans('front.error_in_data'));
+        return redirect()->back();
+    }
+
+    /**
+     * Create Paymob payment for  flow
+     * Step 3: Generate payment URL
+     */
+    public function paymobPayment($subscription = [], $member = [])
+    {
+        $unique_id = uniqid();
+
+        // Create payment invoice record
+        $paymentOnlineInvoice = PaymentOnlineInvoice::create([
+            'payment_id' => $unique_id,
+            'member_id' => @$this->current_user->id,
+            'status' => @Constants::PEND,
+            'subscription_id' => @$member['subscription_id'],
+            'name' => $member['name'],
+            'email' => $member['email'],
+            'phone' => $member['phone'],
+            'dob' => $member['dob'],
+            'address' => $member['address'],
+            'gender' => $member['gender'],
+            'amount' => $member['amount'],
+            'vat' => $member['vat'],
+            'vat_percentage' => $member['vat_percentage'],
+            'payment_method' => $member['payment_method'],
+            'start_date' => @$member['start_date'],
+        ]);
+
+        // Prepare order data for Paymob
+        $orderData = [
+            'amount' => @$subscription['price'],
+            'currency' => 'EGP',
+            'description' => 'Gym Subscription Payment',
+            'order_id' => (string)$paymentOnlineInvoice->id,
+            'customer' => [
+                'name' => $member['name'],
+                'email' => $member['email'] ?? 'guest@example.com',
+                'phone' => $member['phone'],
+            ],
+            'items' => [
+                [
+                    'name' => $subscription['name'],
+                    'description' =>  'Gym Subscription Payment',
+                    'amount_cents' => (int)(@$subscription['price'] * 100),
+                    'quantity' => 1,
+                ]
+            ],
+            'return_url' => route('paymob-verify', ['payment_id' => $unique_id, 'order_id' =>  (string)$paymentOnlineInvoice->id]),
+        ];
+        
+        // Use PaymentServiceFactory to get Paymob service
+        $paymentService = PaymentServiceFactory::make('Cakorinas');
+        $result = $paymentService->createPayment($orderData);
+
+        if (!$result['success']) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return route('subscription', ['id' => $subscription['id']]);
+        }
+
+        // Update invoice with transaction ID
+        $paymentOnlineInvoice->transaction_id = $result['transaction_id'];
+        $paymentOnlineInvoice->save();
+
+        return $result['payment_url'];
+    }
+
+    /**
+     * Verify Paymob payment callback for test flow
+     * Step 4: Handle payment verification and create subscription
+     */
+    public function paymobVerify(Request $request)
+    {dd('ssssssss');
+        $transaction_id = $request->input('id');
+        $order_id = $request->input('order');
+
+        // Find payment invoice
+        $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+            $q->withTrashed();
+        }])->where('transaction_id', $transaction_id)->first();
+
+        if (!$payment_invoice && $order_id) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+                $q->withTrashed();
+            }])->where('transaction_id', $order_id)->first();
+        }
+
+        if($payment_invoice){
+            $paymentService = PaymentServiceFactory::make('Cakorinas');
+            $verificationResult = $paymentService->verifyPayment($request->all());
+
+            if(@$verificationResult['raw_data'] && (@$verificationResult['raw_data']['success'] == "true")){
+                // Payment successful
+                $payment_invoice->status = Constants::SUCCESS;
+                $payment_invoice->response_code = $verificationResult;
+                $payment_invoice->save();
+
+                // Create or get member
+                $member = @request()->session()->get('user');
+                $type_of_payment = Constants::RenewMember;
+
+                if(!@request()->session()->get('user') || !@request()->session()->get('user')->id){
+                    // Create new member
+                    $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
+                    $member = Member::create([
+                        'code' => $maxId,
+                        'name' => $payment_invoice['name'],
+                        'gender' => $payment_invoice['gender'],
+                        'phone' => $payment_invoice['phone'],
+                        'address' => $payment_invoice['address'],
+                        'dob' => $payment_invoice['dob']
+                    ]);
+                    $type_of_payment = Constants::CreateMember;
+                }
+
+                if($member){
+                    // Create member subscription
+                    $start_date = @$payment_invoice['start_date'] ? Carbon::parse($payment_invoice['start_date']) : Carbon::now();
+                    $member_subscription = MemberSubscription::create([
+                        'subscription_id' => $payment_invoice['subscription_id'],
+                        'member_id' => @$member->id,
+                        'workouts' => @$payment_invoice['subscription']['workouts'],
+                        'amount_paid' => @$payment_invoice['amount'],
+                        'vat' => @$payment_invoice['vat'],
+                        'vat_percentage' => @$payment_invoice['vat_percentage'],
+                        'joining_date' => $start_date->toDateTimeString(),
+                        'expire_date' => $start_date->copy()->addDays($payment_invoice['subscription']['period']),
+                        'status' => Constants::Active,
+                        'freeze_limit' => @$payment_invoice['subscription']['freeze_limit'],
+                        'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'],
+                        'amount_before_discount' => @$payment_invoice['subscription']['price'],
+                        'payment_type' => Constants::ONLINE_PAYMENT
+                    ]);
+
+                    $payment_invoice->member_subscription_id = @$member_subscription->id;
+                    $payment_invoice->save();
+
+                    // Update money box
+                    $amount_box = MoneyBox::orderBy('id', 'desc')->first();
+                    $amount_after = SubscriptionFrontController::amountAfter(@$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
+                    $notes = trans('sw.member_moneybox_add_msg', [
+                        'subscription' => @$payment_invoice->subscription->name,
+                        'member' => @$member->name,
+                        'amount_paid' => @$payment_invoice->amount,
+                        'amount_remaining' => 0,
+                    ]);
+
+                    if(@$payment_invoice->vat_percentage){
+                        $notes = $notes.' - '.trans('sw.vat_added');
+                    }
+
+                    MoneyBox::create([
+                        'operation' => Constants::Add,
+                        'amount' => @$payment_invoice->amount,
+                        'vat' => @$payment_invoice['vat'],
+                        'amount_before' => $amount_after,
+                        'notes' => $notes,
+                        'member_id' => @$member->id,
+                        'type' => $type_of_payment,
+                        'payment_type' => Constants::ONLINE_PAYMENT,
+                        'member_subscription_id' => $payment_invoice['subscription_id'],
+                        'online_subscription_id' => @$payment_invoice->id
+                    ]);
+
+                    // Login new member
+                    if(!@request()->session()->get('user')->id){
+                        $auth = new FrontAuthFrontController();
+                        $user = $auth->getSubscriptionInfo($maxId, $member->phone);
+                        request()->session()->put('user', $user->member);
+                    }
+
+                    // Redirect to success page with invoice
+                    return redirect()->route('payment-success')->with('invoice_id', @$member_subscription->id);
+                }
+            } else {
+                // Payment failed
+                $payment_invoice->status = Constants::FAILED;
+                $payment_invoice->response_code = $verificationResult;
+                $payment_invoice->save();
+            }
+        }
+
+        return redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+    }
+
+    /**
+     * Display payment success page
+     */
+    public function paymentSuccess()
+    {
+        View::share('currentUser', @request()->session()->get('user'));
+
+        $invoice_id = session('invoice_id');
+        $title = trans('front.payment_success');
+
+        return view('cakorinas::Front.payment_success', compact('title', 'invoice_id'));
     }
 
     public function invoice($invoice_id)

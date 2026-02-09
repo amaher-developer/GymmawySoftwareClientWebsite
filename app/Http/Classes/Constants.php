@@ -34,6 +34,7 @@ class Constants {
     const MADA = 1;
     const TABBY = 2;
     const PAYMOB = 3;
+    const TAMARA = 4;
 
     const CreateMember = 0;
     const RenewMember = 1;

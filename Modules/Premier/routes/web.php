@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
 Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
 Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::class, 'tabby_payment_verify'])->name('tabby-verify-payment');
+Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::class, 'tamara_payment_verify'])->name('tamara-verify-payment');
+Route::post('/payments/tamara-notify', [SubscriptionFrontController::class, 'tamaraNotify'])->name('tamara-notify');
 Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
 
 Route::name('test')->get('test', [MainFrontController::class, 'test']);

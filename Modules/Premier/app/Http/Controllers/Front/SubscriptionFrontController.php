@@ -5,6 +5,7 @@ use App\Http\Classes\Constants;
 use Modules\Premier\app\Http\Controllers\Front\AuthFrontController;
 use Modules\Premier\app\Http\Controllers\Front\GenericFrontController;
 use Modules\Premier\app\Http\Classes\TabbyService;
+use Modules\Premier\app\Http\Classes\TamaraService;
 use Modules\Premier\app\Http\Requests\SubscriptionRequest;
 use Modules\Premier\Models\Member;
 
@@ -45,21 +46,6 @@ class SubscriptionFrontController extends GenericFrontController
         return view('premier::Front.subscription', compact('title', 'record', 'subscriptions'));
     }
 
-    public function showTest($id)
-    {
-//        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
-        $record = Subscription::where('id', $id)->first();
-
-        if (!$record) {
-            \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('home');
-        }
-
-        $subscriptions = @Subscription::where('is_web', true)->get();
-        $title = $record['name'];
-        return view('premier::Front.subscription_test', compact('title', 'record', 'subscriptions'));
-    }
-
     public function invoice($invoice_id)
     {
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
@@ -77,37 +63,8 @@ class SubscriptionFrontController extends GenericFrontController
     }
 
     public function getInvoiceDetails($invoice_id, $member_id){
-               
-
-//        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id, 'member_id' => $member_id])->first();
-
         $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id])->first();
         return $invoice;
-/*
-        $ch = curl_init();
-        $certificate_location = "";
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $certificate_location);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $certificate_location);
-        $options = array(
-            CURLOPT_URL            => @env('APP_URL_MASTER')."api/member-subscription-invoice-info",
-            CURLOPT_HTTPHEADER     => array(
-                'Content-Type: application/json'
-            ),
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode(array(
-                'lang' => $this->lang,
-                'invoice_id' => $invoice_id,
-                'member_id' => $member_id,
-            )),
-            CURLOPT_RETURNTRANSFER => true
-        );
-
-        curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $result = json_decode($response);
-        return (@$result);
-        */
     }
 
     public function invoiceSubmit(SubscriptionRequest $request)
@@ -167,6 +124,9 @@ class SubscriptionFrontController extends GenericFrontController
             }else if(@$request->payment_method == Constants::TABBY){
                 // tabby
                 $payment_url = $this->tabby_payment($subscription->toArray(), $member_data);
+            }else if(@$request->payment_method == Constants::TAMARA){
+                // tamara
+                $payment_url = $this->tamara_payment($subscription->toArray(), $member_data);
             }
             return redirect($payment_url);
         }
@@ -202,6 +162,7 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
+            'payment_gateway' => Constants::MADA,
             'response_code' => ['joining_date' => $member['joining_date']],
         ]);
 
@@ -303,6 +264,7 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => $member['payment_method'],
+            'payment_gateway' => Constants::TABBY,
             'response_code' => ['joining_date' => $member['joining_date']],
         ]);
 
@@ -705,11 +667,366 @@ class SubscriptionFrontController extends GenericFrontController
     public function tabbyCancel(){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);
-        
+
         $title = trans('front.invoice');
         return view('premier::Front.tabby_error_cancel', compact('title'));
     }
 
+    // tamara
+    public function tamara_payment($subscription = [], $member = [])
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        $vatPercentage = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
+        $priceBeforeVat = $subscription['price'];
+        $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+        $unique_id = uniqid();
+
+        $paymentOnlineInvoice = PaymentOnlineInvoice::create([
+            'payment_id' => $unique_id,
+            'member_id' => @$this->current_user->id,
+            'status' => @Constants::PEND,
+            'subscription_id' => @$member['subscription_id'],
+            'name' => $member['name'],
+            'email' => $member['email'],
+            'phone' => $member['phone'],
+            'dob' => $member['dob'],
+            'address' => $member['address'],
+            'gender' => $member['gender'],
+            'amount' => round($member['amount'], 2),
+            'vat' => $member['vat'],
+            'vat_percentage' => $member['vat_percentage'],
+            'payment_method' => $member['payment_method'],
+            'payment_gateway' => Constants::TAMARA,
+            'response_code' => ['joining_date' => $member['joining_date']],
+        ]);
+
+        $items = collect([]);
+        $items->push([
+            'title' => $subscription['name'],
+            'description' => @$subscription['content'],
+            'quantity' => 1,
+            'unit_price' => $subscription['price'],
+            'total_amount' => round((@$subscription['price'] + $vatAmount), 2),
+            'reference_id' => (string) $paymentOnlineInvoice->id,
+        ]);
+
+        $order_data = [
+            'amount' => round((@$subscription['price'] + $vatAmount), 2),
+            'currency' => @env('TAMARA_CURRENCY', 'SAR'),
+            'description' => @$subscription['content'],
+            'full_name' => $member['name'],
+            'buyer_phone' => $member['phone'],
+            'buyer_email' => $member['email'] ?? '',
+            'address' => @env('TAMARA_ADDRESS', ''),
+            'city' => @env('TAMARA_CITY', 'Riyadh'),
+            'order_id' => $paymentOnlineInvoice->id,
+            'success-url' => route('tamara-verify-payment', ['invoice_id' => $unique_id]),
+            'cancel-url' => route('tamara-error-cancel', ['invoice_id' => $unique_id]),
+            'failure-url' => route('tamara-error-failure', ['invoice_id' => $unique_id]),
+            'notification-url' => route('tamara-notify'),
+            'items' => $items->toArray(),
+        ];
+
+        $payment = new TamaraService();
+        $response = $payment->createCheckout($order_data);
+
+        if (!@$response->checkout_url) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return route('subscription', ['id' => $subscription['id']]);
+        }
+
+        $paymentOnlineInvoice->transaction_id = @$response->order_id;
+        $responseArray = @(array)$response;
+        $responseArray['joining_date'] = $member['joining_date'];
+        $paymentOnlineInvoice->response_code = $responseArray;
+        $paymentOnlineInvoice->save();
+
+        return $response->checkout_url;
+    }
+
+    public function tamara_payment_verify(Request $request)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        $invoiceId = $request->invoice_id;
+        $paymentStatus = $request->paymentStatus;
+        $orderId = $request->orderId;
+
+        $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+            $q->withTrashed();
+        }])->where('payment_id', $invoiceId)->first();
+
+        if (!$paymentInvoice) {
+            Log::error('Invoice not found for Tamara payment', compact('invoiceId'));
+            return redirect()->route('error-payment', ['payment_id' => $invoiceId]);
+        }
+
+        // Already processed
+        if ($paymentInvoice->member_subscription_id) {
+            return redirect()->route('invoice', [
+                'id' => $paymentInvoice->member_subscription_id
+            ]);
+        }
+
+        $joiningDate = $paymentInvoice->response_code['joining_date']
+            ?? Carbon::now()->toDateString();
+
+        // Check redirect status
+        if ($paymentStatus !== 'approved') {
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tamara_redirect_status' => $paymentStatus]
+            );
+            $paymentInvoice->save();
+
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('subscription', [
+                'id' => $paymentInvoice->subscription_id
+            ]);
+        }
+
+        $tamaraService = new TamaraService();
+        $tamaraOrderId = $paymentInvoice->transaction_id;
+
+        // Authorise the order (required by Tamara after approval)
+        $authorise = $tamaraService->authoriseOrder($tamaraOrderId);
+
+        Log::info('Tamara authorise response', (array) $authorise);
+
+        $authoriseStatus = @$authorise->status;
+
+        // If auto-capture is enabled, status will be fully_captured directly
+        if ($authoriseStatus === 'fully_captured') {
+            // Already captured via auto-capture
+        } elseif ($authoriseStatus === 'authorised') {
+            // Capture the payment
+            $capture = $tamaraService->capturePayment(
+                $tamaraOrderId,
+                (string) $paymentInvoice->amount,
+                [['title' => @$paymentInvoice->subscription->name, 'quantity' => 1, 'unit_price' => $paymentInvoice->amount, 'total_amount' => $paymentInvoice->amount, 'reference_id' => (string)$paymentInvoice->id]]
+            );
+
+            Log::info('Tamara capture response', (array) $capture);
+
+            if (!$capture || !in_array(@$capture->status, ['fully_captured', 'partially_captured'])) {
+                $paymentInvoice->status = Constants::FAILED;
+                $paymentInvoice->response_code = array_merge(
+                    (array) $paymentInvoice->response_code,
+                    ['tamara_authorise' => (array) $authorise, 'tamara_capture' => (array) $capture]
+                );
+                $paymentInvoice->save();
+
+                \Session::flash('error', trans('front.error_in_data'));
+                return redirect()->route('subscription', [
+                    'id' => $paymentInvoice->subscription_id
+                ]);
+            }
+        } else {
+            // Authorisation failed
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tamara_authorise' => (array) $authorise]
+            );
+            $paymentInvoice->save();
+
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('subscription', [
+                'id' => $paymentInvoice->subscription_id
+            ]);
+        }
+
+        // Success — finalize
+        $paymentInvoice->status = Constants::SUCCESS;
+        $paymentInvoice->response_code = array_merge(
+            (array) $paymentInvoice->response_code,
+            ['tamara_authorise' => (array) $authorise]
+        );
+        $paymentInvoice->save();
+
+        $memberSubscription = $this->finalizeTabbyCheckout(
+            $paymentInvoice,
+            $joiningDate,
+            $this->current_user,
+            true
+        );
+
+        if ($memberSubscription) {
+            return redirect()->route('invoice', [
+                'id' => $memberSubscription->id
+            ]);
+        }
+
+        // Fallback
+        $paymentInvoice->status = Constants::FAILED;
+        $paymentInvoice->save();
+
+        return redirect()->route('error-payment', [
+            'payment_id' => $invoiceId
+        ]);
+    }
+
+    public function tamaraNotify(Request $request)
+    {
+        Log::info('Tamara webhook received', $request->all());
+
+        $eventType = $request->event_type ?? null;
+        $orderId = $request->order_id ?? null;
+
+        if (!$eventType || !$orderId) {
+            Log::error('Invalid Tamara webhook payload');
+            return response()->json(['status' => 'invalid_payload'], 400);
+        }
+
+        $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+            $q->withTrashed();
+        }])->where('transaction_id', $orderId)->first();
+
+        if (!$paymentInvoice) {
+            Log::error('Invoice not found for Tamara order', [
+                'tamara_order_id' => $orderId
+            ]);
+            return response()->json(['status' => 'invoice_not_found'], 404);
+        }
+
+        // Idempotency — already processed
+        if ($paymentInvoice->status === Constants::SUCCESS) {
+            Log::info('Tamara webhook ignored — already processed', [
+                'invoice_id' => $paymentInvoice->id
+            ]);
+            return response()->json(['status' => 'already_processed'], 200);
+        }
+
+        // Handle declined / expired / canceled
+        if (in_array($eventType, ['order_declined', 'order_canceled', 'order_expired'])) {
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tamara_webhook' => $request->all()]
+            );
+            $paymentInvoice->save();
+
+            return response()->json(['status' => 'payment_failed'], 200);
+        }
+
+        // Only process order_approved
+        if ($eventType !== 'order_approved') {
+            return response()->json(['status' => 'ignored'], 200);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $tamaraService = new TamaraService();
+
+            // Authorise order
+            $authorise = $tamaraService->authoriseOrder($orderId);
+
+            $authoriseStatus = @$authorise->status;
+            $needsCapture = ($authoriseStatus === 'authorised');
+
+            if ($authoriseStatus === 'fully_captured') {
+                // Auto-captured
+            } elseif ($needsCapture) {
+                $capture = $tamaraService->capturePayment(
+                    $orderId,
+                    (string) $paymentInvoice->amount,
+                    [['title' => @$paymentInvoice->subscription->name, 'quantity' => 1, 'unit_price' => $paymentInvoice->amount, 'total_amount' => $paymentInvoice->amount, 'reference_id' => (string)$paymentInvoice->id]]
+                );
+
+                if (!$capture || !in_array(@$capture->status, ['fully_captured', 'partially_captured'])) {
+                    throw new \Exception('Tamara capture failed');
+                }
+            } else {
+                throw new \Exception('Tamara authorise returned unexpected status: ' . $authoriseStatus);
+            }
+
+            // Resolve Member
+            $member = null;
+            $typeOfPayment = Constants::RenewMember;
+
+            if ($paymentInvoice->member_id) {
+                $member = Member::find($paymentInvoice->member_id);
+            }
+
+            if (!$member) {
+                $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $member = Member::create([
+                    'code'    => $maxId,
+                    'name'    => $paymentInvoice->name,
+                    'gender'  => $paymentInvoice->gender,
+                    'phone'   => $paymentInvoice->phone,
+                    'address' => $paymentInvoice->address,
+                    'dob'     => $paymentInvoice->dob,
+                ]);
+                $typeOfPayment = Constants::CreateMember;
+            }
+
+            $joiningDate = Carbon::parse(
+                $paymentInvoice->response_code['joining_date'] ?? now()
+            );
+
+            $memberSubscription = MemberSubscription::create([
+                'subscription_id' => $paymentInvoice->subscription_id,
+                'member_id'       => $member->id,
+                'workouts'        => $paymentInvoice->subscription->workouts,
+                'amount_paid'     => $paymentInvoice->amount,
+                'vat'             => $paymentInvoice->vat,
+                'vat_percentage'  => $paymentInvoice->vat_percentage,
+                'joining_date'    => $joiningDate,
+                'expire_date'     => $joiningDate->copy()->addDays(
+                    $paymentInvoice->subscription->period
+                ),
+                'status'          => Constants::Active,
+                'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
+                'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
+                'amount_before_discount' => $paymentInvoice->subscription->price,
+                'payment_type'    => Constants::ONLINE_PAYMENT,
+            ]);
+
+            $paymentInvoice->status = Constants::SUCCESS;
+            $paymentInvoice->member_subscription_id = $memberSubscription->id;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tamara_webhook' => $request->all()]
+            );
+            $paymentInvoice->save();
+
+            $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
+
+            DB::commit();
+
+            return response()->json(['status' => 'success'], 200);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Tamara webhook failed', [
+                'error' => $e->getMessage(),
+                'tamara_order_id' => $orderId
+            ]);
+
+            return response()->json(['status' => 'error'], 500);
+        }
+    }
+
+    public function tamaraFailure(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
+        $title = trans('front.invoice');
+        return view('premier::Front.tamara_error_failure', compact('title'));
+    }
+
+    public function tamaraCancel(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
+        $title = trans('front.invoice');
+        return view('premier::Front.tamara_error_cancel', compact('title'));
+    }
 
     protected function finalizeTabbyCheckout(PaymentOnlineInvoice $invoice, string $joiningDate, $sessionMember = null, bool $loginNewMember = true): ?MemberSubscription
     {
@@ -786,7 +1103,6 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         if (@$result['generatedCode'] && @$result['member']->phone) {
-            $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
         return $result['memberSubscription'];

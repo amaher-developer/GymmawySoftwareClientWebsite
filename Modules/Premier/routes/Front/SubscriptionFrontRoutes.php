@@ -4,12 +4,11 @@ use Modules\Premier\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('subscription')->get('/subscription/{id}', [SubscriptionFrontController::class, 'show']);
-Route::name('subscription-test')->get('/subscription-test/{id}', [SubscriptionFrontController::class, 'showTest']);
 Route::name('invoice')->get('/invoice/{id}', [SubscriptionFrontController::class, 'invoice']);
 Route::name('invoice')->post('/invoice/{id}', [SubscriptionFrontController::class, 'invoiceSubmit']);
-//Route::name('invoiceStore')->any('/invoice-store', [SubscriptionFrontController::class, 'invoiceStore']);
-Route::name('invoiceReturn')->any('/invoice-return', [SubscriptionFrontController::class, 'invoiceReturn']);
 Route::name('tabby-error-cancel')->get('/tabby/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tabbyCancel']);
 Route::name('tabby-error-failure')->get('/tabby/error/failure/{payment?}', [SubscriptionFrontController::class, 'tabbyFailure']);
+Route::name('tamara-error-cancel')->get('/tamara/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tamaraCancel']);
+Route::name('tamara-error-failure')->get('/tamara/error/failure/{payment?}', [SubscriptionFrontController::class, 'tamaraFailure']);
 
 

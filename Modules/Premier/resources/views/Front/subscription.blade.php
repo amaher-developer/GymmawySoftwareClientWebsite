@@ -233,6 +233,24 @@
                                 </div>
                             </div>
 
+                            <div class="highlight-text">
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input tamara" id="tamara" type="radio"
+                                               name="payment_method" value="4" placeholder="Your name">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/tamara-logo.svg')}}">
+                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
                                         type="submit" value="{{trans('front.pay_now')}}" />

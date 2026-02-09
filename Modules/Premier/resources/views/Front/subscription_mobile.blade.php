@@ -1,4 +1,3 @@
-@extends('cakorinas::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
     <style>
@@ -89,8 +88,26 @@
             <div class="row">
                 <div class="col-lg-8">
                     <div class="blog-box">
+                        @if(!empty($record['image_name']))
+                            <img src="{{env('APP_URL_MASTER').'uploads/subscriptions/'.$record['image_name']}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 5px; margin-bottom: 20px;">
+                        @endif
                         <div class="blog-content">
-                            <h4>{{$record['name']}} <span style="color: #f97d04;float: left;;font-size: 16px;padding: 10px;background-color: #6c757d26;border-radius: 5px">{{trans('front.price')}}: {{$record['price']}} {{trans('front.pound_unit')}}</span></h4>
+                            @php
+                                $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
+                                $priceBeforeVat = $record['price'];
+                                $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+                                $priceWithVat = $priceBeforeVat + $vatAmount;
+                                $priceWithVat = (float)round($priceWithVat, 2);
+                            @endphp
+                            <h4>{{$record['name']}}
+                                <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
+                                    {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
+                                    @if($vatPercentage > 0)
+                                        <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                        <strong>{{trans('global.total')}}: {{$priceWithVat}} {{trans('front.pound_unit')}}</strong>
+                                    @endif
+                                </span>
+                            </h4>
 {{--                            <p>It is a long established fact that a reader </p>--}}
                             <div class="clearfix"><br/></div>
                             @if(\Session::has('error'))
@@ -102,9 +119,11 @@
                             <form method="post" action="{{route('invoice', @$record->id)}}">
                                 {{csrf_field()}}
                                 <input type="hidden" name="subscription_id" value="{{$record['id']}}">
-                                <input type="hidden" name="amount" value="{{$record['price']}}">
+                                <input type="hidden" name="amount" value="{{$priceWithVat}}">
                                 <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
                             <br/><br/>
+
+
                             @if(!$currentUser)
                                 <h5>{{trans('front.register_info')}}:</h5>
                                 <div class="row">
@@ -139,7 +158,7 @@
                                                                placeholder="{{trans('front.birthdate')}}" required="">
                                                         <input type="text" name="address" class="form-control"
                                                                placeholder="{{trans('front.address')}}" required="">
-                                                        <!--                                <input type="text" class="form-control" placeholder="Ø¹Ø¯Ø¯">-->
+                                                        <!--                                <input type="text" class="form-control" placeholder="عدد">-->
 
 
                                                 </div>
@@ -150,30 +169,49 @@
                                 </div>
                                 <br/><br>
                             @endif
-                            <h5>{{trans('front.choose_payment_methods')}}:</h5>
-                            <div class="highlight-text">
+                                <h5>{{trans('front.register_info_joining_date')}}:</h5>
+
                                 <div class="row">
-                                    <div class="col-md-1">
-                                        <input class="form-control radio-input mada" id="mada" type="radio"
-                                               name="payment_method" value="1" placeholder="Your name">
-                                    </div>
-
-                                    <div class="col-md-11">
-                                        <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>
-                                        <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/visa_logo.svg')}}">
-
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/mada-logo.svg')}}">
-
-
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/american_express_logo.svg')}}">
-                                        </p>
+                                    <div class="col-md-12">
+                                        <div class="row">
+                                            <div class="col-md-12  ">
+                                                <div class="highlight-text" STYLE="border-color: grey !important;">
+                                                <input type="date" name="joining_date" class="form-control"
+                                                       value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
+                                                       min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
+                                                       max="{{\Carbon\Carbon::now()->addMonth()->format('Y-m-d')}}"
+                                                       required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-md-offset-3"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                                                    <br/><br/>
+                            <h5>{{trans('front.choose_payment_methods')}}:</h5>
+{{--                            <div class="highlight-text">--}}
+{{--                                <div class="row">--}}
+{{--                                    <div class="col-md-1">--}}
+{{--                                        <input class="form-control radio-input mada" id="mada" type="radio"--}}
+{{--                                               name="payment_method" value="1" placeholder="Your name">--}}
+{{--                                    </div>--}}
+
+{{--                                    <div class="col-md-11">--}}
+{{--                                        <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>--}}
+{{--                                        <p>--}}
+{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
+{{--                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}">--}}
+
+{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
+{{--                                                 src="{{asset('resources/assets/images/mada-logo.svg')}}">--}}
+
+
+{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
+{{--                                                 src="{{asset('resources/assets/images/american_express_logo.svg')}}">--}}
+{{--                                        </p>--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                            </div>--}}
 
                             <div class="highlight-text">
 
@@ -187,9 +225,27 @@
                                         <p><label for="tabby">{{trans('front.tabby_installment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/tabby-logo.webp')}}">
+                                                 src="{{asset('resources/assets/images/tabby-logo.webp')}}">
                                         <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span></p>
                                         <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="highlight-text">
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input tamara" id="tamara" type="radio"
+                                               name="payment_method" value="4" placeholder="Your name">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/tamara-logo.svg')}}">
+                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -225,13 +281,21 @@
 
 @endsection
 @section('script')
+    @php
+        $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
+        $priceBeforeVat = $record['price'];
+        $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+        $priceWithVat = $priceBeforeVat + $vatAmount;
+        $priceWithVat = (float)round($priceWithVat, 2);
+
+    @endphp
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
             selector: '#tabbyCard', // empty div for TabbyCard.
             currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
             lang: 'ar', // Optional, language of snippet and popups.
-            price: {{$record['price']}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
+            price: {{$priceWithVat}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
             size: 'wide', // required, can be also 'wide', depending on the width.
             theme: 'black', // required, can be also 'default'.
             header: false // if a Payment method name present already.
