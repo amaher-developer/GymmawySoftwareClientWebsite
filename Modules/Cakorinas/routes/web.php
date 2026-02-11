@@ -8,6 +8,8 @@ Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Cakorinas\app\Http\
 Route::get('/payments/paymob-verify/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'paymob_payment_verify'])->name('paymob-verify-payment');
 Route::get('/payments/error/{payment?}',[\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
 
+Route::get('/go', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'test']);
 
 Route::get('operate', [\App\Modules\Cakorinas\app\Http\Controllers\Admin\DashboardAdminController::class, 'showHome'])

@@ -12,6 +12,8 @@ Route::name('banner')->get('/banner', [\App\Modules\Almadagym\app\Http\Controlle
 Route::name('terms')->get('/terms', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'terms']);
 Route::name('policy')->get('/policy', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'policy']);
 
+Route::name('downloadApp')->get('/download-app', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'downloadApp']);
+
 Route::prefix('user')
     ->middleware(['auth'])
     ->group(function () {

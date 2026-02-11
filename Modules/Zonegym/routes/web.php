@@ -8,6 +8,8 @@ Route::post('/payments/verify/{payment?}', 'Front\SubscriptionFrontController@pa
 Route::get('/payments/tabby-verify/{payment?}', 'Front\SubscriptionFrontController@tabby_payment_verify')->name('tabby-verify-payment');
 Route::get('/payments/error/{payment?}', 'Front\SubscriptionFrontController@error_payment')->name('error-payment');
 
+Route::get('/go', [\Modules\Zonegym\Http\Controllers\Front\MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', 'Front\MainFrontController@test');
 
 Route::get('operate', 'Admin\DashboardAdminController@showHome')

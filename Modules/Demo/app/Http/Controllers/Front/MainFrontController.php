@@ -7,6 +7,8 @@ use Modules\Demo\Http\Requests\ContactRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Modules\Demo\Models\Contact;
+use Modules\Demo\Models\Setting;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class MainFrontController extends GenericFrontController
 {
@@ -148,8 +150,35 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
+    public function smartLink()
+    {
+        $userAgent = request()->header('User-Agent', '');
+        $settings = Setting::first();
 
+        if (preg_match('/iPhone|iPad|iPod/i', $userAgent) && !empty($settings->ios_app)) {
+            return redirect()->away($settings->ios_app);
+        }
 
+        if (preg_match('/Android/i', $userAgent) && !empty($settings->android_app)) {
+            return redirect()->away($settings->android_app);
+        }
 
+        return redirect()->to(env('APP_URL'));
+    }
+
+    public function downloadApp()
+    {
+        $settings = $this->mainSettings;
+        $smartLinkUrl = url('/go');
+        $qrCode = QrCode::size(300)->generate($smartLinkUrl);
+
+        return view('demo::Front.pages.download_app', [
+            'title' => $this->lang == 'ar' ? 'تحميل التطبيق' : 'Download App',
+            'qrCode' => $qrCode,
+            'smartLinkUrl' => $smartLinkUrl,
+            'iosApp' => $settings->ios_app ?? '',
+            'androidApp' => $settings->android_app ?? '',
+        ]);
+    }
 
 }

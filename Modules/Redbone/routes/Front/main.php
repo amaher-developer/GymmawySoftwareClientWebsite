@@ -27,6 +27,8 @@ Route::name('thanks')->get('/thanks', [MainFrontController::class, 'thanks']);
 //Route::name('rss')->get('/rss', [MainFrontController::class, 'rss']);
 Route::name('sitemap')->get('/sitemap', [MainFrontController::class, 'sitemap']);
 
+Route::name('downloadApp')->get('/download-app', [MainFrontController::class, 'downloadApp']);
+
 
 Route::post('add-favorite-by-ajax', [MainFrontController::class, 'addFavoriteByAjax'])->name('addFavoriteByAjax');
 Route::post('remove-favorite-by-ajax', [MainFrontController::class, 'removeFavoriteByAjax'])->name('removeFavoriteByAjax');

@@ -14,6 +14,8 @@ Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::c
 Route::post('/payments/tamara-notify', [SubscriptionFrontController::class, 'tamaraNotify'])->name('tamara-notify');
 Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
 
+Route::get('/go', [MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', [MainFrontController::class, 'test']);
 
 Route::get('operate', [DashboardAdminController::class, 'showHome'])

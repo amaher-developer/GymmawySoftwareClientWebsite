@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\View;
 use Milon\Barcode\DNS1D;
 use Milon\Barcode\DNS2D;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Thujohn\Rss\Rss;
 
 class MainFrontController extends GenericFrontController
@@ -226,6 +227,37 @@ class MainFrontController extends GenericFrontController
         $setting->under_maintenance = 1;
         $setting->save();
         return 1;
+    }
+
+    public function smartLink()
+    {
+        $userAgent = request()->header('User-Agent', '');
+        $settings = Setting::first();
+
+        if (preg_match('/iPhone|iPad|iPod/i', $userAgent) && !empty($settings->ios_app)) {
+            return redirect()->away($settings->ios_app);
+        }
+
+        if (preg_match('/Android/i', $userAgent) && !empty($settings->android_app)) {
+            return redirect()->away($settings->android_app);
+        }
+
+        return redirect()->to(env('APP_URL'));
+    }
+
+    public function downloadApp()
+    {
+        $settings = $this->mainSettings;
+        $smartLinkUrl = url('/go');
+        $qrCode = QrCode::size(300)->generate($smartLinkUrl);
+
+        return view('stepfitness::Front.pages.download_app', [
+            'title' => $this->lang == 'ar' ? 'تحميل التطبيق' : 'Download App',
+            'qrCode' => $qrCode,
+            'smartLinkUrl' => $smartLinkUrl,
+            'iosApp' => $settings->ios_app ?? '',
+            'androidApp' => $settings->android_app ?? '',
+        ]);
     }
 
     public function test(){

@@ -47,6 +47,8 @@ Route::name('banner')->get('/banner', [MainFrontController::class, 'banner']);
 Route::name('terms')->get('/terms', [MainFrontController::class, 'terms']);
 Route::name('policy')->get('/policy', [MainFrontController::class, 'policy']);
 
+Route::name('downloadApp')->get('/download-app', [MainFrontController::class, 'downloadApp']);
+
 Route::prefix('user')
     ->middleware(['auth'])
     ->group(function () {

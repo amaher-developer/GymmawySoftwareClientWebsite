@@ -12,6 +12,8 @@ Route::name('banner')->get('/banner', [\App\Modules\Sixtyminutes\app\Http\Contro
 Route::name('terms')->get('/terms', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'terms']);
 Route::name('policy')->get('/policy', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'policy']);
 
+Route::name('downloadApp')->get('/download-app', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'downloadApp']);
+
 Route::prefix('user')
     ->middleware(['auth'])
     ->group(function () {

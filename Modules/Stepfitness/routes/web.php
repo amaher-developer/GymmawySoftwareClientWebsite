@@ -12,6 +12,8 @@ Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 
 Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::class, 'tabby_payment_verify'])->name('tabby-verify-payment');
 Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
 
+Route::get('/go', [MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', [MainFrontController::class, 'test']);
 
 Route::get('operate', [DashboardAdminController::class, 'showHome'])

@@ -7,6 +7,8 @@ Route::post('/payments/verify/{payment?}',[\App\Modules\Almadagym\app\Http\Contr
 Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Almadagym\app\Http\Controllers\Front\SubscriptionFrontController::class,'tabby_payment_verify'])->name('tabby-verify-payment');
 Route::get('/payments/error/{payment?}',[\App\Modules\Almadagym\app\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
 
+Route::get('/go', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', [\App\Modules\Almadagym\app\Http\Controllers\Front\MainFrontController::class, 'test']);
 
 Route::get('operate', [\App\Modules\Almadagym\app\Http\Controllers\Admin\DashboardAdminController::class, 'showHome'])

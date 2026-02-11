@@ -4,6 +4,8 @@ Route::post('/payments/verify/{payment?}',[\App\Modules\Generic\Http\Controllers
 Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Generic\Http\Controllers\Front\SubscriptionFrontController::class,'tabby_payment_verify'])->name('tabby-verify-payment');
 Route::get('/payments/error/{payment?}',[\App\Modules\Generic\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
 
+Route::get('/go', [\App\Modules\Redbone\app\Http\Controllers\Front\MainFrontController::class, 'smartLink'])->name('smart-link');
+
 Route::name('test')->get('test', 'Front\MainFrontController@test');
 
 Route::get('operate', 'Admin\DashboardAdminController@showHome')
