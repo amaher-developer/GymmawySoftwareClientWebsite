@@ -133,6 +133,15 @@
     @if(@$error)
         <div class="alert alert-danger">{!! @$error !!}</div>
     @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul style="margin: 0; padding-{{ $isRtl ? 'right' : 'left' }}: 15px;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="subscription-header">
         <h4>{{ $record['name'] }}</h4>
@@ -155,23 +164,23 @@
         @if(!$currentUser)
             <h5 class="section-title">{{trans('front.register_info')}}:</h5>
             <div class="highlight-text">
-                <input type="text" name="name" class="form-control" placeholder="{{trans('front.name')}}" required>
-                <input type="text" name="phone" class="form-control" placeholder="{{trans('front.phone')}}" required>
+                <input type="text" name="name" class="form-control" placeholder="{{trans('front.name')}}" value="{{ old('name') }}" required>
+                <input type="text" name="phone" class="form-control" placeholder="{{trans('front.phone')}}" value="{{ old('phone') }}" required>
                 <div class="gender-row">
-                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::MALE }}" id="male_m" required>
+                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::MALE }}" id="male_m" {{ old('gender') == \App\Http\Classes\Constants::MALE ? 'checked' : '' }} required>
                     <label for="male_m">{{trans('front.male')}}</label>
-                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::FEMALE }}" id="female_m">
+                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::FEMALE }}" id="female_m" {{ old('gender') == \App\Http\Classes\Constants::FEMALE ? 'checked' : '' }}>
                     <label for="female_m">{{trans('front.female')}}</label>
                 </div>
-                <input type="date" name="dob" class="form-control" placeholder="{{trans('front.birthdate')}}" required>
-                <input type="text" name="address" class="form-control" placeholder="{{trans('front.address')}}" required>
+                <input type="date" name="dob" class="form-control" placeholder="{{trans('front.birthdate')}}" value="{{ old('dob') }}" required>
+                <input type="text" name="address" class="form-control" placeholder="{{trans('front.address')}}" value="{{ old('address') }}" required>
             </div>
         @endif
 
         <h5 class="section-title">{{trans('front.register_info_joining_date')}}:</h5>
         <div class="highlight-text">
             <input type="date" name="joining_date" class="form-control"
-                   value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
+                   value="{{ old('joining_date', \Carbon\Carbon::now()->format('Y-m-d')) }}"
                    min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
                    max="{{ \Carbon\Carbon::now()->addMonth()->format('Y-m-d') }}"
                    required>
@@ -180,7 +189,7 @@
         <h5 class="section-title">{{trans('front.choose_payment_methods')}}:</h5>
 
         <div class="payment-option">
-            <input type="radio" name="payment_method" value="2" id="tabby_m">
+            <input type="radio" name="payment_method" value="2" id="tabby_m" {{ old('payment_method') == '2' ? 'checked' : '' }}>
             <div class="payment-details">
                 <label for="tabby_m">{{trans('front.tabby_installment_msg')}}</label>
                 <img src="{{ asset('resources/assets/images/tabby-logo.webp') }}" alt="Tabby">
@@ -190,7 +199,7 @@
         </div>
 
         <div class="payment-option">
-            <input type="radio" name="payment_method" value="4" id="tamara_m">
+            <input type="radio" name="payment_method" value="4" id="tamara_m" {{ old('payment_method') == '4' ? 'checked' : '' }}>
             <div class="payment-details">
                 <label for="tamara_m">{{trans('front.tamara_installment_msg')}}</label>
                 <img src="{{ asset('resources/assets/images/tamara-logo.svg') }}" alt="Tamara">

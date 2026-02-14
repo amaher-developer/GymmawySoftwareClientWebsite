@@ -354,9 +354,13 @@ class SubscriptionFrontController extends GenericFrontController
         $payment = $payment->createSession($order_data);
         $status = @$payment->status;
 
+        $errorRoute = @$member['payment_channel'] == 3
+            ? route('subscription-mobile', ['id' => $subscription['id']])
+            : route('subscription', ['id' => $subscription['id']]);
+
         if($status == Constants::REJECTED){
             \Session::flash('error', trans('front.'.@$payment->configuration->products->installments->rejection_reason));
-            return route('subscription', ['id' => $subscription['id']]);
+            return $errorRoute;
         }
 
 //        $id = $payment->payment->id;
@@ -364,7 +368,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         if(!$redirect_url){
             \Session::flash('error', trans('front.error_in_data'));
-            return route('subscription', ['id' => $subscription['id']]);
+            return $errorRoute;
         }
 
         $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
@@ -795,7 +799,9 @@ class SubscriptionFrontController extends GenericFrontController
 
         if (!@$response->checkout_url) {
             \Session::flash('error', trans('front.error_in_data'));
-            return route('subscription', ['id' => $subscription['id']]);
+            return @$member['payment_channel'] == 3
+                ? route('subscription-mobile', ['id' => $subscription['id']])
+                : route('subscription', ['id' => $subscription['id']]);
         }
 
         $paymentOnlineInvoice->transaction_id = @$response->order_id;
