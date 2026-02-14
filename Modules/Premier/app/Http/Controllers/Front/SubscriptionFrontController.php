@@ -277,8 +277,38 @@ class SubscriptionFrontController extends GenericFrontController
             "description" => @$subscription['content'],
             'quantity' => 1,
             'unit_price' => $subscription['price'],
-            'category' => 'Membership',
+            'category' => 'Gym Membership',
         ]);
+
+        // Build order_history from previous completed orders (5-10 orders, excluding current)
+        $orderHistory = [];
+        if (@$this->current_user && @$this->current_user->id) {
+            $previousOrders = PaymentOnlineInvoice::where('member_id', $this->current_user->id)
+                ->where('id', '!=', $paymentOnlineInvoice->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            foreach ($previousOrders as $prevOrder) {
+                $orderHistory[] = [
+                    'purchased_at' => $prevOrder->created_at->toISOString(),
+                    'amount' => (string) round($prevOrder->amount, 2),
+                    'status' => $prevOrder->status === Constants::SUCCESS ? 'complete' : ($prevOrder->status === Constants::FAILED ? 'canceled' : 'new'),
+                    'buyer' => [
+                        'phone' => $prevOrder->phone ?? '',
+                        'email' => $prevOrder->email ?? '',
+                        'name' => $prevOrder->name ?? '',
+                    ],
+                    'shipping_address' => [
+                        'city' => env('TABBY_CITY', ''),
+                        'address' => env('TABBY_ADDRESS', ''),
+                        'zip' => env('TABBY_ZIP', ''),
+                    ],
+                    'payment_method' => 'card',
+                ];
+            }
+        }
+
         $order_data = [
             'amount'=> round((@$subscription['price'] + $vatAmount), 2),
             'currency' => @env('TABBY_CURRENCY', 'SAR'),
@@ -287,11 +317,10 @@ class SubscriptionFrontController extends GenericFrontController
             'buyer_phone'=> $member['phone'],
             'buyer_email' => $member['email'] ?? '',
             'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
-//            'dob' => Carbon::parse($member['dob'])->toDateString(),
-            'address'=> @env('TABBY_ADDRESS'),
-            'city' => @env('TABBY_CITY'),
-            'zip'=> '1234',
-            'order_id'=> $paymentOnlineInvoice->id,
+            'address'=> env('TABBY_ADDRESS', ''),
+            'city' => env('TABBY_CITY', ''),
+            'zip'=> env('TABBY_ZIP', ''),
+            'order_id'=> (string) $paymentOnlineInvoice->id,
             'registered_since' => $registered_since,
             'updated_at' => $updated_at,
             'purchased_at' => $purchased_at,
@@ -300,6 +329,7 @@ class SubscriptionFrontController extends GenericFrontController
             'cancel-url' => route('tabby-error-cancel', ['invoice_id' => $unique_id]),
             'failure-url' => route('tabby-error-failure', ['invoice_id' => $unique_id]),
             'items' => $items,
+            'order_history' => $orderHistory,
         ];
         // step 1: create session
         $payment = new TabbyService();
@@ -386,13 +416,14 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         // 🟡 Ignore anything not AUTHORIZED
-        if ($event !== 'payment.authorized' || $paymentStatus !== Constants::AUTHORIZED) {
+        // Note: webhooks return status in lowercase ("authorized"), while GET payment returns uppercase ("AUTHORIZED")
+        if ($event !== 'payment.authorized' || strtoupper($paymentStatus) !== Constants::AUTHORIZED) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
         /**
          * ─────────────────────────────
-         * AUTHORIZED → CAPTURE → FINALIZE
+         * AUTHORIZED → RETRIEVE → VERIFY → CAPTURE → FINALIZE
          * ─────────────────────────────
          */
         DB::beginTransaction();
@@ -400,7 +431,19 @@ class SubscriptionFrontController extends GenericFrontController
         try {
             $tabbyService = new TabbyService();
 
-            // 3️⃣ Capture (amount + currency only)
+            // 3️⃣ Retrieve payment to verify status
+            $retrievedPayment = $tabbyService->getPayment($tabbyPaymentId);
+
+            if (!$retrievedPayment || $retrievedPayment->status !== Constants::AUTHORIZED) {
+                Log::error('Tabby payment status verification failed', [
+                    'tabby_payment_id' => $tabbyPaymentId,
+                    'expected_status' => 'AUTHORIZED',
+                    'actual_status' => $retrievedPayment->status ?? 'unknown',
+                ]);
+                throw new \Exception('Tabby payment not in AUTHORIZED status after retrieval');
+            }
+
+            // 4️⃣ Capture (amount + currency only)
             $capture = $tabbyService->capturePayment(
                 $tabbyPaymentId,
                 (string) $paymentInvoice->amount

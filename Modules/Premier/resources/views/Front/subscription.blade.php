@@ -1,6 +1,11 @@
 @extends('premier::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
+    @php
+        $isRtl = app()->getLocale() === 'ar';
+        $textAlign = $isRtl ? 'right' : 'left';
+        $floatOpposite = $isRtl ? 'left' : 'right';
+    @endphp
     <style>
         .img-fluid {
             height: 100%;
@@ -16,11 +21,11 @@
         }
 
         .blog-single-sec .blog-content p {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         h4, h5 {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         .highlight-text {
@@ -31,7 +36,7 @@
         }
 
         .simple-btn-div {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         .radio-input {
@@ -101,7 +106,7 @@
                                 $priceWithVat = (float)round($priceWithVat, 2);
                             @endphp
                             <h4>{{$record['name']}}
-                                <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
+                                <span style="color: #f97d04;float: {{$floatOpposite}};font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
                                     {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
                                     @if($vatPercentage > 0)
                                         <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
@@ -219,7 +224,7 @@
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input tabby" id="tabby" type="radio"
-                                               name="payment_method" value="2" placeholder="Your name">
+                                               name="payment_method" value="2">
                                     </div>
 
                                     <div class="col-md-11">
@@ -238,7 +243,7 @@
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input tamara" id="tamara" type="radio"
-                                               name="payment_method" value="4" placeholder="Your name">
+                                               name="payment_method" value="4">
                                     </div>
 
                                     <div class="col-md-11">
@@ -295,11 +300,13 @@
         new TabbyCard({
             selector: '#tabbyCard', // empty div for TabbyCard.
             currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
-            lang: 'ar', // Optional, language of snippet and popups.
+            lang: '{{app()->getLocale()}}', // language of snippet and popups.
             price: {{$priceWithVat}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
             size: 'wide', // required, can be also 'wide', depending on the width.
             theme: 'black', // required, can be also 'default'.
-            header: false // if a Payment method name present already.
+            header: false, // if a Payment method name present already.
+            publicKey: '{{env("TABBY_PK")}}', // required, your Tabby public key.
+            merchantCode: '{{env("TABBY_MERCHANT_CODE")}}' // required, your Tabby merchant code.
         });
     </script>
     <script>

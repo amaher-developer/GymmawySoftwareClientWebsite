@@ -21,7 +21,7 @@ class TabbyService
     public function createSession($data)
     {
         $body = $this->getConfig($data);
-        $http = Http::withToken($this->pk_test)->baseUrl($this->base_url.'v2/');
+        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $response = $http->post('checkout',$body);
@@ -30,7 +30,7 @@ class TabbyService
 
     public function getSession($payment_id)
     {
-        $http = Http::withToken($this->pk_test)->baseUrl($this->base_url.'v2/');
+        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $url = 'checkout/'.$payment_id;
@@ -90,17 +90,15 @@ class TabbyService
 
     public function getConfig($data)
     {
-        $body= [];
         $body = [
             "payment" => [
-                "amount" => $data['amount'],
+                "amount" => (string) $data['amount'],
                 "currency" => $data['currency'],
                 "description" =>  $data['description'],
                 "buyer" => [
                     "phone" => $data['buyer_phone'],
-                    "email" => $data['buyer_email'],
+                    "email" => $data['buyer_email'] ?? '',
                     "name" => $data['full_name'],
-//                    "dob" => $data['dob'],
                 ],
                 "shipping_address" => [
                     "city" => $data['city'],
@@ -111,24 +109,18 @@ class TabbyService
                     "tax_amount" =>  "0.00",
                     "shipping_amount" =>  "0.00",
                     "discount_amount" => "0.00",
-                    "updated_at" => $data['updated_at'],//"2019-08-24T14:15:22Z",
-                    "reference_id" => $data['order_id'],
+                    "updated_at" => $data['updated_at'],
+                    "reference_id" => (string) $data['order_id'],
                     "items" => $data['items'],
                 ],
                 "buyer_history" => [
                     "registered_since"=> $data['registered_since'],
                     "loyalty_level"=> $data['loyalty_level'],
                 ],
-                "order_history" => [
-                    collect([
-                        "purchased_at"=> $data['purchased_at'],
-                        "amount"=> $data['amount'],
-                        "status"=> $data['status']
-                    ])
-                ],
+                "order_history" => $data['order_history'] ?? [],
             ],
             "lang" => app()->getLocale(),
-            "merchant_code" => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau'),
+            "merchant_code" => @env('TABBY_MERCHANT_CODE'),
             "merchant_urls" => [
                 "success" => $data['success-url'],
                 "cancel" => @$data['cancel-url'],
