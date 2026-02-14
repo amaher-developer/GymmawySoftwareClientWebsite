@@ -129,6 +129,7 @@ class SubscriptionFrontController extends GenericFrontController
             $member_data['subscription_id'] = @$request->subscription_id;
             $member_data['joining_date'] = @$request->joining_date;
             $member_data['payment_method'] = @$request->payment_method;
+            $member_data['payment_channel'] = @$request->payment_channel;
             $member_data['amount'] = (float)(@$request->amount ?? 0);
             $member_data['vat_percentage'] = (float)(@$request->vat_percentage ?? 0);
             $member_data['vat'] = ((float)(@$request->vat_percentage ?? 0) / 100) * (float)(@$request->amount ?? 0);
@@ -176,7 +177,8 @@ class SubscriptionFrontController extends GenericFrontController
             'amount' => $member['amount'],
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
+            'payment_method' => 7, // PAYTABS_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::MADA,
             'response_code' => ['joining_date' => $member['joining_date']],
         ]);
@@ -278,7 +280,8 @@ class SubscriptionFrontController extends GenericFrontController
             'amount' => round($member['amount'], 2),
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
+            'payment_method' => 4, // TABBY_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TABBY,
             'response_code' => ['joining_date' => $member['joining_date']],
         ]);
@@ -754,7 +757,8 @@ class SubscriptionFrontController extends GenericFrontController
             'amount' => round($member['amount'], 2),
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
+            'payment_method' => 6, // TAMARA_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TAMARA,
             'response_code' => ['joining_date' => $member['joining_date']],
         ]);

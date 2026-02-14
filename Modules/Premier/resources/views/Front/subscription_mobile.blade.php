@@ -150,6 +150,7 @@
         <input type="hidden" name="subscription_id" value="{{ $record['id'] }}">
         <input type="hidden" name="amount" value="{{ $priceWithVat }}">
         <input type="hidden" name="vat_percentage" value="{{ @$mainSettings['vat_details']['vat_percentage'] }}">
+        <input type="hidden" name="payment_channel" value="3">
 
         @if(!$currentUser)
             <h5 class="section-title">{{trans('front.register_info')}}:</h5>

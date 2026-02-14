@@ -127,6 +127,7 @@
                                 <input type="hidden" name="subscription_id" value="{{$record['id']}}">
                                 <input type="hidden" name="amount" value="{{$priceWithVat}}">
                                 <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
+                                <input type="hidden" name="payment_channel" value="2">
                             <br/><br/>
 
 
