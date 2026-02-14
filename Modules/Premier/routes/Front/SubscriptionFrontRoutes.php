@@ -4,6 +4,7 @@ use Modules\Premier\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('subscription')->get('/subscription/{id}', [SubscriptionFrontController::class, 'show']);
+Route::name('subscription-mobile')->get('/subscription-mobile/{id}', [SubscriptionFrontController::class, 'showMobile']);
 Route::name('invoice')->get('/invoice/{id}', [SubscriptionFrontController::class, 'invoice']);
 Route::name('invoice')->post('/invoice/{id}', [SubscriptionFrontController::class, 'invoiceSubmit']);
 Route::name('tabby-error-cancel')->get('/tabby/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tabbyCancel']);

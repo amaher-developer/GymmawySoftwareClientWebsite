@@ -1,306 +1,218 @@
-@section('title'){{ $title }} | @endsection
-@section('style')
-    <style>
-        .img-fluid {
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .hero_in.general:before {
-            background: url({{asset('resources/assets/front/img/bg/articles.jpg')}}) center center no-repeat;
-            -webkit-background-size: cover;
-            -moz-background-size: cover;
-            -o-background-size: cover;
-            background-size: cover;
-        }
-
-        .blog-single-sec .blog-content p {
-            text-align: right;
-        }
-
-        h4, h5 {
-            text-align: right;
-        }
-
-        .highlight-text {
-            border-radius: 10px;
-            border: solid 1px #f97d04;
-            margin-bottom: 20px !important;
-            margin-top: 20px !important;
-        }
-
-        .simple-btn-div {
-            text-align: right;
-        }
-
-        .radio-input {
-            height: 30px !important;
-        }
-
-        .blog-sec .blog-box {
-            border-top: none;
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 5px;
-        }
-
-        .blog-single-sec .blog-content {
-            padding-right: 0px;
-        }
-
-        ::placeholder {
-            color: #d5d5d5 !important;
-            opacity: 1; /* Firefox */
-        }
-
-        ::-ms-input-placeholder { /* Edge 12-18 */
-            color: #555555;
-        }
-
-        #tabbyCard div:first-child{
-            background-color: #f5f5f5 !important;
-        }
-        #tabbyCard {
-            padding-top: 20px;
-            width: 100%;
-        }
-    </style>
-@endsection
-
-@section('content')
-
-    <!-- Page title -->
-    <section class="page-title-sec over-layer-black">
-        <div id="particles-js"></div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <h2>{{$title}}</h2>
-                    <p><a href="{{route('home')}}">{{trans('front.home')}}</a> / <a href="#">{{$title}}</a></p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Blog Single Section -->
-    <section id="blog" class="blog-sec blog-single-sec">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="blog-box">
-                        @if(!empty($record['image_name']))
-                            <img src="{{env('APP_URL_MASTER').'uploads/subscriptions/'.$record['image_name']}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 5px; margin-bottom: 20px;">
-                        @endif
-                        <div class="blog-content">
-                            @php
-                                $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
-                                $priceBeforeVat = $record['price'];
-                                $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
-                                $priceWithVat = $priceBeforeVat + $vatAmount;
-                                $priceWithVat = (float)round($priceWithVat, 2);
-                            @endphp
-                            <h4>{{$record['name']}}
-                                <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
-                                    {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
-                                    @if($vatPercentage > 0)
-                                        <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
-                                        <strong>{{trans('global.total')}}: {{$priceWithVat}} {{trans('front.pound_unit')}}</strong>
-                                    @endif
-                                </span>
-                            </h4>
-{{--                            <p>It is a long established fact that a reader </p>--}}
-                            <div class="clearfix"><br/></div>
-                            @if(\Session::has('error'))
-                                <p class="alert alert-danger">{!! \Session::get('error') !!}</p>
-                            @endif
-                            @if(@$error)<div class="alert alert-danger">{!! @$error !!}</div>@endif
-
-
-                            <form method="post" action="{{route('invoice', @$record->id)}}">
-                                {{csrf_field()}}
-                                <input type="hidden" name="subscription_id" value="{{$record['id']}}">
-                                <input type="hidden" name="amount" value="{{$priceWithVat}}">
-                                <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
-                            <br/><br/>
-
-
-                            @if(!$currentUser)
-                                <h5>{{trans('front.register_info')}}:</h5>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-12  ">
-                                                @if(@$error)<div class="alert alert-danger">{{@$error}}</div>@endif
-                                                <div class="highlight-text" STYLE="border-color: grey !important;">
-                                                        <input type="text" name="name" class="form-control"
-                                                               placeholder="{{trans('front.name')}}" required="">
-                                                        <input type="text" name="phone" class="form-control"
-                                                               placeholder="{{trans('front.phone')}}" required="">
-                                                        <div class="row text-center">
-                                                            <div class="col-md-1"><input type="radio" name="gender" value="{{\App\Http\Classes\Constants::MALE}}"
-                                                                                         class="form-control male"
-                                                                                         id="male" style="height: 20px"
-                                                                                         required=""></div>
-                                                            <div class="col-md-1"><label
-                                                                        for="male">{{trans('front.male')}}</label></div>
-                                                            <div class="col-md-2"></div>
-                                                            <div class="col-md-1"><input type="radio" name="gender" value="{{\App\Http\Classes\Constants::FEMALE}}"
-                                                                                         class="form-control female"
-                                                                                         id="female"
-                                                                                         style="height: 20px"
-                                                                                         required=""></div>
-                                                            <div class="col-md-1"><label
-                                                                        for="female">{{trans('front.female')}}</label>
-                                                            </div>
-
-                                                        </div>
-                                                        <input type="date" name="dob" class="form-control"
-                                                               placeholder="{{trans('front.birthdate')}}" required="">
-                                                        <input type="text" name="address" class="form-control"
-                                                               placeholder="{{trans('front.address')}}" required="">
-                                                        <!--                                <input type="text" class="form-control" placeholder="عدد">-->
-
-
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3 col-md-offset-3"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <br/><br>
-                            @endif
-                                <h5>{{trans('front.register_info_joining_date')}}:</h5>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-12  ">
-                                                <div class="highlight-text" STYLE="border-color: grey !important;">
-                                                <input type="date" name="joining_date" class="form-control"
-                                                       value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                                                       min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                                                       max="{{\Carbon\Carbon::now()->addMonth()->format('Y-m-d')}}"
-                                                       required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3 col-md-offset-3"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                                    <br/><br/>
-                            <h5>{{trans('front.choose_payment_methods')}}:</h5>
-{{--                            <div class="highlight-text">--}}
-{{--                                <div class="row">--}}
-{{--                                    <div class="col-md-1">--}}
-{{--                                        <input class="form-control radio-input mada" id="mada" type="radio"--}}
-{{--                                               name="payment_method" value="1" placeholder="Your name">--}}
-{{--                                    </div>--}}
-
-{{--                                    <div class="col-md-11">--}}
-{{--                                        <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>--}}
-{{--                                        <p>--}}
-{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
-{{--                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}">--}}
-
-{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
-{{--                                                 src="{{asset('resources/assets/images/mada-logo.svg')}}">--}}
-
-
-{{--                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"--}}
-{{--                                                 src="{{asset('resources/assets/images/american_express_logo.svg')}}">--}}
-{{--                                        </p>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                            </div>--}}
-
-                            <div class="highlight-text">
-
-                                <div class="row">
-                                    <div class="col-md-1">
-                                        <input class="form-control radio-input tabby" id="tabby" type="radio"
-                                               name="payment_method" value="2" placeholder="Your name">
-                                    </div>
-
-                                    <div class="col-md-11">
-                                        <p><label for="tabby">{{trans('front.tabby_installment_msg')}}</label></p>
-                                        <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/assets/images/tabby-logo.webp')}}">
-                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span></p>
-                                        <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="highlight-text">
-
-                                <div class="row">
-                                    <div class="col-md-1">
-                                        <input class="form-control radio-input tamara" id="tamara" type="radio"
-                                               name="payment_method" value="4" placeholder="Your name">
-                                    </div>
-
-                                    <div class="col-md-11">
-                                        <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
-                                        <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/assets/images/tamara-logo.svg')}}">
-                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-12 simple-btn-div">
-                                <input class="btn btn-default mb-4 simple-btn"
-                                        type="submit" value="{{trans('front.pay_now')}}" />
-                            </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="at-sidebar">
-                        <div class="at-categories clearfix">
-                            <h3 class="at-sedebar-title">{{trans('front.other_subscriptions')}}</h3>
-                            <ul>
-                                @foreach($subscriptions as $subscription)
-                                    @if($subscription->id != $record['id'])
-                                        <li>
-                                            <a href="{{route('subscription', ['id' => $subscription->id])}}">{{$subscription->name}}</a>
-                                        </li>
-                                    @endif
-                                @endforeach
-                            </ul>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-@endsection
-@section('script')
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
     @php
+        $isRtl = app()->getLocale() === 'ar';
+        $textAlign = $isRtl ? 'right' : 'left';
+
         $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
         $priceBeforeVat = $record['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = $priceBeforeVat + $vatAmount;
         $priceWithVat = (float)round($priceWithVat, 2);
-
     @endphp
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fff;
+            margin: 0;
+            padding: 15px;
+            direction: {{ $isRtl ? 'rtl' : 'ltr' }};
+            text-align: {{ $textAlign }};
+            color: #333;
+        }
+        .subscription-header {
+            margin-bottom: 15px;
+        }
+        .subscription-header h4 {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
+        .price-box {
+            background: #f5f5f5;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+            color: #f97d04;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        .price-box small { font-size: 12px; color: #555; }
+        .section-title {
+            font-size: 15px;
+            margin: 15px 0 8px;
+            text-align: {{ $textAlign }};
+        }
+        .highlight-text {
+            border-radius: 10px;
+            border: 1px solid grey;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+        .payment-option {
+            border-radius: 10px;
+            border: 1px solid #f97d04;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .payment-option input[type="radio"] {
+            margin-top: 4px;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .payment-option .payment-details { flex: 1; }
+        .payment-option label {
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .payment-option img {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid grey;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .payment-option .policy-msg {
+            font-size: 11px;
+            color: #666;
+            vertical-align: bottom;
+        }
+        #tabbyCard { padding-top: 10px; width: 100%; }
+        #tabbyCard div:first-child { background-color: #f5f5f5 !important; }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .gender-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 0;
+        }
+        .gender-row label { font-size: 14px; margin: 0; }
+        .gender-row input[type="radio"] { width: 18px; height: 18px; }
+        .btn-pay {
+            width: 100%;
+            padding: 14px;
+            background: #f97d04;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-pay:active { background: #e06c00; }
+        .alert { padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 13px; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        ::placeholder { color: #bbb !important; }
+    </style>
+</head>
+<body>
+
+    @if(\Session::has('error'))
+        <div class="alert alert-danger">{!! \Session::get('error') !!}</div>
+    @endif
+    @if(@$error)
+        <div class="alert alert-danger">{!! @$error !!}</div>
+    @endif
+
+    <div class="subscription-header">
+        <h4>{{ $record['name'] }}</h4>
+        <div class="price-box">
+            {{trans('front.price')}}: {{ number_format($priceBeforeVat, 2) }} {{trans('front.pound_unit')}}<br>
+            @if($vatPercentage > 0)
+                <small>{{trans('front.vat')}} ({{ $vatPercentage }}%): {{ number_format($vatAmount, 2) }} {{trans('front.pound_unit')}}</small><br>
+                <strong>{{trans('global.total')}}: {{ $priceWithVat }} {{trans('front.pound_unit')}}</strong>
+            @endif
+        </div>
+    </div>
+
+    <form method="post" action="{{ route('invoice', @$record->id) }}">
+        {{ csrf_field() }}
+        <input type="hidden" name="subscription_id" value="{{ $record['id'] }}">
+        <input type="hidden" name="amount" value="{{ $priceWithVat }}">
+        <input type="hidden" name="vat_percentage" value="{{ @$mainSettings['vat_details']['vat_percentage'] }}">
+
+        @if(!$currentUser)
+            <h5 class="section-title">{{trans('front.register_info')}}:</h5>
+            <div class="highlight-text">
+                <input type="text" name="name" class="form-control" placeholder="{{trans('front.name')}}" required>
+                <input type="text" name="phone" class="form-control" placeholder="{{trans('front.phone')}}" required>
+                <div class="gender-row">
+                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::MALE }}" id="male_m" required>
+                    <label for="male_m">{{trans('front.male')}}</label>
+                    <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::FEMALE }}" id="female_m">
+                    <label for="female_m">{{trans('front.female')}}</label>
+                </div>
+                <input type="date" name="dob" class="form-control" placeholder="{{trans('front.birthdate')}}" required>
+                <input type="text" name="address" class="form-control" placeholder="{{trans('front.address')}}" required>
+            </div>
+        @endif
+
+        <h5 class="section-title">{{trans('front.register_info_joining_date')}}:</h5>
+        <div class="highlight-text">
+            <input type="date" name="joining_date" class="form-control"
+                   value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
+                   min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
+                   max="{{ \Carbon\Carbon::now()->addMonth()->format('Y-m-d') }}"
+                   required>
+        </div>
+
+        <h5 class="section-title">{{trans('front.choose_payment_methods')}}:</h5>
+
+        <div class="payment-option">
+            <input type="radio" name="payment_method" value="2" id="tabby_m">
+            <div class="payment-details">
+                <label for="tabby_m">{{trans('front.tabby_installment_msg')}}</label>
+                <img src="{{ asset('resources/assets/images/tabby-logo.webp') }}" alt="Tabby">
+                <span class="policy-msg">{{trans('front.tabby_policy_msg')}}</span>
+                <div id="tabbyCard"></div>
+            </div>
+        </div>
+
+        <div class="payment-option">
+            <input type="radio" name="payment_method" value="4" id="tamara_m">
+            <div class="payment-details">
+                <label for="tamara_m">{{trans('front.tamara_installment_msg')}}</label>
+                <img src="{{ asset('resources/assets/images/tamara-logo.svg') }}" alt="Tamara">
+                <span class="policy-msg">{{trans('front.tamara_policy_msg')}}</span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
+    </form>
+
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
-            selector: '#tabbyCard', // empty div for TabbyCard.
-            currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
-            lang: 'ar', // Optional, language of snippet and popups.
-            price: {{$priceWithVat}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
-            size: 'wide', // required, can be also 'wide', depending on the width.
-            theme: 'black', // required, can be also 'default'.
-            header: false // if a Payment method name present already.
+            selector: '#tabbyCard',
+            currency: '{{ env("TABBY_CURRENCY") }}',
+            lang: '{{ app()->getLocale() }}',
+            price: {{ $priceWithVat }},
+            size: 'wide',
+            theme: 'black',
+            header: false,
+            publicKey: '{{ env("TABBY_PK") }}',
+            merchantCode: '{{ env("TABBY_MERCHANT_CODE") }}'
         });
     </script>
-    <script>
-    </script>
-@endsection
+</body>
+</html>

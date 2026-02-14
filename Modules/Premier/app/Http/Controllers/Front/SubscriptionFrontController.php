@@ -46,6 +46,21 @@ class SubscriptionFrontController extends GenericFrontController
         return view('premier::Front.subscription', compact('title', 'record', 'subscriptions'));
     }
 
+    public function showMobile($id)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
+        $record = Subscription::where('id', $id)->first();
+
+        if (!$record) {
+            return abort(404);
+        }
+
+        $title = $record['name'];
+        return view('premier::Front.subscription_mobile', compact('title', 'record'));
+    }
+
     public function invoice($invoice_id)
     {
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
