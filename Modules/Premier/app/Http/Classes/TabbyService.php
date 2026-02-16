@@ -95,15 +95,17 @@ class TabbyService
                 "amount" => (string) $data['amount'],
                 "currency" => $data['currency'],
                 "description" =>  $data['description'],
-                "buyer" => [
+                "buyer" => array_filter([
                     "phone" => $data['buyer_phone'],
                     "email" => $data['buyer_email'] ?? '',
                     "name" => $data['full_name'],
-                ],
+                    "dob" => $data['buyer_dob'] ?? null,
+                ]),
                 "shipping_address" => [
                     "city" => $data['city'],
                     "address" =>  $data['address'],
                     "zip" => $data['zip'],
+                    "country" => $data['country'] ?? env('TABBY_COUNTRY', 'SA'),
                 ],
                 "order" => [
                     "tax_amount" =>  "0.00",

@@ -261,8 +261,19 @@ class SubscriptionFrontController extends GenericFrontController
         $priceBeforeVat = $subscription['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
 
-        $registered_since = Carbon::now()->toISOString();
-        $updated_at = Carbon::now()->toISOString();
+        // Use actual member dates for registered users, fallback to now for guests
+        if (@$this->current_user && @$this->current_user->id) {
+            $memberRecord = Member::find($this->current_user->id);
+            $registered_since = $memberRecord && $memberRecord->created_at
+                ? Carbon::parse($memberRecord->created_at)->toISOString()
+                : Carbon::now()->toISOString();
+            $updated_at = $memberRecord && $memberRecord->updated_at
+                ? Carbon::parse($memberRecord->updated_at)->toISOString()
+                : Carbon::now()->toISOString();
+        } else {
+            $registered_since = Carbon::now()->toISOString();
+            $updated_at = Carbon::now()->toISOString();
+        }
         $purchased_at = Carbon::now()->toISOString();
         $unique_id = uniqid();
 
@@ -321,6 +332,7 @@ class SubscriptionFrontController extends GenericFrontController
                         'city' => env('TABBY_CITY', ''),
                         'address' => env('TABBY_ADDRESS', ''),
                         'zip' => env('TABBY_ZIP', ''),
+                        'country' => env('TABBY_COUNTRY', 'SA'),
                     ],
                     'payment_method' => 'card',
                 ];
@@ -334,15 +346,17 @@ class SubscriptionFrontController extends GenericFrontController
             'full_name'=> $member['name'],
             'buyer_phone'=> $member['phone'],
             'buyer_email' => $member['email'] ?? '',
+            'buyer_dob' => $member['dob'] ? Carbon::parse($member['dob'])->format('Y-m-d') : null,
             'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
             'address'=> env('TABBY_ADDRESS', ''),
             'city' => env('TABBY_CITY', ''),
             'zip'=> env('TABBY_ZIP', ''),
+            'country' => env('TABBY_COUNTRY', 'SA'),
             'order_id'=> (string) $paymentOnlineInvoice->id,
             'registered_since' => $registered_since,
             'updated_at' => $updated_at,
             'purchased_at' => $purchased_at,
-            'loyalty_level'=> 0,
+            'loyalty_level'=> count($orderHistory),
             'success-url'=>  route('tabby-verify-payment', ['invoice_id' => $unique_id]),
             'cancel-url' => route('tabby-error-cancel', ['invoice_id' => $unique_id]),
             'failure-url' => route('tabby-error-failure', ['invoice_id' => $unique_id]),
@@ -679,6 +693,19 @@ class SubscriptionFrontController extends GenericFrontController
                     'id' => $paymentInvoice->subscription_id
                 ]);
             }
+        } elseif ($payment->status !== Constants::CLOSED) {
+            // Any other status (REJECTED, EXPIRED, etc.) is a failure
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tabby_payment' => (array) $payment]
+            );
+            $paymentInvoice->save();
+
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('subscription', [
+                'id' => $paymentInvoice->subscription_id
+            ]);
         }
 
         // ✅ CLOSED (either captured now or already captured)
@@ -722,16 +749,45 @@ class SubscriptionFrontController extends GenericFrontController
         $title = trans('front.invoice');
         return view('premier::Front.error', compact('title'));
     }
-    public function tabbyFailure(){
+    public function tabbyFailure(Request $request){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);
-        
+
+        // Look up the invoice to redirect back to checkout
+        $invoiceId = $request->invoice_id ?? $request->route('payment');
+        if ($invoiceId) {
+            $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
+            if ($invoice) {
+                $invoice->status = Constants::FAILED;
+                $invoice->save();
+
+                \Session::flash('error', trans('front.tabby_error_failure_body_msg'));
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
+            }
+        }
+
         $title = trans('front.invoice');
         return view('premier::Front.tabby_error_failure', compact('title'));
     }
-    public function tabbyCancel(){
+    public function tabbyCancel(Request $request){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);
+
+        // Look up the invoice to redirect back to checkout
+        $invoiceId = $request->invoice_id ?? $request->route('payment');
+        if ($invoiceId) {
+            $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
+            if ($invoice) {
+                \Session::flash('error', trans('front.tabby_error_cancel_body_msg'));
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
+            }
+        }
 
         $title = trans('front.invoice');
         return view('premier::Front.tabby_error_cancel', compact('title'));
@@ -1233,6 +1289,30 @@ class SubscriptionFrontController extends GenericFrontController
 
         return $amount;
     }
+
+
+    public function tabbyRegisterWebhook()
+    {
+        $tabbyService = new TabbyService();
+        $result = $tabbyService->createWebHooks();
+
+        return response()->json([
+            'message' => 'Webhook registration attempt completed',
+            'result' => $result,
+        ]);
+    }
+
+    public function tabbyCheckWebhooks()
+    {
+        $tabbyService = new TabbyService();
+        $result = $tabbyService->getWebHooks();
+
+        return response()->json([
+            'message' => 'Current registered webhooks',
+            'result' => $result,
+        ]);
+    }
+
 
 
 }

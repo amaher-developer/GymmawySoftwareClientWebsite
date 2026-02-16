@@ -13,3 +13,11 @@ Route::name('tamara-error-cancel')->get('/tamara/error/cancel/{payment?}', [Subs
 Route::name('tamara-error-failure')->get('/tamara/error/failure/{payment?}', [SubscriptionFrontController::class, 'tamaraFailure']);
 
 
+
+Route::get('tabby-register-webhook', [SubscriptionFrontController::class, 'tabbyRegisterWebhook'])
+->name('tabby-register-webhook')
+->middleware(['permission:super']);
+
+Route::get('tabby-check-webhooks', [SubscriptionFrontController::class, 'tabbyCheckWebhooks'])
+->name('tabby-check-webhooks')
+->middleware(['permission:super']);
