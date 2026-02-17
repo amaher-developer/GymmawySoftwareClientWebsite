@@ -95,6 +95,25 @@ class TamaraService
         return $response->object();
     }
 
+    public function refundOrder($orderId, $amount, $comment = '')
+    {
+        $currency = @env('TAMARA_CURRENCY', 'SAR');
+        $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
+        if (@env('TAMARA_IS_TEST'))
+            $http = $http->withoutVerifying();
+
+        $response = $http->post("payments/simplified-refund/{$orderId}", [
+            'total_amount' => [
+                'amount' => (float) $amount,
+                'currency' => $currency,
+            ],
+            'comment' => $comment ?: "Refund for order {$orderId}",
+        ]);
+
+        Log::info('TAMARA REFUND ORDER', $response->json() ?? []);
+        return $response->object();
+    }
+
     public function getConfig($data)
     {
         $currency = @env('TAMARA_CURRENCY', 'SAR');

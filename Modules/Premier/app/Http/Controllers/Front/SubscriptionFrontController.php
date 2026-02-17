@@ -996,6 +996,20 @@ class SubscriptionFrontController extends GenericFrontController
     {
         Log::info('Tamara webhook received', $request->all());
 
+        // Verify Tamara JWT token (HS256) using Notification Key
+        $notificationKey = env('TAMARA_NOTIFICATION_TOKEN');
+        if ($notificationKey) {
+            $tamaraToken = $request->query('tamaraToken')
+                ?? str_replace('Bearer ', '', $request->header('Authorization', ''));
+
+            if (!$tamaraToken || !$this->verifyTamaraToken($tamaraToken, $notificationKey)) {
+                Log::error('Tamara webhook token verification failed', [
+                    'token' => $tamaraToken ? substr($tamaraToken, 0, 20) . '...' : 'empty',
+                ]);
+                return response()->json(['status' => 'unauthorized'], 401);
+            }
+        }
+
         $eventType = $request->event_type ?? null;
         $orderId = $request->order_id ?? null;
 
@@ -1150,6 +1164,76 @@ class SubscriptionFrontController extends GenericFrontController
 
         $title = trans('front.invoice');
         return view('premier::Front.tamara_error_cancel', compact('title'));
+    }
+
+    public function tamaraRefund(Request $request, $invoiceId)
+    {
+        $paymentInvoice = PaymentOnlineInvoice::where('id', $invoiceId)
+            ->where('payment_gateway', Constants::TAMARA)
+            ->where('status', Constants::SUCCESS)
+            ->first();
+
+        if (!$paymentInvoice) {
+            return response()->json(['status' => 'error', 'message' => 'Invoice not found or not eligible for refund'], 404);
+        }
+
+        $amount = $request->input('amount', $paymentInvoice->amount);
+        $comment = $request->input('comment', '');
+
+        $tamaraService = new TamaraService();
+        $refund = $tamaraService->refundOrder($paymentInvoice->transaction_id, $amount, $comment);
+
+        if ($refund && in_array(@$refund->status, ['fully_refunded', 'partially_refunded'])) {
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['tamara_refund' => (array) $refund]
+            );
+            $paymentInvoice->save();
+
+            return response()->json([
+                'status' => 'success',
+                'refund_id' => @$refund->refund_id,
+                'refund_status' => @$refund->status,
+            ]);
+        }
+
+        Log::error('Tamara refund failed', [
+            'invoice_id' => $invoiceId,
+            'response' => (array) $refund,
+        ]);
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Refund request failed',
+            'details' => (array) $refund,
+        ], 422);
+    }
+
+    /**
+     * Verify Tamara webhook JWT token using HS256 algorithm.
+     */
+    protected function verifyTamaraToken(string $token, string $secret): bool
+    {
+        $parts = explode('.', $token);
+        if (count($parts) !== 3) {
+            return false;
+        }
+
+        [$headerB64, $payloadB64, $signatureB64] = $parts;
+
+        $signature = $this->base64UrlDecode($signatureB64);
+        $expectedSignature = hash_hmac('sha256', "$headerB64.$payloadB64", $secret, true);
+
+        return hash_equals($expectedSignature, $signature);
+    }
+
+    protected function base64UrlDecode(string $data): string
+    {
+        $remainder = strlen($data) % 4;
+        if ($remainder) {
+            $data .= str_repeat('=', 4 - $remainder);
+        }
+        return base64_decode(strtr($data, '-_', '+/'));
     }
 
     protected function finalizeTabbyCheckout(PaymentOnlineInvoice $invoice, string $joiningDate, $sessionMember = null, bool $loginNewMember = true): ?MemberSubscription

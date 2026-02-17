@@ -12,6 +12,7 @@ Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 
 Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::class, 'tabby_payment_verify'])->name('tabby-verify-payment');
 Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::class, 'tamara_payment_verify'])->name('tamara-verify-payment');
 Route::post('/payments/tamara-notify', [SubscriptionFrontController::class, 'tamaraNotify'])->name('tamara-notify');
+Route::post('/payments/tamara-refund/{invoice}', [SubscriptionFrontController::class, 'tamaraRefund'])->name('tamara-refund')->middleware(['permission:super']);
 Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
 
 Route::get('/go', [MainFrontController::class, 'smartLink'])->name('smart-link');

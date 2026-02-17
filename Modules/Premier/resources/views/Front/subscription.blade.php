@@ -253,6 +253,9 @@
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
                                                  src="{{asset('resources/assets/images/tamara-logo.svg')}}">
                                         <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
+                                        <div class="row col-md-12 col-xs-12" style="padding-top: 10px;">
+                                            <tamara-widget type="tamara-summary" amount="{{$priceWithVat}}" inline-type="2"></tamara-widget>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -311,5 +314,11 @@
         });
     </script>
     <script>
+        window.tamaraWidgetConfig = {
+            lang: '{{app()->getLocale()}}',
+            country: '{{env("TAMARA_COUNTRY_CODE", "SA")}}',
+            publicKey: '{{env("TAMARA_PUBLIC_KEY")}}'
+        };
     </script>
+    <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
 @endsection

@@ -204,12 +204,23 @@
                 <label for="tamara_m">{{trans('front.tamara_installment_msg')}}</label>
                 <img src="{{ asset('resources/assets/images/tamara-logo.svg') }}" alt="Tamara">
                 <span class="policy-msg">{{trans('front.tamara_policy_msg')}}</span>
+                <div style="padding-top: 10px;">
+                    <tamara-widget type="tamara-summary" amount="{{ $priceWithVat }}" inline-type="2"></tamara-widget>
+                </div>
             </div>
         </div>
 
         <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
     </form>
 
+    <script>
+        window.tamaraWidgetConfig = {
+            lang: '{{ app()->getLocale() }}',
+            country: '{{ env("TAMARA_COUNTRY_CODE", "SA") }}',
+            publicKey: '{{ env("TAMARA_PUBLIC_KEY") }}'
+        };
+    </script>
+    <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
