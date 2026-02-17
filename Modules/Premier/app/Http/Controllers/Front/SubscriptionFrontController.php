@@ -132,7 +132,14 @@ class SubscriptionFrontController extends GenericFrontController
             $member_data['payment_channel'] = @$request->payment_channel;
             $member_data['amount'] = (float)(@$request->amount ?? 0);
             $member_data['vat_percentage'] = (float)(@$request->vat_percentage ?? 0);
-            $member_data['vat'] = ((float)(@$request->vat_percentage ?? 0) / 100) * (float)(@$request->amount ?? 0);
+            // Calculate VAT on the base price (amount is already VAT-inclusive from the form)
+            $vatPct = (float)(@$request->vat_percentage ?? 0);
+            if ($vatPct > 0) {
+                $basePrice = (float)(@$request->amount ?? 0) / (1 + $vatPct / 100);
+                $member_data['vat'] = round((float)(@$request->amount ?? 0) - $basePrice, 2);
+            } else {
+                $member_data['vat'] = 0;
+            }
 
             if(@$request->payment_method == Constants::MADA){
                 // paytabs
@@ -632,13 +639,30 @@ class SubscriptionFrontController extends GenericFrontController
 
         $tabbyService = new TabbyService();
 
-        // 3️⃣ Get payment status from Tabby
-        $payment = $tabbyService->getPayment($tabbyPaymentId);
+        // 3️⃣ Get payment status from Tabby (with retry for CREATED→AUTHORIZED timing gap)
+        $payment = null;
+        $maxRetries = 5;
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $payment = $tabbyService->getPayment($tabbyPaymentId);
 
-        Log::info('Tabby payment status', [
-            'tabby_payment_id' => $tabbyPaymentId,
-            'status' => $payment->status ?? null,
-        ]);
+            Log::info('Tabby payment status', [
+                'tabby_payment_id' => $tabbyPaymentId,
+                'status' => $payment->status ?? null,
+                'attempt' => $attempt + 1,
+            ]);
+
+            if (!$payment) {
+                break;
+            }
+
+            // If still CREATED, wait briefly and retry (Tabby may not have authorized yet)
+            if ($payment->status === Constants::CREATED && $attempt < $maxRetries - 1) {
+                sleep(2);
+                continue;
+            }
+
+            break;
+        }
 
         if (!$payment) {
             $paymentInvoice->status = Constants::FAILED;
@@ -659,7 +683,7 @@ class SubscriptionFrontController extends GenericFrontController
          * CLOSED      → already captured → success
          */
 
-        // 🟡 Still processing (user not finished checkout)
+        // 🟡 Still processing after retries (authorization not yet received)
         if ($payment->status === Constants::CREATED) {
             \Session::flash('info', trans('front.payment_processing'));
             return redirect()->route('subscription', [
@@ -846,7 +870,7 @@ class SubscriptionFrontController extends GenericFrontController
             'success-url' => route('tamara-verify-payment', ['invoice_id' => $unique_id]),
             'cancel-url' => route('tamara-error-cancel', ['invoice_id' => $unique_id]),
             'failure-url' => route('tamara-error-failure', ['invoice_id' => $unique_id]),
-            'notification-url' => route('tamara-notify'),
+            'notification-url' => route('api.tamara-notify'),
             'items' => $items->toArray(),
         ];
 

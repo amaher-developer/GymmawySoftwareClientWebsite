@@ -50,7 +50,7 @@ class TabbyService
     }
 
     public function createWebHooks(){
-        $body = ['url' => route('tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
+        $body = ['url' => route('api.tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
         $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();

@@ -202,7 +202,7 @@
             <input type="radio" name="payment_method" value="4" id="tamara_m" {{ old('payment_method') == '4' ? 'checked' : '' }}>
             <div class="payment-details">
                 <label for="tamara_m">{{trans('front.tamara_installment_msg')}}</label>
-                <img src="{{ asset('resources/assets/images/tamara-logo.svg') }}" alt="Tamara">
+                <img src="https://cdn.tamara.co/assets/png/tamara-logo-badge-{{ app()->getLocale() == 'ar' ? 'ar' : 'en' }}.png" alt="Tamara">
                 <span class="policy-msg">{{trans('front.tamara_policy_msg')}}</span>
                 <div style="padding-top: 10px;">
                     <tamara-widget type="tamara-summary" amount="{{ $priceWithVat }}" inline-type="2"></tamara-widget>
