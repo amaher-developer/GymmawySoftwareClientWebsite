@@ -316,24 +316,35 @@ class SubscriptionFrontController extends GenericFrontController
             'category' => 'Gym Membership',
         ]);
 
-        // Build order_history from previous completed orders (5-10 orders, excluding current)
+        // Build order_history from MemberSubscription (covers all payment methods)
         $orderHistory = [];
+        $loyaltyLevel = 0;
         if (@$this->current_user && @$this->current_user->id) {
-            $previousOrders = PaymentOnlineInvoice::where('member_id', $this->current_user->id)
-                ->where('id', '!=', $paymentOnlineInvoice->id)
+            // loyalty_level = number of successfully placed orders with any payment method
+            $loyaltyLevel = MemberSubscription::where('member_id', $this->current_user->id)->count();
+
+            // 5-10 previous orders from any payment method, current order excluded
+            $previousSubscriptions = MemberSubscription::with(['member'])
+                ->where('member_id', $this->current_user->id)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
 
-            foreach ($previousOrders as $prevOrder) {
+            $statusMap = [
+                Constants::Active  => 'complete',
+                Constants::Freeze  => 'processing',
+                Constants::Expired => 'complete',
+            ];
+
+            foreach ($previousSubscriptions as $sub) {
                 $orderHistory[] = [
-                    'purchased_at' => $prevOrder->created_at->toISOString(),
-                    'amount' => (string) round($prevOrder->amount, 2),
-                    'status' => $prevOrder->status === Constants::SUCCESS ? 'complete' : ($prevOrder->status === Constants::FAILED ? 'canceled' : 'new'),
+                    'purchased_at' => Carbon::parse($sub->joining_date ?? $sub->created_at)->toISOString(),
+                    'amount' => (string) round($sub->amount_paid, 2),
+                    'status' => $statusMap[$sub->status] ?? 'unknown',
                     'buyer' => [
-                        'phone' => $prevOrder->phone ?? '',
-                        'email' => $prevOrder->email ?? '',
-                        'name' => $prevOrder->name ?? '',
+                        'phone' => $sub->member->phone ?? $member['phone'],
+                        'email' => $sub->member->email ?? $member['email'],
+                        'name' => $sub->member->name ?? $member['name'],
                     ],
                     'shipping_address' => [
                         'city' => env('TABBY_CITY', ''),
@@ -341,7 +352,7 @@ class SubscriptionFrontController extends GenericFrontController
                         'zip' => env('TABBY_ZIP', ''),
                         'country' => env('TABBY_COUNTRY', 'SA'),
                     ],
-                    'payment_method' => 'card',
+                    'payment_method' => $sub->payment_type == Constants::ONLINE_PAYMENT ? 'card' : 'cod',
                 ];
             }
         }
@@ -363,7 +374,7 @@ class SubscriptionFrontController extends GenericFrontController
             'registered_since' => $registered_since,
             'updated_at' => $updated_at,
             'purchased_at' => $purchased_at,
-            'loyalty_level'=> count($orderHistory),
+            'loyalty_level'=> $loyaltyLevel,
             'success-url'=>  route('tabby-verify-payment', ['invoice_id' => $unique_id]),
             'cancel-url' => route('tabby-error-cancel', ['invoice_id' => $unique_id]),
             'failure-url' => route('tabby-error-failure', ['invoice_id' => $unique_id]),
@@ -684,7 +695,12 @@ class SubscriptionFrontController extends GenericFrontController
          */
 
         // 🟡 Still processing after retries (authorization not yet received)
+        // Webhook will capture this payment once Tabby authorizes it
         if ($payment->status === Constants::CREATED) {
+            Log::info('Tabby payment still CREATED after retries, deferring to webhook', [
+                'tabby_payment_id' => $tabbyPaymentId,
+                'invoice_id' => $invoiceId,
+            ]);
             \Session::flash('info', trans('front.payment_processing'));
             return redirect()->route('subscription', [
                 'id' => $paymentInvoice->subscription_id

@@ -20,12 +20,54 @@ class TabbyService
 
     public function createSession($data)
     {
+        // Ensure webhook is registered before creating session
+        $this->ensureWebhookRegistered();
+
         $body = $this->getConfig($data);
         $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $response = $http->post('checkout',$body);
         return $response->object();
+    }
+
+    /**
+     * Ensure webhook is registered with Tabby. Uses cache to avoid checking on every request.
+     */
+    public function ensureWebhookRegistered()
+    {
+        $cacheKey = 'tabby_webhook_registered';
+
+        if (cache()->has($cacheKey)) {
+            return;
+        }
+
+        try {
+            $existingWebhooks = $this->getWebHooks();
+            $notifyUrl = route('api.tabby-notify');
+            $alreadyRegistered = false;
+
+            if ($existingWebhooks && is_array($existingWebhooks)) {
+                foreach ($existingWebhooks as $wh) {
+                    if (isset($wh->url) && $wh->url === $notifyUrl) {
+                        $alreadyRegistered = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$alreadyRegistered) {
+                $result = $this->createWebHooks();
+                Log::info('Tabby webhook auto-registered', ['result' => (array) $result]);
+            }
+
+            // Cache for 24 hours so we don't check every request
+            cache()->put($cacheKey, true, now()->addHours(24));
+        } catch (\Throwable $e) {
+            Log::warning('Tabby webhook auto-registration check failed', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function getSession($payment_id)
