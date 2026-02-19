@@ -361,16 +361,13 @@ class SubscriptionFrontController extends GenericFrontController
     {
         Log::info('Tabby webhook received', $request->all());
 
-        $event   = $request->event ?? null;
-        $payment = $request->payment ?? null;
+        $tabbyPaymentId = $request->id ?? null;
+        $paymentStatus  = $request->status ?? null;
 
-        if (!$event || !$payment || empty($payment['id'])) {
+        if (empty($tabbyPaymentId) || empty($paymentStatus)) {
             Log::error('Invalid Tabby webhook payload');
             return response()->json(['status' => 'invalid_payload'], 400);
         }
-
-        $tabbyPaymentId = $payment['id'];
-        $paymentStatus  = $payment['status'] ?? null;
 
         // 1️⃣ Find invoice using Tabby payment.id
         $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
@@ -399,7 +396,7 @@ class SubscriptionFrontController extends GenericFrontController
          */
 
         // ❌ Failed / Cancelled
-        if (in_array($event, ['payment.failed', 'payment.canceled'])) {
+        if (in_array(strtolower($paymentStatus), ['rejected', 'expired'])) {
 
             $paymentInvoice->status = Constants::FAILED;
             $paymentInvoice->response_code = array_merge(
@@ -412,7 +409,8 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         // 🟡 Ignore anything not AUTHORIZED
-        if ($event !== 'payment.authorized' || $paymentStatus !== Constants::AUTHORIZED) {
+        // Note: Tabby webhook sends status in lowercase ("authorized")
+        if (strtoupper($paymentStatus) !== Constants::AUTHORIZED) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
