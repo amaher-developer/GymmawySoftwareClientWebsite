@@ -1090,11 +1090,12 @@ class SubscriptionFrontController extends GenericFrontController
             }
         }
 
-        $eventType = $request->event_type ?? null;
-        $orderId = $request->order_id ?? null;
+        // Tamara sends "order_status" (e.g. "approved") at the root of the payload.
+        $orderId     = $request->order_id ?? null;
+        $orderStatus = $request->order_status ?? null;
 
-        if (!$eventType || !$orderId) {
-            Log::error('Invalid Tamara webhook payload');
+        if (!$orderId || !$orderStatus) {
+            Log::error('Invalid Tamara webhook payload', $request->all());
             return response()->json(['status' => 'invalid_payload'], 400);
         }
 
@@ -1118,7 +1119,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         // Handle declined / expired / canceled
-        if (in_array($eventType, ['order_declined', 'order_canceled', 'order_expired'])) {
+        if (in_array($orderStatus, ['declined', 'canceled', 'expired'])) {
             $paymentInvoice->status = Constants::FAILED;
             $paymentInvoice->response_code = array_merge(
                 (array) $paymentInvoice->response_code,
@@ -1129,8 +1130,8 @@ class SubscriptionFrontController extends GenericFrontController
             return response()->json(['status' => 'payment_failed'], 200);
         }
 
-        // Only process order_approved
-        if ($eventType !== 'order_approved') {
+        // Only process approved orders
+        if ($orderStatus !== 'approved') {
             return response()->json(['status' => 'ignored'], 200);
         }
 
