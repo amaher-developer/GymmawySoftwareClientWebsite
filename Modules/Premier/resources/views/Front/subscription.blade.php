@@ -186,7 +186,7 @@
                                                 <input type="date" name="joining_date" class="form-control"
                                                        value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
                                                        min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                                                       max="{{\Carbon\Carbon::now()->addMonth()->format('Y-m-d')}}"
+                                                       max="{{\Carbon\Carbon::now()->addMonths(6)->format('Y-m-d')}}"
                                                        required>
                                                 </div>
                                             </div>
