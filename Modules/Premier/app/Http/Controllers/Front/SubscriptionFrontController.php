@@ -1333,10 +1333,6 @@ class SubscriptionFrontController extends GenericFrontController
 
     protected function finalizeTabbyCheckout(PaymentOnlineInvoice $invoice, string $joiningDate, $sessionMember = null, bool $loginNewMember = true): ?MemberSubscription
     {
-        if ($invoice->member_subscription_id) {
-            return MemberSubscription::find($invoice->member_subscription_id);
-        }
-
         $subscription = $invoice->subscription ?? Subscription::withTrashed()->find($invoice->subscription_id);
 
         if (!$subscription) {
@@ -1345,10 +1341,25 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $result = DB::transaction(function () use ($invoice, $joiningDate, $sessionMember, $subscription) {
+            // Re-read with exclusive row lock — prevents duplicate processing when both
+            // the webhook (tabbyNotify) and the browser redirect (tabby_payment_verify)
+            // run simultaneously with a stale invoice object.
+            $invoice = PaymentOnlineInvoice::where('id', $invoice->id)->lockForUpdate()->first();
+
+            // Re-check inside the lock with fresh data.
+            if ($invoice->member_subscription_id) {
+                return ['memberSubscription' => MemberSubscription::find($invoice->member_subscription_id), 'early' => true];
+            }
+
             $member = ($sessionMember && @$sessionMember->id) ? $sessionMember : null;
 
             if (!$member && $invoice->member_id) {
                 $member = Member::find($invoice->member_id);
+            }
+
+            // Fallback: look up by phone to avoid creating a duplicate member.
+            if (!$member && $invoice->phone) {
+                $member = Member::where('phone', $invoice->phone)->first();
             }
 
             $type = Constants::RenewMember;
@@ -1405,7 +1416,8 @@ class SubscriptionFrontController extends GenericFrontController
             return null;
         }
 
-        if (@$result['generatedCode'] && @$result['member']->phone) {
+        // Skip login for early-return path (already processed by concurrent webhook).
+        if (empty($result['early']) && @$result['generatedCode'] && @$result['member']->phone) {
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
         return $result['memberSubscription'];
