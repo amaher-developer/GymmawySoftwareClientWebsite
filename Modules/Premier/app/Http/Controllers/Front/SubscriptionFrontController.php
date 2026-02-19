@@ -480,7 +480,23 @@ class SubscriptionFrontController extends GenericFrontController
         DB::beginTransaction();
 
         try {
+            // Re-fetch invoice with exclusive row lock — prevents concurrent webhooks from
+            // all passing the idempotency check and creating duplicate records.
+            $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $tabbyPaymentId)->lockForUpdate()->first();
+
+            // Re-check inside the lock — a concurrent webhook may have committed already.
+            if ($paymentInvoice->status === Constants::SUCCESS) {
+                DB::commit();
+                Log::info('Webhook ignored — already processed (concurrent)', [
+                    'invoice_id' => $paymentInvoice->id
+                ]);
+                return response()->json(['status' => 'already_processed'], 200);
+            }
+
             $tabbyService = new TabbyService();
+            $capture = null;
 
             // 3️⃣ Retrieve payment to verify status
             $retrievedPayment = $tabbyService->getPayment($tabbyPaymentId);
@@ -506,12 +522,17 @@ class SubscriptionFrontController extends GenericFrontController
                 }
             }
 
-            // 4️⃣ Resolve Member
+            // 5️⃣ Resolve Member
             $member = null;
             $typeOfPayment = Constants::RenewMember;
 
             if ($paymentInvoice->member_id) {
                 $member = Member::find($paymentInvoice->member_id);
+            }
+
+            // Fallback: look up by phone to avoid creating a duplicate member.
+            if (!$member && $paymentInvoice->phone) {
+                $member = Member::where('phone', $paymentInvoice->phone)->first();
             }
 
             if (!$member) {
