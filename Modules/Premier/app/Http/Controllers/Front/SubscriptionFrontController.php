@@ -1135,9 +1135,28 @@ class SubscriptionFrontController extends GenericFrontController
             return response()->json(['status' => 'ignored'], 200);
         }
 
+        // Advisory lock — prevents a concurrent browser-redirect from creating a duplicate
+        // member/subscription while this webhook is processing the same invoice.
+        $lockKey = 'tamara_finalize_' . $paymentInvoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
         DB::beginTransaction();
 
         try {
+            // Re-fetch with exclusive row lock so concurrent webhooks block here.
+            $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $orderId)->lockForUpdate()->first();
+
+            // Re-check inside the lock — a concurrent process may have committed already.
+            if ($paymentInvoice->status === Constants::SUCCESS) {
+                DB::commit();
+                Log::info('Tamara webhook ignored — already processed (concurrent)', [
+                    'invoice_id' => $paymentInvoice->id
+                ]);
+                return response()->json(['status' => 'already_processed'], 200);
+            }
+
             $tamaraService = new TamaraService();
 
             // Step 1: Authorise order — confirms receipt of approved notification
@@ -1184,6 +1203,11 @@ class SubscriptionFrontController extends GenericFrontController
                 $member = Member::find($paymentInvoice->member_id);
             }
 
+            // Fallback: look up by phone to avoid creating a duplicate member.
+            if (!$member && $paymentInvoice->phone) {
+                $member = Member::where('phone', $paymentInvoice->phone)->first();
+            }
+
             if (!$member) {
                 $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
@@ -1210,7 +1234,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'vat_percentage'  => $paymentInvoice->vat_percentage,
                 'joining_date'    => $joiningDate,
                 'expire_date'     => $joiningDate->copy()->addDays(
-                    $paymentInvoice->subscription->period
+                    (int) $paymentInvoice->subscription->period
                 ),
                 'status'          => Constants::Active,
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
@@ -1253,6 +1277,8 @@ class SubscriptionFrontController extends GenericFrontController
             ]);
 
             return response()->json(['status' => 'error'], 500);
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
     }
 
