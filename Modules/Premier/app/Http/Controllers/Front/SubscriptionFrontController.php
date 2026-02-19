@@ -954,18 +954,24 @@ class SubscriptionFrontController extends GenericFrontController
         $tamaraService = new TamaraService();
         $tamaraOrderId = $paymentInvoice->transaction_id;
 
-        // Authorise the order (required by Tamara after approval)
+        // Step 1: Authorise the order (required by Tamara after approval)
         $authorise = $tamaraService->authoriseOrder($tamaraOrderId);
-
-        Log::info('Tamara authorise response', (array) $authorise);
-
         $authoriseStatus = @$authorise->status;
+        $autoCaptured = @$authorise->auto_captured ?? false;
+
+        Log::info('Tamara authorise response', [
+            'tamara_order_id' => $tamaraOrderId,
+            'status' => $authoriseStatus,
+            'auto_captured' => $autoCaptured,
+        ]);
+
+        $capture = null;
 
         // If auto-capture is enabled, status will be fully_captured directly
-        if ($authoriseStatus === 'fully_captured') {
-            // Already captured via auto-capture
+        if ($authoriseStatus === 'fully_captured' || $autoCaptured) {
+            // Already captured via auto-capture — no separate capture needed
         } elseif ($authoriseStatus === 'authorised') {
-            // Capture the payment
+            // Step 2: Capture the payment to complete the transaction
             $capture = $tamaraService->capturePayment(
                 $tamaraOrderId,
                 (string) $paymentInvoice->amount,
@@ -974,7 +980,8 @@ class SubscriptionFrontController extends GenericFrontController
 
             Log::info('Tamara capture response', (array) $capture);
 
-            if (!$capture || !in_array(@$capture->status, ['fully_captured', 'partially_captured'])) {
+            // Capture succeeds if capture_id is returned or status indicates captured
+            if (!$capture || (!@$capture->capture_id && !in_array(@$capture->status, ['fully_captured', 'partially_captured']))) {
                 $paymentInvoice->status = Constants::FAILED;
                 $paymentInvoice->response_code = array_merge(
                     (array) $paymentInvoice->response_code,
@@ -1006,7 +1013,10 @@ class SubscriptionFrontController extends GenericFrontController
         $paymentInvoice->status = Constants::SUCCESS;
         $paymentInvoice->response_code = array_merge(
             (array) $paymentInvoice->response_code,
-            ['tamara_authorise' => (array) $authorise]
+            [
+                'tamara_authorise' => (array) $authorise,
+                'tamara_capture' => (array) $capture,
+            ]
         );
         $paymentInvoice->save();
 
@@ -1099,23 +1109,37 @@ class SubscriptionFrontController extends GenericFrontController
         try {
             $tamaraService = new TamaraService();
 
-            // Authorise order
+            // Step 1: Authorise order — confirms receipt of approved notification
             $authorise = $tamaraService->authoriseOrder($orderId);
-
             $authoriseStatus = @$authorise->status;
-            $needsCapture = ($authoriseStatus === 'authorised');
+            $autoCaptured = @$authorise->auto_captured ?? false;
 
-            if ($authoriseStatus === 'fully_captured') {
-                // Auto-captured
-            } elseif ($needsCapture) {
+            Log::info('Tamara webhook authorise response', [
+                'tamara_order_id' => $orderId,
+                'status' => $authoriseStatus,
+                'auto_captured' => $autoCaptured,
+            ]);
+
+            $capture = null;
+
+            if ($authoriseStatus === 'fully_captured' || $autoCaptured) {
+                // Auto-captured — no separate capture needed
+            } elseif ($authoriseStatus === 'authorised') {
+                // Step 2: Capture payment to complete the transaction
                 $capture = $tamaraService->capturePayment(
                     $orderId,
                     (string) $paymentInvoice->amount,
                     [['title' => @$paymentInvoice->subscription->name, 'quantity' => 1, 'unit_price' => $paymentInvoice->amount, 'total_amount' => $paymentInvoice->amount, 'reference_id' => (string)$paymentInvoice->id]]
                 );
 
-                if (!$capture || !in_array(@$capture->status, ['fully_captured', 'partially_captured'])) {
-                    throw new \Exception('Tamara capture failed');
+                Log::info('Tamara webhook capture response', [
+                    'tamara_order_id' => $orderId,
+                    'capture' => (array) $capture,
+                ]);
+
+                // Capture succeeds if capture_id is returned or status indicates captured
+                if (!$capture || (!@$capture->capture_id && !in_array(@$capture->status, ['fully_captured', 'partially_captured']))) {
+                    throw new \Exception('Tamara capture failed: ' . json_encode($capture));
                 }
             } else {
                 throw new \Exception('Tamara authorise returned unexpected status: ' . $authoriseStatus);
@@ -1168,13 +1192,23 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->member_subscription_id = $memberSubscription->id;
             $paymentInvoice->response_code = array_merge(
                 (array) $paymentInvoice->response_code,
-                ['tamara_webhook' => $request->all()]
+                [
+                    'tamara_webhook' => $request->all(),
+                    'tamara_authorise' => (array) $authorise,
+                    'tamara_capture' => (array) $capture,
+                ]
             );
             $paymentInvoice->save();
 
             $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
 
             DB::commit();
+
+            Log::info('Tamara webhook processed successfully', [
+                'tamara_order_id' => $orderId,
+                'invoice_id' => $paymentInvoice->id,
+                'member_subscription_id' => $memberSubscription->id,
+            ]);
 
             return response()->json(['status' => 'success'], 200);
 
@@ -1183,7 +1217,8 @@ class SubscriptionFrontController extends GenericFrontController
 
             Log::error('Tamara webhook failed', [
                 'error' => $e->getMessage(),
-                'tamara_order_id' => $orderId
+                'trace' => $e->getTraceAsString(),
+                'tamara_order_id' => $orderId,
             ]);
 
             return response()->json(['status' => 'error'], 500);
