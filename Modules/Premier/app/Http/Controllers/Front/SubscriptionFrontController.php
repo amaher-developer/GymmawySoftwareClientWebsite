@@ -485,23 +485,25 @@ class SubscriptionFrontController extends GenericFrontController
             // 3️⃣ Retrieve payment to verify status
             $retrievedPayment = $tabbyService->getPayment($tabbyPaymentId);
 
-            if (!$retrievedPayment || $retrievedPayment->status !== Constants::AUTHORIZED) {
+            if (!$retrievedPayment || !in_array($retrievedPayment->status, [Constants::AUTHORIZED, Constants::CLOSED])) {
                 Log::error('Tabby payment status verification failed', [
                     'tabby_payment_id' => $tabbyPaymentId,
-                    'expected_status' => 'AUTHORIZED',
+                    'expected_status' => 'AUTHORIZED or CLOSED',
                     'actual_status' => $retrievedPayment->status ?? 'unknown',
                 ]);
-                throw new \Exception('Tabby payment not in AUTHORIZED status after retrieval');
+                throw new \Exception('Tabby payment not in AUTHORIZED or CLOSED status after retrieval');
             }
 
-            // 4️⃣ Capture (amount + currency only)
-            $capture = $tabbyService->capturePayment(
-                $tabbyPaymentId,
-                (string) $paymentInvoice->amount
-            );
+            // 4️⃣ Capture (only if not already closed by a previous attempt)
+            if ($retrievedPayment->status === Constants::AUTHORIZED) {
+                $capture = $tabbyService->capturePayment(
+                    $tabbyPaymentId,
+                    (string) $paymentInvoice->amount
+                );
 
-            if (!$capture || $capture->status !== Constants::CLOSED) {
-                throw new \Exception('Tabby capture failed');
+                if (!$capture || $capture->status !== Constants::CLOSED) {
+                    throw new \Exception('Tabby capture failed');
+                }
             }
 
             // 4️⃣ Resolve Member
@@ -539,7 +541,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'vat_percentage'  => $paymentInvoice->vat_percentage,
                 'joining_date'    => $joiningDate,
                 'expire_date'     => $joiningDate->copy()->addDays(
-                    $paymentInvoice->subscription->period
+                    (int) $paymentInvoice->subscription->period
                 ),
                 'status'          => Constants::Active,
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
