@@ -477,6 +477,14 @@ class SubscriptionFrontController extends GenericFrontController
          * AUTHORIZED → RETRIEVE → VERIFY → CAPTURE → FINALIZE
          * ─────────────────────────────
          */
+
+        // Acquire application-level advisory lock so that a concurrent browser-redirect
+        // (tabby_payment_verify → finalizeTabbyCheckout) cannot create a duplicate
+        // member/subscription while this webhook is processing the same invoice.
+        // Works regardless of DB storage engine (InnoDB or MyISAM).
+        $lockKey = 'tabby_finalize_' . $paymentInvoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
         DB::beginTransaction();
 
         try {
@@ -628,6 +636,8 @@ class SubscriptionFrontController extends GenericFrontController
             ]);
 
             return response()->json(['status' => 'error'], 500);
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
     }
 
@@ -1340,6 +1350,12 @@ class SubscriptionFrontController extends GenericFrontController
             return null;
         }
 
+        // Acquire the same advisory lock used by tabbyNotify — guarantees that only one
+        // of (webhook / browser-redirect) can enter the finalization section at a time.
+        $lockKey = 'tabby_finalize_' . $invoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
+        try {
         $result = DB::transaction(function () use ($invoice, $joiningDate, $sessionMember, $subscription) {
             // Re-read with exclusive row lock — prevents duplicate processing when both
             // the webhook (tabbyNotify) and the browser redirect (tabby_payment_verify)
@@ -1421,6 +1437,9 @@ class SubscriptionFrontController extends GenericFrontController
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
         return $result['memberSubscription'];
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
+        }
     }
 
     protected function createMoneyBoxEntry(PaymentOnlineInvoice $invoice, Member $member, int $type): void
