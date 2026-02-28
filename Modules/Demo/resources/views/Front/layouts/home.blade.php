@@ -1105,7 +1105,10 @@
                                     <div class="double-clear"></div>
                                     <div class="double-clear"></div>
                                 </div>
+                                
+                                @if($country_name != 'egypt')
                                 <div class="clearfix"></div>
+                                @endif
                                 <div class=" ok-md-4 ok-xsd-12">
                                     <div class="features-start small-flat" data-animate="fadeInUp" data-delay="550">
                                         <header role="banner">
