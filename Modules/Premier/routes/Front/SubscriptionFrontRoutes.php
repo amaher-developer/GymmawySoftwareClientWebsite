@@ -11,6 +11,8 @@ Route::name('tabby-error-cancel')->get('/tabby/error/cancel/{payment?}', [Subscr
 Route::name('tabby-error-failure')->get('/tabby/error/failure/{payment?}', [SubscriptionFrontController::class, 'tabbyFailure']);
 Route::name('tamara-error-cancel')->get('/tamara/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tamaraCancel']);
 Route::name('tamara-error-failure')->get('/tamara/error/failure/{payment?}', [SubscriptionFrontController::class, 'tamaraFailure']);
+Route::name('paytabs-error-cancel')->get('/paytabs/error/cancel/{payment?}', [SubscriptionFrontController::class, 'paytabsCancel']);
+Route::name('paytabs-error-failure')->get('/paytabs/error/failure/{payment?}', [SubscriptionFrontController::class, 'paytabsFailure']);
 
 
 

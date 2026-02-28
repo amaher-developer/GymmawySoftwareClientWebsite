@@ -35,6 +35,7 @@ class Constants {
     const TABBY = 2;
     const PAYMOB = 3;
     const TAMARA = 4;
+    const PAYTABS_STANDARD = 5;
 
     const CreateMember = 0;
     const RenewMember = 1;

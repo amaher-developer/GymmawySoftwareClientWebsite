@@ -210,6 +210,17 @@
             </div>
         </div>
 
+        <!-- <div class="payment-option">
+            <input type="radio" name="payment_method" value="5" id="paytabs_m" {{ old('payment_method') == '5' ? 'checked' : '' }}>
+            <div class="payment-details">
+                <label for="paytabs_m">{{trans('front.paytabs_payment_msg')}}</label>
+                <img src="https://cdn.paytabs.com/assets/images/paytabs-logo.png" alt="Paytabs" onerror="this.style.display='none'">
+                <img src="{{ asset('resources/assets/images/visa_logo.svg') }}" alt="Visa">
+                <img src="{{ asset('resources/assets/images/mada-logo.svg') }}" alt="Mada">
+                <span class="policy-msg">{{trans('front.paytabs_policy_msg')}}</span>
+            </div>
+        </div> -->
+
         <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
     </form>
 

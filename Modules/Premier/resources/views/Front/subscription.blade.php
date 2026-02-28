@@ -260,6 +260,28 @@
                                 </div>
                             </div>
 
+                            <!-- <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input paytabs" id="paytabs" type="radio"
+                                               name="payment_method" value="5">
+                                    </div>
+                                    <div class="col-md-11">
+                                        <p><label for="paytabs">{{trans('front.paytabs_payment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="https://cdn.paytabs.com/assets/images/paytabs-logo.png"
+                                                 onerror="this.style.display='none'">
+                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}">
+                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/mada-logo.svg')}}">
+                                        </p>
+                                        <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
+                                    </div>
+                                </div>
+                            </div> -->
+
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
                                         type="submit" value="{{trans('front.pay_now')}}" />

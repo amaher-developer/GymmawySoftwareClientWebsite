@@ -6,6 +6,7 @@ use Modules\Premier\app\Http\Controllers\Front\AuthFrontController;
 use Modules\Premier\app\Http\Controllers\Front\GenericFrontController;
 use Modules\Premier\app\Http\Classes\TabbyService;
 use Modules\Premier\app\Http\Classes\TamaraService;
+use Modules\Premier\app\Http\Classes\PaytabsService;
 use Modules\Premier\app\Http\Requests\SubscriptionRequest;
 use Modules\Premier\Models\Member;
 
@@ -150,6 +151,9 @@ class SubscriptionFrontController extends GenericFrontController
             }else if(@$request->payment_method == Constants::TAMARA){
                 // tamara
                 $payment_url = $this->tamara_payment($subscription->toArray(), $member_data);
+            }else if(@$request->payment_method == Constants::PAYTABS_STANDARD){
+                // paytabs standard
+                $payment_url = $this->paytabs_standard_payment($subscription->toArray(), $member_data);
             }
             return redirect($payment_url);
         }
@@ -1550,6 +1554,341 @@ class SubscriptionFrontController extends GenericFrontController
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // PAYTABS STANDARD
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function paytabs_standard_payment($subscription = [], $member = [])
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        $vatPercentage  = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
+        $priceBeforeVat = $subscription['price'];
+        $vatAmount      = ($vatPercentage / 100) * $priceBeforeVat;
+        $unique_id      = uniqid();
+
+        $paymentOnlineInvoice = PaymentOnlineInvoice::create([
+            'payment_id'      => $unique_id,
+            'member_id'       => @$this->current_user->id,
+            'status'          => Constants::PEND,
+            'subscription_id' => @$member['subscription_id'],
+            'name'            => $member['name'],
+            'email'           => $member['email'],
+            'phone'           => $member['phone'],
+            'dob'             => $member['dob'],
+            'address'         => $member['address'],
+            'gender'          => $member['gender'],
+            'amount'          => round($member['amount'], 2),
+            'vat'             => $member['vat'],
+            'vat_percentage'  => $member['vat_percentage'],
+            'payment_method'  => 8, // PAYTABS_STANDARD_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
+            'payment_gateway' => Constants::PAYTABS_STANDARD,
+            'response_code'   => ['joining_date' => $member['joining_date']],
+        ]);
+
+        $errorRoute = @$member['payment_channel'] == 3
+            ? route('subscription-mobile', ['id' => $subscription['id']])
+            : route('subscription', ['id' => $subscription['id']]);
+
+        $paytabsService = new PaytabsService();
+        $response = $paytabsService->createPaymentPage([
+            'cart_id'      => $unique_id,
+            'description'  => $subscription['name'],
+            'amount'       => round($member['amount'], 2),
+            'callback_url' => route('api.paytabs-notify'),
+            'return_url'   => route('paytabs-verify-payment', ['invoice_id' => $unique_id]),
+            'name'         => $member['name'],
+            'email'        => $member['email'] ?? '',
+            'phone'        => $member['phone'],
+            'address'      => env('PAYTABS_ADDRESS', 'Riyadh'),
+            'city'         => env('PAYTABS_CITY', 'Riyadh'),
+        ]);
+
+        if (empty($response['redirect_url'])) {
+            Log::error('Paytabs create payment page failed', $response);
+            \Session::flash('error', trans('front.error_in_data'));
+            return $errorRoute;
+        }
+
+        $paymentOnlineInvoice->transaction_id = @$response['tran_ref'];
+        $responseArray                         = $response;
+        $responseArray['joining_date']         = $member['joining_date'];
+        $paymentOnlineInvoice->response_code   = $responseArray;
+        $paymentOnlineInvoice->save();
+
+        return $response['redirect_url'];
+    }
+
+    /**
+     * Browser return URL — called after the user completes (or fails) payment on Paytabs.
+     */
+    public function paytabs_payment_verify(Request $request)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        $invoiceId = $request->invoice_id;
+
+        $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+            $q->withTrashed();
+        }])->where('payment_id', $invoiceId)->first();
+
+        if (!$paymentInvoice) {
+            Log::error('Paytabs: Invoice not found', compact('invoiceId'));
+            return redirect()->route('error-payment', ['payment_id' => $invoiceId]);
+        }
+
+        // Already processed by concurrent IPN
+        if ($paymentInvoice->member_subscription_id) {
+            return redirect()->route('invoice', ['id' => $paymentInvoice->member_subscription_id]);
+        }
+
+        $tranRef    = $paymentInvoice->transaction_id;
+        $joiningDate = $paymentInvoice->response_code['joining_date'] ?? Carbon::now()->toDateString();
+
+        // Re-query Paytabs for authoritative status
+        $paytabsService = new PaytabsService();
+        $payment        = $paytabsService->verifyPayment($tranRef);
+        $responseStatus = $paytabsService->getResponseStatus($payment);
+
+        Log::info('Paytabs verify payment on return', [
+            'invoice_id'      => $invoiceId,
+            'tran_ref'        => $tranRef,
+            'response_status' => $responseStatus,
+        ]);
+
+        if ($responseStatus !== 'A') {
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['paytabs_verify' => $payment]
+            );
+            $paymentInvoice->save();
+
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
+        }
+
+        $paymentInvoice->status = Constants::SUCCESS;
+        $paymentInvoice->response_code = array_merge(
+            (array) $paymentInvoice->response_code,
+            ['paytabs_verify' => $payment]
+        );
+        $paymentInvoice->save();
+
+        $memberSubscription = $this->finalizeTabbyCheckout(
+            $paymentInvoice,
+            $joiningDate,
+            $this->current_user,
+            true
+        );
+
+        if ($memberSubscription) {
+            return redirect()->route('invoice', ['id' => $memberSubscription->id]);
+        }
+
+        $paymentInvoice->status = Constants::FAILED;
+        $paymentInvoice->save();
+
+        return redirect()->route('error-payment', ['payment_id' => $invoiceId]);
+    }
+
+    /**
+     * Paytabs IPN / callback webhook (server-to-server POST).
+     */
+    public function paytabsNotify(Request $request)
+    {
+        Log::info('Paytabs IPN received', $request->all());
+
+        $paytabsService = new PaytabsService();
+
+        // Validate signature when present (Paytabs form-encoded IPN)
+        if ($request->has('signature') && !$paytabsService->isValidSignature($request->all())) {
+            Log::error('Paytabs IPN signature validation failed');
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
+
+        $tranRef = $request->input('tran_ref');
+
+        if (!$tranRef) {
+            Log::error('Paytabs IPN: missing tran_ref', $request->all());
+            return response()->json(['status' => 'invalid_payload'], 400);
+        }
+
+        $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+            $q->withTrashed();
+        }])->where('transaction_id', $tranRef)->first();
+
+        if (!$paymentInvoice) {
+            Log::error('Paytabs IPN: Invoice not found', ['tran_ref' => $tranRef]);
+            return response()->json(['status' => 'invoice_not_found'], 404);
+        }
+
+        // Idempotency — already processed
+        if ($paymentInvoice->status === Constants::SUCCESS) {
+            Log::info('Paytabs IPN ignored — already processed', ['invoice_id' => $paymentInvoice->id]);
+            return response()->json(['status' => 'already_processed'], 200);
+        }
+
+        // Re-query Paytabs for authoritative status instead of trusting IPN payload alone
+        $payment        = $paytabsService->verifyPayment($tranRef);
+        $responseStatus = $paytabsService->getResponseStatus($payment);
+
+        Log::info('Paytabs IPN verify result', [
+            'tran_ref'        => $tranRef,
+            'response_status' => $responseStatus,
+        ]);
+
+        // Handle non-successful statuses
+        if ($responseStatus !== 'A') {
+            $paymentInvoice->status = Constants::FAILED;
+            $paymentInvoice->response_code = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['paytabs_ipn' => $request->all(), 'paytabs_verify' => $payment]
+            );
+            $paymentInvoice->save();
+
+            return response()->json(['status' => 'payment_failed'], 200);
+        }
+
+        // Advisory lock — prevents concurrent browser-redirect and IPN from creating duplicates
+        $lockKey = 'paytabs_finalize_' . $paymentInvoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
+        DB::beginTransaction();
+
+        try {
+            // Re-fetch with exclusive row lock
+            $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $tranRef)->lockForUpdate()->first();
+
+            // Re-check inside the lock
+            if ($paymentInvoice->status === Constants::SUCCESS) {
+                DB::commit();
+                Log::info('Paytabs IPN ignored — already processed (concurrent)', ['invoice_id' => $paymentInvoice->id]);
+                return response()->json(['status' => 'already_processed'], 200);
+            }
+
+            // Resolve Member
+            $member        = null;
+            $typeOfPayment = Constants::RenewMember;
+
+            if ($paymentInvoice->member_id) {
+                $member = Member::find($paymentInvoice->member_id);
+            }
+            if (!$member && $paymentInvoice->phone) {
+                $member = Member::where('phone', $paymentInvoice->phone)->first();
+            }
+            if (!$member) {
+                $maxId  = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $member = Member::create([
+                    'code'    => $maxId,
+                    'name'    => $paymentInvoice->name,
+                    'gender'  => $paymentInvoice->gender,
+                    'phone'   => $paymentInvoice->phone,
+                    'address' => $paymentInvoice->address,
+                    'dob'     => $paymentInvoice->dob,
+                ]);
+                $typeOfPayment = Constants::CreateMember;
+            }
+
+            $joiningDate = Carbon::parse($paymentInvoice->response_code['joining_date'] ?? now());
+
+            $memberSubscription = MemberSubscription::create([
+                'subscription_id'        => $paymentInvoice->subscription_id,
+                'member_id'              => $member->id,
+                'workouts'               => $paymentInvoice->subscription->workouts,
+                'amount_paid'            => $paymentInvoice->amount,
+                'vat'                    => $paymentInvoice->vat,
+                'vat_percentage'         => $paymentInvoice->vat_percentage,
+                'joining_date'           => $joiningDate,
+                'expire_date'            => $joiningDate->copy()->addDays((int) $paymentInvoice->subscription->period),
+                'status'                 => Constants::Active,
+                'freeze_limit'           => $paymentInvoice->subscription->freeze_limit,
+                'number_times_freeze'    => $paymentInvoice->subscription->number_times_freeze,
+                'amount_before_discount' => $paymentInvoice->subscription->price,
+                'payment_type'           => Constants::ONLINE_PAYMENT,
+            ]);
+
+            $paymentInvoice->status                 = Constants::SUCCESS;
+            $paymentInvoice->member_subscription_id = $memberSubscription->id;
+            $paymentInvoice->response_code          = array_merge(
+                (array) $paymentInvoice->response_code,
+                ['paytabs_ipn' => $request->all(), 'paytabs_verify' => $payment]
+            );
+            $paymentInvoice->save();
+
+            $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
+
+            DB::commit();
+
+            Log::info('Paytabs IPN processed successfully', [
+                'tran_ref'               => $tranRef,
+                'invoice_id'             => $paymentInvoice->id,
+                'member_subscription_id' => $memberSubscription->id,
+            ]);
+
+            return response()->json(['status' => 'success'], 200);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Paytabs IPN processing failed', [
+                'error'    => $e->getMessage(),
+                'tran_ref' => $tranRef,
+            ]);
+
+            return response()->json(['status' => 'error'], 500);
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
+        }
+    }
+
+    public function paytabsCancel(Request $request)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
+        $invoiceId = $request->invoice_id ?? $request->route('payment');
+        if ($invoiceId) {
+            $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
+            if ($invoice) {
+                \Session::flash('error', trans('front.paytabs_error_cancel_body_msg'));
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
+            }
+        }
+
+        $title = trans('front.invoice');
+        return view('premier::Front.paytabs_error_cancel', compact('title'));
+    }
+
+    public function paytabsFailure(Request $request)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
+        $invoiceId = $request->invoice_id ?? $request->route('payment');
+        if ($invoiceId) {
+            $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
+            if ($invoice) {
+                $invoice->status = Constants::FAILED;
+                $invoice->save();
+
+                \Session::flash('error', trans('front.paytabs_error_failure_body_msg'));
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
+            }
+        }
+
+        $title = trans('front.invoice');
+        return view('premier::Front.paytabs_error_failure', compact('title'));
+    }
 
 
 }
