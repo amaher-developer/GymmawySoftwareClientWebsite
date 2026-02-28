@@ -1058,8 +1058,8 @@
                                             <i class="fa fa-mobile-phone"></i>
                                         </header>
                                         <div class="features-content">
-                                            <h5 class="features-title ">{{trans('front.t_feature36')}}</h5>
-                                            <p class="flat-paragraph ">{{trans('front.feature36')}}</p>
+                                            <h5 class="features-title ">{{trans('front.t_feature33')}}</h5>
+                                            <p class="flat-paragraph ">{{trans('front.feature33')}}</p>
                                         </div>
                                     </div>
                                     <div class="double-clear"></div>
