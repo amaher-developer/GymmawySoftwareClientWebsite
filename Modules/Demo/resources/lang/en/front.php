@@ -93,7 +93,7 @@ You will easy to manage the accounts of all clients, employees and memberships f
     't_feature34' => 'Nutrition and Fitness Doctors',
     't_feature35' => 'AI Reports',
     't_feature36' => 'ZATCA Integration',
-    't_feature37' => 'Loyalty Points', 
+    't_feature37' => 'Loyalty Points',
 
     'feature1' => 'You will be able to track your system online from anywhere in the world',
     'feature2' => 'The system supports Arabic 🇪🇬 and English 🇺🇸',
