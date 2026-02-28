@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Generic\Http\Middleware;
+namespace Modules\Demo\Http\Middleware;
 
 use App\Exceptions\ApplicationClosed;
 use App\Modules\Generic\Models\City;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Generic\Http\Middleware;
+namespace Modules\Demo\Http\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\View;

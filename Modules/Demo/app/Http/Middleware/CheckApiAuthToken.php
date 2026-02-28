@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Generic\Http\Middleware;
+namespace Modules\Demo\Http\Middleware;
 
 use App\Modules\Access\Models\User;
 use Closure;

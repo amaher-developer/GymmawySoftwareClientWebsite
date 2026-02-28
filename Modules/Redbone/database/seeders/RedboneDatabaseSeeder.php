@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\\Redbone\Database\Seeders;
+namespace Modules\Redbone\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
