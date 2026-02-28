@@ -321,6 +321,7 @@ return [
     'android_app' => 'Andriod App',
     'ios_app' => 'IOS App',
     'terms' => 'Terms',
+    'policy' => 'Policy',
     'logo' => 'Logo',
     'add_member' => 'Add Member',
     'gym_address' => 'Gym Address',
