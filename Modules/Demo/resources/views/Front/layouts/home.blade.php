@@ -290,9 +290,6 @@
 
             
 
-            <!-- TESTIMONIALS SECTION -->
-            @include('demo::Front.partials.testimonials')
-            <!--! TESTIMONIALS SECTION -->
 
             
             <!--! CALL TO ACTION -->
@@ -1082,6 +1079,46 @@
                                     <div class="double-clear"></div>
                                 </div>
 
+                                <div class=" ok-md-4 ok-xsd-12">
+                                    <div class="features-start small-flat" data-animate="fadeInUp" data-delay="550">
+                                        <header role="banner">
+                                            <i class="fa fa-bar-chart"></i>
+                                        </header>
+                                        <div class="features-content">
+                                            <h5 class="features-title ">{{trans('front.t_feature35')}}</h5>
+                                            <p class="flat-paragraph ">{{trans('front.feature35')}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="double-clear"></div>
+                                    <div class="double-clear"></div>
+                                </div>
+                                <div class=" ok-md-4 ok-xsd-12">
+                                    <div class="features-start small-flat" data-animate="fadeInUp" data-delay="550">
+                                        <header role="banner">
+                                            <i class="fa fa-file-text-o"></i>
+                                        </header>
+                                        <div class="features-content">
+                                            <h5 class="features-title ">{{trans('front.t_feature36')}}</h5>
+                                            <p class="flat-paragraph ">{{trans('front.feature36')}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="double-clear"></div>
+                                    <div class="double-clear"></div>
+                                </div>
+                                <div class="clearfix"></div>
+                                <div class=" ok-md-4 ok-xsd-12">
+                                    <div class="features-start small-flat" data-animate="fadeInUp" data-delay="550">
+                                        <header role="banner">
+                                            <i class="fa fa-gift"></i>
+                                        </header>
+                                        <div class="features-content">
+                                            <h5 class="features-title ">{{trans('front.t_feature37')}}</h5>
+                                            <p class="flat-paragraph ">{{trans('front.feature37')}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="double-clear"></div>
+                                    <div class="double-clear"></div>
+                                </div>
 
 
                             </div>
@@ -1095,6 +1132,9 @@
             {{-- @include('demo::Front.partials.stats') --}}
             <!--! STATS SECTION -->
 
+            <!-- TESTIMONIALS SECTION -->
+            @include('demo::Front.partials.testimonials')
+            <!--! TESTIMONIALS SECTION -->
             <div style="clear: both;float:none;"></div>
             <!-- APP SECTION -->
             <section class="section" id="app">
@@ -1283,10 +1323,24 @@
                                     <!-- CLIENT (5) -->
                                     <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
                                         <a data-animated-link="fadeOut" href="#">
-                                            <img src="{{asset('resources/assets/images/paymob.png')}}" style="width: 150px;" alt="tabby">
+                                            <img src="{{asset('resources/assets/images/paymob.png')}}" style="width: 150px;" alt="paymob">
                                         </a>
                                     </div>
                                     <!--! CLIENT (5) -->
+                                    <!-- CLIENT (6) -->
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
+                                        <a data-animated-link="fadeOut" href="#">
+                                            <img src="https://cdn.tamara.co/assets/png/tamara-logo-badge-{{ app()->getLocale() == 'ar' ? 'ar' : 'en' }}.png" style="width: 150px;" alt="tamara">
+                                        </a>
+                                    </div>
+                                    <!--! CLIENT (6) -->
+                                    <!-- CLIENT (7) -->
+                                    <div class="client ok-md-2 ok-xsd-12 ok-sd-6">
+                                        <a data-animated-link="fadeOut" href="#">
+                                            <img src="https://cdn.paytabs.com/assets/images/paytabs-logo.png" style="width: 150px;" alt="paytabs" onerror="this.style.display='none'">
+                                        </a>
+                                    </div>
+                                    <!--! CLIENT (7) -->
                                 </div>
                             </div>
                             <div class="double-clear"></div>

@@ -91,6 +91,9 @@ You will easy to manage the accounts of all clients, employees and memberships f
     't_feature32' => 'e-payment gateway',
     't_feature33' => 'Mobile app with your gym name',
     't_feature34' => 'Nutrition and Fitness Doctors',
+    't_feature35' => 'AI Reports',
+    't_feature36' => 'ZATCA Integration',
+    't_feature37' => 'Loyalty Points',
 
     'feature1' => 'You will be able to track your system online from anywhere in the world',
     'feature2' => 'The system supports Arabic 🇪🇬 and English 🇺🇸',
@@ -127,6 +130,9 @@ You will easy to manage the accounts of all clients, employees and memberships f
     'feature32' => 'Linking the website with various e-payment gateways such as: (Visa, MasterCard, American Express, Tabby, Madi, PayMob...)',
     'feature33' => 'Android and iPhone application with the name of your gym, tracking your members and their subscriptions, and sending them automatic and manual alerts about their subscriptions.',
     'feature34' => "Highly experienced nutrition and fitness doctors are available to provide nutrition programs, create training plans, and regularly monitor members.",
+    'feature35' => 'AI-powered reports and analytics that provide deep insights into gym performance, member behavior, revenue trends, and operational efficiency.',
+    'feature36' => 'Full integration with the Saudi Zakat, Tax and Customs Authority (ZATCA) for generating compliant e-invoices and Phase 2 (Fatoora) electronic invoicing.',
+    'feature37' => 'A loyalty points system that rewards members for their attendance and subscriptions, encouraging retention and engagement.',
     'thank_you' => 'thank you',
     'thank_you_message' => 'Your demo credentials has been sent to you email successfully',
 
