@@ -1,6 +1,6 @@
 <?php
 
-return [
+return [ 
     'app_name' => env('APP_NAME_EN'),
     'about_us' => ' About '.env('APP_NAME_EN'),
     'about_us_msg' => env('APP_NAME_EN') . ' is gym software designed to make it easy to maintain detailed records of your members and their memberships, book memberships and activities, process and track sales, and communicate en mass with the right members at the right time.
