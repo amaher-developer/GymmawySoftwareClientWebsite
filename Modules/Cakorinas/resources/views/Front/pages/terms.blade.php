@@ -91,7 +91,8 @@
                     <div class="blog-box">
                         <div class="blog-content">
                            <!-- {!! @$terms !!} -->
-
+                           @if($lang == 'ar')
+                           <div>
                            شروط وأحكام إستخدام الموقع https://thecakorinas.com
 عزيزي مستخدم الموقع أهلاً بك على الموقع الالكتروني لأريبيان بوديبلدنغ دوت كوم THE CAKORINAS (و يشار إليها بـ"الشركة" أو "الموقع"). الرجاء قراءة شروط وأحكام استخدام الموقع هذه ("الشروط والأحكام") بعناية. الرجاء عدم الاستمرار في استخدام الموقع و/ أو الخدمات في حال عدم موافقتك على الشروط والأحكام. يعتبر استمرارك باستخدام الموقع و/ أو الخدمات موافقة من قبلك على الشروط والأحكام .
 <br/>
@@ -236,7 +237,165 @@
 <br/>
 9. 8 تحتفظ الشركة –بمحض تقديرها المطلق- بحقها في إلغاء الشروط والأحكام و/ أو عدم تمكين المستخدم من الدخول إلى الموقع و/ أو الخدمات في أي وقت و دون الحاجة لأي إنذار أو إشعار و يسقط حق المستخدم بالدخول إلى الموقع و/ أو الخدمات في هذه الحالة.
 <br/>
+                           </div>
+                           @else
+                           <div style="text-align: left;direction: ltr;">
+                           </h1>
+<p><strong>https://thecakorinas.com</strong></p>
 
+<p>
+Welcome to THE CAKORINAS (referred to as "the Company" or "the Website").
+Please read these Terms and Conditions carefully. If you do not agree,
+please do not use the Website or its Services. Continued use constitutes acceptance.
+</p>
+
+<hr>
+
+<h2>1. User Obligations</h2>
+<p>
+The user agrees to browse and use the Website in accordance with these
+Terms and Conditions and applicable laws.
+</p>
+
+<h3>1.2 Use of Information and Content</h3>
+
+<h4>1.2.1</h4>
+<p>
+Services include (but are not limited to) information, correspondence,
+images, sounds, and other content provided through the Website.
+</p>
+
+<h4>1.2.2</h4>
+<p>
+The user may not use the Website or Services in violation of these Terms.
+</p>
+
+<h4>1.2.3</h4>
+<p>
+The Website and Services are for personal use on a single device only.
+Commercial use, unlawful activity, unfair competition, or misuse that harms
+the Company or others is strictly prohibited.
+</p>
+
+<h3>1.3 Downloaded Content</h3>
+<p>
+All downloaded content is for personal use only. The Company remains
+the sole owner of all intellectual property rights.
+</p>
+
+<h3>1.4 Email / SMS Notifications</h3>
+<p>
+Information sent via email or SMS may only be used for personal purposes.
+It may not be redistributed or published without prior written consent.
+</p>
+
+<h3>1.5 Prohibited Actions</h3>
+<ul>
+    <li>Removing or altering copyright or trademark notices.</li>
+    <li>Modifying the Website or its services.</li>
+    <li>Reverse engineering any Website software.</li>
+    <li>Copying or redistributing content without written permission.</li>
+    <li>Using the Website for unauthorized commercial advertising.</li>
+    <li>Unauthorized access, overloading the system, or sending spam.</li>
+</ul>
+
+<hr>
+
+<h2>2. User Information</h2>
+
+<h3>2.1 Registration</h3>
+<p>
+By providing personal data, the user consents to its processing
+in accordance with Company policies.
+</p>
+
+<h3>2.2 User Declarations</h3>
+<ul>
+    <li>All provided information is accurate and complete.</li>
+    <li>Submitted content does not violate laws or third-party rights.</li>
+    <li>The Company may use submitted information within its services.</li>
+</ul>
+
+<h3>2.3 Password & Login Credentials</h3>
+<p>
+Users must keep login credentials confidential and are responsible
+for all actions under their accounts.
+</p>
+
+<h3>2.4 Monitoring</h3>
+<p>
+The Company may monitor communications for security and quality purposes,
+in compliance with applicable laws.
+</p>
+
+<hr>
+
+<h2>3. Fees</h2>
+<p>
+The Company may impose fees for certain services after notifying users.
+</p>
+
+<hr>
+
+<h2>4. Intellectual Property</h2>
+<p>
+All intellectual property rights related to the Website and its content
+are exclusively owned by the Company.
+Unauthorized use is prohibited.
+</p>
+
+<hr>
+
+<h2>5. Disclaimer</h2>
+<ul>
+    <li>The Website is provided "AS IS" and "AS AVAILABLE".</li>
+    <li>No guarantees are made regarding accuracy or uninterrupted service.</li>
+    <li>The Company may modify or remove content at any time.</li>
+    <li>Internet use involves risks that the user acknowledges.</li>
+</ul>
+
+<hr>
+
+<h2>6. Limitation of Liability</h2>
+<p>
+The Company is not liable for:
+</p>
+<ul>
+    <li>Service interruptions or technical failures.</li>
+    <li>Data loss or unauthorized access.</li>
+    <li>Viruses or malicious software.</li>
+    <li>Direct or indirect damages resulting from Website use.</li>
+</ul>
+
+<hr>
+
+<h2>7. Termination</h2>
+<p>
+If the user disagrees with any part of these Terms,
+the only remedy is to discontinue use of the Website.
+</p>
+
+<hr>
+
+<h2>8. Indemnification</h2>
+<p>
+The user agrees to indemnify the Company against any losses,
+damages, or claims resulting from violation of these Terms.
+</p>
+
+<hr>
+
+<h2>9. General Provisions</h2>
+<ul>
+    <li>The Company may modify these Terms at any time.</li>
+    <li>Continued use constitutes acceptance of changes.</li>
+    <li>Invalid provisions do not affect remaining provisions.</li>
+    <li>Governing Law: Jordanian Law. Jurisdiction: Amman Courts (Abdali).</li>
+    <li>The Company may suspend or terminate access without notice.</li>
+</ul>
+
+                           </div>
+                           @endif
                         </div>
                     </div>
                 </div>

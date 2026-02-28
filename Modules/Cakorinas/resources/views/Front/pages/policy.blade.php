@@ -16,11 +16,11 @@
         }
 
         .blog-single-sec .blog-content p {
-            text-align: right;
+            text-align: start;
         }
 
         h4, h5 {
-            text-align: right;
+            text-align: start;
         }
 
         .highlight-text {
@@ -91,6 +91,10 @@
                     <div class="blog-box">
                         <div class="blog-content">
                            <!-- {!! @$policy !!} -->
+
+@if($lang == 'ar')
+                        <div>
+
                            خصوصية thecakorinas.com
 مقدمة
 <br/>
@@ -157,6 +161,113 @@
 <br/>
 اذا كان لديك اسئلة او اهتمامات حول جمعنا واستخدامنا لمعلوماتك الشخصية ,الرجاء الاتصال على فريق مركز العناية بالمستخدمين أو مراسلتنا على العنوان البريدي الخاص بمركز خدمة العملاء ببلدك
 <br/>
+                        </div>
+@else
+<div  style="text-align: left;direction: ltr;">
+<h1>Privacy Policy of thecakorinas.com</h1>
+
+<h2>Introduction</h2>
+<p>
+This Privacy Policy explains how we collect data and how we protect users’ personal information.
+By providing us with your personal information, you authorize us to process it in accordance with this policy.
+We may update this policy at any time by publishing the revised version on our website.
+</p>
+
+<h2>Scope of This Policy</h2>
+<ul>
+    <li>Collection and retention of your personal information</li>
+    <li>Use and modification of your personal information</li>
+    <li>Your use of personal information</li>
+    <li>Accessing and updating your information</li>
+    <li>Communication tools and third-party links</li>
+    <li>Cookies and browser technologies</li>
+    <li>Protection of your information</li>
+    <li>How to contact us</li>
+</ul>
+
+<h2>Collection and Retention of Personal Information</h2>
+<p>
+When registering on our website, you may be required to provide personal information such as your name,
+shipping address, email address, phone number, date of birth, and identity details.
+We may also request valid proof of identity (passport, national ID, residence permit, or driver’s license).
+</p>
+
+<p>
+Financial information such as credit card or bank account details may also be collected
+for billing purposes and transaction processing.
+</p>
+
+<p>
+We record transactions and activities on the website including purchases, sales,
+withdrawals, deposits, and related activities.
+We may collect IP address and browsing information to improve site management.
+</p>
+
+<h2>Use of Personal Information</h2>
+<p>
+We use your personal information to:
+</p>
+<ul>
+    <li>Provide customer service and support</li>
+    <li>Improve our services</li>
+    <li>Prevent illegal activities</li>
+    <li>Process payments and transactions</li>
+    <li>Send promotional and service-related emails</li>
+</ul>
+
+<p>
+We do not sell or rent your personal information to third parties.
+However, we may disclose information if required by law or legal authorities.
+</p>
+
+<h2>Your Use of Information</h2>
+<p>
+Members may share information to complete transactions.
+You must respect the confidentiality of other users' personal information
+and use it only for completing transactions on our website.
+</p>
+
+<h2>Access and Update of Information</h2>
+<p>
+You can access and update your personal information through the "My Account" section.
+You are responsible for keeping your information accurate and up to date.
+</p>
+
+<h2>Third-Party Links</h2>
+<p>
+Our website may contain links to third-party websites.
+We are not responsible for their privacy practices.
+Please review their privacy policies before providing personal information.
+</p>
+
+<h2>Cookies</h2>
+<p>
+We use cookies to improve website performance and user experience.
+You may disable cookies through your browser settings,
+but doing so may limit certain functionalities of the website.
+</p>
+
+<h2>Email Policy</h2>
+<p>
+We do not tolerate misleading or harmful emails.
+If you receive suspicious communication, please contact us at:
+</p>
+<p><strong>info@thecakorinas.com</strong></p>
+
+<h2>Protection of Personal Information</h2>
+<p>
+We take reasonable measures to protect your personal information
+from unauthorized access, use, or disclosure.
+However, no internet transmission is completely secure.
+</p>
+
+<h2>Contact Us</h2>
+<p>
+If you have any questions about this Privacy Policy,
+please contact our Customer Support team.
+</p>
+</div>
+@endif
 
                         </div>
                     </div>
