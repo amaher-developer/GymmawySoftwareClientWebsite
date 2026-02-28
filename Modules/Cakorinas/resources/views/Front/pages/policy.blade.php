@@ -15,13 +15,24 @@
             background-size: cover;
         }
 
+        @if($lang == 'ar')
+
         .blog-single-sec .blog-content p {
             text-align: start;
         }
-
         h4, h5 {
             text-align: start;
         }
+
+        @else
+        .blog-single-sec .blog-content p {
+            text-align: left !important;
+        }
+        h4, h5 {
+            text-align: left !important;
+        }
+
+        @endif
 
         .highlight-text {
             border-radius: 10px;

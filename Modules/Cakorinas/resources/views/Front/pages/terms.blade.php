@@ -8,21 +8,33 @@
         }
 
         .hero_in.general:before {
-            background: url({{asset('resources/assets/front/img/bg/articles.jpg')}}) center center no-repeat;
+            background: url("{{asset('resources/assets/front/img/bg/articles.jpg')}}") center center no-repeat;
             -webkit-background-size: cover;
             -moz-background-size: cover;
             -o-background-size: cover;
             background-size: cover;
         }
 
+        @if($lang == 'ar')
+
         .blog-single-sec .blog-content p {
-            text-align: right;
+            text-align: start;
         }
-
         h4, h5 {
-            text-align: right;
+            text-align: start;
         }
 
+        @else
+        .blog-single-sec .blog-content p {
+            text-align: left !important;
+        }
+        h4, h5 {
+            text-align: left !important;
+        }
+
+        @endif
+
+        
         .highlight-text {
             border-radius: 10px;
             border: solid 1px #f97d04;
@@ -31,7 +43,7 @@
         }
 
         .simple-btn-div {
-            text-align: right;
+            text-align: start;
         }
 
         .radio-input {
@@ -92,7 +104,7 @@
                         <div class="blog-content">
                            <!-- {!! @$terms !!} -->
                            @if($lang == 'ar')
-                           <div>
+                           <div dir="rtl">
                            شروط وأحكام إستخدام الموقع https://thecakorinas.com
 عزيزي مستخدم الموقع أهلاً بك على الموقع الالكتروني لأريبيان بوديبلدنغ دوت كوم THE CAKORINAS (و يشار إليها بـ"الشركة" أو "الموقع"). الرجاء قراءة شروط وأحكام استخدام الموقع هذه ("الشروط والأحكام") بعناية. الرجاء عدم الاستمرار في استخدام الموقع و/ أو الخدمات في حال عدم موافقتك على الشروط والأحكام. يعتبر استمرارك باستخدام الموقع و/ أو الخدمات موافقة من قبلك على الشروط والأحكام .
 <br/>
@@ -240,8 +252,7 @@
                            </div>
                            @else
                            <div style="text-align: left;direction: ltr;">
-                           </h1>
-<p><strong>https://thecakorinas.com</strong></p>
+<h1>Terms and Conditions — https://thecakorinas.com</h1>
 
 <p>
 Welcome to THE CAKORINAS (referred to as "the Company" or "the Website").
