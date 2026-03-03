@@ -1,6 +1,11 @@
 @extends('stepfitness::Front.layouts.master')
 @section('title'){{ $title }} | @endsection
 @section('style')
+    @php
+        $isRtl = app()->getLocale() === 'ar';
+        $textAlign = $isRtl ? 'right' : 'left';
+        $floatOpposite = $isRtl ? 'left' : 'right';
+    @endphp
     <style>
         .img-fluid {
             height: 100%;
@@ -16,11 +21,11 @@
         }
 
         .blog-single-sec .blog-content p {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         h4, h5 {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         .highlight-text {
@@ -31,7 +36,7 @@
         }
 
         .simple-btn-div {
-            text-align: right;
+            text-align: {{$textAlign}};
         }
 
         .radio-input {
@@ -89,6 +94,9 @@
             <div class="row">
                 <div class="col-lg-8">
                     <div class="blog-box">
+                        @if(!empty($record['image_name']))
+                            <img src="{{env('APP_URL_MASTER').'uploads/subscriptions/'.$record['image_name']}}" class="img-fluid" alt="{{$record['name']}}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 5px; margin-bottom: 20px;">
+                        @endif
                         <div class="blog-content">
                             @php
                                 $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
@@ -98,7 +106,7 @@
                                 $priceWithVat = (float)round($priceWithVat, 2);
                             @endphp
                             <h4>{{$record['name']}}
-                                <span style="color: #f97d04;float: left;font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
+                                <span style="color: #f97d04;float: {{$floatOpposite}};font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
                                     {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
                                     @if($vatPercentage > 0)
                                         <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
@@ -119,6 +127,7 @@
                                 <input type="hidden" name="subscription_id" value="{{$record['id']}}">
                                 <input type="hidden" name="amount" value="{{$priceWithVat}}">
                                 <input type="hidden" name="vat_percentage" value="{{@$mainSettings['vat_details']['vat_percentage']}}">
+                                <input type="hidden" name="payment_channel" value="2">
                             <br/><br/>
 
 
@@ -177,7 +186,7 @@
                                                 <input type="date" name="joining_date" class="form-control"
                                                        value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
                                                        min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                                                       max="{{\Carbon\Carbon::now()->addMonth()->format('Y-m-d')}}"
+                                                       max="{{\Carbon\Carbon::now()->addMonths(6)->format('Y-m-d')}}"
                                                        required>
                                                 </div>
                                             </div>
@@ -216,7 +225,7 @@
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input tabby" id="tabby" type="radio"
-                                               name="payment_method" value="2" placeholder="Your name">
+                                               name="payment_method" value="2">
                                     </div>
 
                                     <div class="col-md-11">
@@ -229,6 +238,49 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="highlight-text">
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input tamara" id="tamara" type="radio"
+                                               name="payment_method" value="4">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="https://cdn.tamara.co/assets/png/tamara-logo-badge-{{ app()->getLocale() == 'ar' ? 'ar' : 'en' }}.png">
+                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
+                                        <div class="row col-md-12 col-xs-12" style="padding-top: 10px;">
+                                            <tamara-widget type="tamara-summary" amount="{{$priceWithVat}}" inline-type="2"></tamara-widget>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input paytabs" id="paytabs" type="radio"
+                                               name="payment_method" value="5">
+                                    </div>
+                                    <div class="col-md-11">
+                                        <p><label for="paytabs">{{trans('front.paytabs_payment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="https://cdn.paytabs.com/assets/images/paytabs-logo.png"
+                                                 onerror="this.style.display='none'">
+                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/visa_logo.svg')}}">
+                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/mada-logo.svg')}}">
+                                        </p>
+                                        <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
+                                    </div>
+                                </div>
+                            </div> -->
 
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
@@ -274,13 +326,21 @@
         new TabbyCard({
             selector: '#tabbyCard', // empty div for TabbyCard.
             currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
-            lang: 'ar', // Optional, language of snippet and popups.
+            lang: '{{app()->getLocale()}}', // language of snippet and popups.
             price: {{$priceWithVat}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
             size: 'wide', // required, can be also 'wide', depending on the width.
             theme: 'black', // required, can be also 'default'.
-            header: false // if a Payment method name present already.
+            header: false, // if a Payment method name present already.
+            publicKey: '{{env("TABBY_PK")}}', // required, your Tabby public key.
+            merchantCode: '{{env("TABBY_MERCHANT_CODE")}}' // required, your Tabby merchant code.
         });
     </script>
     <script>
+        window.tamaraWidgetConfig = {
+            lang: '{{app()->getLocale()}}',
+            country: '{{env("TAMARA_COUNTRY_CODE", "SA")}}',
+            publicKey: '{{env("TAMARA_PUBLIC_KEY")}}'
+        };
     </script>
+    <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
 @endsection

@@ -181,7 +181,7 @@
                     <table>
                         <tr>
                             <td class="title " >
-                                <img src="{{asset('Modules/Stepfitness/resources/assets/img/logo.png')}}"style="width: 100%; max-width: 200px;"/>
+                                <img src="{{asset('Modules/Premier/resources/assets/img/logo.png')}}"style="width: 100%; max-width: 200px;"/>
                             </td>
                             <td>
                                 <br/><br/>

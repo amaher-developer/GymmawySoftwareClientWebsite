@@ -20,17 +20,59 @@ class TabbyService
 
     public function createSession($data)
     {
+        // Ensure webhook is registered before creating session
+        $this->ensureWebhookRegistered();
+
         $body = $this->getConfig($data);
-        $http = Http::withToken($this->pk_test)->baseUrl($this->base_url.'v2/');
+        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $response = $http->post('checkout',$body);
         return $response->object();
     }
 
+    /**
+     * Ensure webhook is registered with Tabby. Uses cache to avoid checking on every request.
+     */
+    public function ensureWebhookRegistered()
+    {
+        $cacheKey = 'tabby_webhook_registered';
+
+        if (cache()->has($cacheKey)) {
+            return;
+        }
+
+        try {
+            $existingWebhooks = $this->getWebHooks();
+            $notifyUrl = route('api.tabby-notify');
+            $alreadyRegistered = false;
+
+            if ($existingWebhooks && is_array($existingWebhooks)) {
+                foreach ($existingWebhooks as $wh) {
+                    if (isset($wh->url) && $wh->url === $notifyUrl) {
+                        $alreadyRegistered = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$alreadyRegistered) {
+                $result = $this->createWebHooks();
+                Log::info('Tabby webhook auto-registered', ['result' => (array) $result]);
+            }
+
+            // Cache for 24 hours so we don't check every request
+            cache()->put($cacheKey, true, now()->addHours(24));
+        } catch (\Throwable $e) {
+            Log::warning('Tabby webhook auto-registration check failed', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
     public function getSession($payment_id)
     {
-        $http = Http::withToken($this->pk_test)->baseUrl($this->base_url.'v2/');
+        $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $url = 'checkout/'.$payment_id;
@@ -50,8 +92,8 @@ class TabbyService
     }
 
     public function createWebHooks(){
-        $body = ['url' => route('tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE')])->baseUrl($this->base_url.'v1/');
+        $body = ['url' => route('api.tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $response = $http->post('webhooks',$body);
@@ -61,7 +103,7 @@ class TabbyService
     public function getWebHooks(){
 //        $create = $this->createWebHooks();
 //        if(@$create->id) {
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => env('TABBY_MERCHANT_CODE')])->baseUrl($this->base_url.'v1/');
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
         if(@env('TABBY_IS_TEST'))
             $http = $http->withoutVerifying();
         $url = 'webhooks' ;
@@ -90,42 +132,36 @@ class TabbyService
 
     public function getConfig($data)
     {
-        $body= [];
         $body = [
             "payment" => [
-                "amount" => $data['amount'],
+                "amount" => (string) $data['amount'],
                 "currency" => $data['currency'],
                 "description" =>  $data['description'],
-                "buyer" => [
+                "buyer" => array_filter([
                     "phone" => $data['buyer_phone'],
-                    "email" => $data['buyer_email'],
+                    "email" => $data['buyer_email'] ?? '',
                     "name" => $data['full_name'],
-//                    "dob" => $data['dob'],
-                ],
+                    "dob" => $data['buyer_dob'] ?? null,
+                ]),
                 "shipping_address" => [
                     "city" => $data['city'],
                     "address" =>  $data['address'],
                     "zip" => $data['zip'],
+                    "country" => $data['country'] ?? env('TABBY_COUNTRY', 'SA'),
                 ],
                 "order" => [
                     "tax_amount" =>  "0.00",
                     "shipping_amount" =>  "0.00",
                     "discount_amount" => "0.00",
-                    "updated_at" => $data['updated_at'],//"2019-08-24T14:15:22Z",
-                    "reference_id" => $data['order_id'],
+                    "updated_at" => $data['updated_at'],
+                    "reference_id" => (string) $data['order_id'],
                     "items" => $data['items'],
                 ],
                 "buyer_history" => [
                     "registered_since"=> $data['registered_since'],
                     "loyalty_level"=> $data['loyalty_level'],
                 ],
-                "order_history" => [
-                    collect([
-                        "purchased_at"=> $data['purchased_at'],
-                        "amount"=> $data['amount'],
-                        "status"=> $data['status']
-                    ])
-                ],
+                "order_history" => $data['order_history'] ?? [],
             ],
             "lang" => app()->getLocale(),
             "merchant_code" => @env('TABBY_MERCHANT_CODE'),
@@ -135,7 +171,6 @@ class TabbyService
                 "failure" => @$data['failure-url'],
             ]
         ];
-//dd($body);
         return $body;
     }
 }

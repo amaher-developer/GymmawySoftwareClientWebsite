@@ -31,15 +31,19 @@ class MainFrontController extends GenericFrontController
     public function __construct()
     {
         parent::__construct();
+        
     }
 
 
     public function index()
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $record = $this->mainSettings;
         $title = @$record->name;
         $lang = $this->lang;
-        $cover_images = @(array)$record['cover_images'];
+        $cover_images = Banner::where("title", "!=", "schedule_banner")->where('is_web', true)->limit(5)->get()->pluck('image');
         $images = (array)$record['images'];
         $subscriptions = Subscription::where('is_web', true)->orderBy('id', 'desc')->get();
         $activities = Activity::where('is_web', true)->orderBy('id', 'desc')->get();
