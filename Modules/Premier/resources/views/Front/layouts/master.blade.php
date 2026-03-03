@@ -113,7 +113,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top main-nav" id="mainNav">
                     <div class="container">
                         <div class="navbar-brand">
-                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Premier/resources/assets/img/logo.png')}}" style="width: 135px; height:51px;object-fit: contain" alt="">
+                            <a href="{{asset($lang)}}" class="js-scroll-trigger"><img src="{{asset('Modules/Premier/resources/assets/img/logo.png')}}" style="width: 185px; height:51px;object-fit: cover" alt="">
                             </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
