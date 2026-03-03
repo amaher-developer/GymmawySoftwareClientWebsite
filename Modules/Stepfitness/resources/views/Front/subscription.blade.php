@@ -239,7 +239,7 @@
                                 </div>
                             </div>
 
-                            <div class="highlight-text">
+                            <!-- <div class="highlight-text">
 
                                 <div class="row">
                                     <div class="col-md-1">
@@ -258,7 +258,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- <div class="highlight-text">
                                 <div class="row">
