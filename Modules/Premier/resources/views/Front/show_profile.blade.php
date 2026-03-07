@@ -44,6 +44,20 @@
             border-radius: 20%;
             padding: 2px;
         }
+        .text-blue {
+            color: white;
+            background-color: #1a73e8;
+            border: 1px solid;
+            border-radius: 20%;
+            padding: 2px;
+        }
+        .text-orange {
+            color: white;
+            background-color: #f97d04;
+            border: 1px solid;
+            border-radius: 20%;
+            padding: 2px;
+        }
 
         .i-profile {
             color: black !important;
@@ -171,10 +185,13 @@
                                             <div class="card-body">
                                                 <p class="mb-4">{{trans('front.my_subscription')}}
                                                     <?php
-                                                    $date = date_create(@$currentUser->expire_date);
-                                                    $date =  date_format($date, 'U');
-                                                    if($date > time()){ ?>
+                                                    $subStatus = @$currentUser->subscription_status;
+                                                    if($subStatus === 3){ ?>
+                                                    <span class="text-blue font-italic me-1">{{trans('front.coming')}}</span>
+                                                    <?php }elseif($subStatus === 0){ ?>
                                                     <span class="text-green font-italic me-1">{{trans('front.active')}}</span>
+                                                    <?php }elseif($subStatus === 1){ ?>
+                                                    <span class="text-orange font-italic me-1">{{trans('front.freeze')}}</span>
                                                     <?php }else{ ?>
                                                     <span class="text-red font-italic me-1">{{trans('front.expired')}}</span>
                                                     <?php } ?>

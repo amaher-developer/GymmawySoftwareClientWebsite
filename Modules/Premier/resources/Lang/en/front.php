@@ -45,6 +45,8 @@ return [
     'follow_up' => 'Follow-up',
     'active' => 'Active',
     'expired' => 'Expired',
+    'freeze' => 'Frozen',
+    'coming' => 'Coming',
     'my_subscription' => 'My Subscription',
     'subscription' => 'Subscription',
     'joining_date' => 'Joining date',

@@ -46,6 +46,8 @@ return [
     'follow_up' => 'المتابعة',
     'active' => 'نشط',
     'expired' => 'منتهي',
+    'freeze' => 'مجمد',
+    'coming' => 'قادم',
     'my_subscription' => 'اشتراكي',
     'subscription' => 'الاشتراك',
     'joining_date' => 'تاريخ بداية الاشتراك',

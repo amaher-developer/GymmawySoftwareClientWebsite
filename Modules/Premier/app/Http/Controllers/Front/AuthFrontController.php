@@ -118,6 +118,7 @@ class AuthFrontController extends GenericFrontController
             $memberData['amount_paid'] = $memberSubscription->amount_paid ?? 0;
             $memberData['amount_remaining'] = $memberSubscription->amount_remaining ?? 0;
             $memberData['attendees_count'] = $memberSubscription->attendees_count ?? 0;
+            $memberData['subscription_status'] = $memberSubscription->status ?? null;
         } else {
             // Set default values if no subscription found
             $memberData['subscription_name'] = null;
@@ -126,6 +127,7 @@ class AuthFrontController extends GenericFrontController
             $memberData['amount_paid'] = 0;
             $memberData['amount_remaining'] = 0;
             $memberData['attendees_count'] = 0;
+            $memberData['subscription_status'] = null;
         }
 
         // Return in the same format as the API (object with member property)
