@@ -25,6 +25,17 @@ class SubscriptionRequest extends FormRequest
     {
         $user = @request()->session()->get('user');
 
+        if (!$user) {
+            $token = request('token') ?: request()->bearerToken();
+            if ($token) {
+                $token = str_replace('Bearer ', '', $token);
+                $pushToken = \Illuminate\Support\Facades\DB::table('sw_gym_push_tokens')->where('token', $token)->first();
+                if ($pushToken && $pushToken->member_id) {
+                    $user = true;
+                }
+            }
+        }
+
         $today = \Carbon\Carbon::now()->format('Y-m-d');
         $maxDate = \Carbon\Carbon::now()->addMonths(6)->format('Y-m-d');
 

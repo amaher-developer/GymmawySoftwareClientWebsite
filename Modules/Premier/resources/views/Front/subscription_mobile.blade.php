@@ -160,6 +160,7 @@
         <input type="hidden" name="amount" value="{{ $priceWithVat }}">
         <input type="hidden" name="vat_percentage" value="{{ @$mainSettings['vat_details']['vat_percentage'] }}">
         <input type="hidden" name="payment_channel" value="3">
+        <input type="hidden" name="token" value="{{ request('token') }}">
 
         @if(!$currentUser)
             <h5 class="section-title">{{trans('front.register_info')}}:</h5>
@@ -175,6 +176,12 @@
                 <input type="date" name="dob" class="form-control" placeholder="{{trans('front.birthdate')}}" value="{{ old('dob') }}" required>
                 <input type="text" name="address" class="form-control" placeholder="{{trans('front.address')}}" value="{{ old('address') }}" required>
             </div>
+        @else
+            <input type="hidden" name="name" value="{{ $currentUser->name }}">
+            <input type="hidden" name="phone" value="{{ $currentUser->phone }}">
+            <input type="hidden" name="gender" value="{{ $currentUser->gender }}">
+            <input type="hidden" name="dob" value="{{ $currentUser->dob ? \Carbon\Carbon::parse($currentUser->dob)->format('Y-m-d') : '' }}">
+            <input type="hidden" name="address" value="{{ $currentUser->address }}">
         @endif
 
         <h5 class="section-title">{{trans('front.register_info_joining_date')}}:</h5>

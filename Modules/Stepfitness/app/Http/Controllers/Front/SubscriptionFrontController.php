@@ -97,6 +97,18 @@ class SubscriptionFrontController extends GenericFrontController
     public function invoiceSubmit(SubscriptionRequest $request)
     {
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        if (!$this->current_user) {
+            $token = $request->input('token') ?: $request->bearerToken();
+            if ($token) {
+                $token = str_replace('Bearer ', '', $token);
+                $pushToken = DB::table('sw_gym_push_tokens')->where('token', $token)->first();
+                if ($pushToken && $pushToken->member_id) {
+                    $this->current_user = Member::find($pushToken->member_id);
+                }
+            }
+        }
+
         View::share('currentUser',$this->current_user);
         // :this process before payment
         // check on member info.
