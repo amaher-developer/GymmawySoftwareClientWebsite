@@ -186,11 +186,11 @@
                                                 <p class="mb-4">{{trans('front.my_subscription')}}
                                                     <?php
                                                     $subStatus = @$currentUser->subscription_status;
-                                                    if($subStatus === 3){ ?>
+                                                    if($subStatus == 3){ ?>
                                                     <span class="text-blue font-italic me-1">{{trans('front.coming')}}</span>
-                                                    <?php }elseif($subStatus === 0){ ?>
+                                                    <?php }elseif($subStatus == 0){ ?>
                                                     <span class="text-green font-italic me-1">{{trans('front.active')}}</span>
-                                                    <?php }elseif($subStatus === 1){ ?>
+                                                    <?php }elseif($subStatus == 1){ ?>
                                                     <span class="text-orange font-italic me-1">{{trans('front.freeze')}}</span>
                                                     <?php }else{ ?>
                                                     <span class="text-red font-italic me-1">{{trans('front.expired')}}</span>
