@@ -55,6 +55,7 @@ return [
     'amount_remaining' => 'Amount remaining',
     'gymmawy' => 'gymmawy',
     'subscribe' => 'Subscribe',
+    'payment_methods' => 'We Accept',
     'choose_payment_methods' => 'Choose payment method',
     'pay_now' => 'Pay Now',
     'other_subscriptions' => 'Subscriptions',

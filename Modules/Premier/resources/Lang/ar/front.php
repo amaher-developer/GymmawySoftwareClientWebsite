@@ -56,6 +56,7 @@ return [
     'amount_remaining' => 'المبلغ المتبقي',
     'gymmawy' => 'جيماوي',
     'subscribe' => 'اشترك',
+    'payment_methods' => 'نقبل الدفع بـ',
     'choose_payment_methods' => 'اختر طريقة الدفع',
     'pay_now' => 'ادفع الان',
     'other_subscriptions' => 'الاشتراكات',

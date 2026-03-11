@@ -260,7 +260,7 @@
                                 </div>
                             </div>
 
-                            <!-- <div class="highlight-text">
+                            <div class="highlight-text">
                                 <div class="row">
                                     <div class="col-md-1">
                                         <input class="form-control radio-input paytabs" id="paytabs" type="radio"
@@ -280,7 +280,7 @@
                                         <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
                                     </div>
                                 </div>
-                            </div> -->
+                            </div>
 
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"

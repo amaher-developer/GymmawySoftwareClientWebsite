@@ -222,6 +222,32 @@
 </footer>
 
 
+<!-- Payment Methods section -->
+<section class="payment-methods-sec" style="background:#1a1a1a; padding: 16px 0; border-top: 1px solid #333;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <span style="color:#aaa; font-size:13px; margin-right:12px; vertical-align:middle;">{{trans('front.payment_methods')}}</span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; padding:5px 12px; margin:4px; height:40px; vertical-align:middle;">
+                    <img src="{{asset('resources/assets/images/visa_logo.svg')}}"       alt="Visa"       style="height:22px; width:auto;">
+                </span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; padding:5px 12px; margin:4px; height:40px; vertical-align:middle;">
+                    <img src="{{asset('resources/assets/images/mastercard-logo.svg')}}" alt="Mastercard" style="height:28px; width:auto;">
+                </span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; padding:5px 12px; margin:4px; height:40px; vertical-align:middle;">
+                    <img src="{{asset('resources/assets/images/mada-logo.svg')}}"       alt="Mada"       style="height:22px; width:auto;">
+                </span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; padding:5px 12px; margin:4px; height:40px; vertical-align:middle;">
+                    <img src="{{asset('resources/assets/images/tabby-logo.webp')}}"     alt="Tabby"      style="height:22px; width:auto;">
+                </span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; padding:5px 12px; margin:4px; height:40px; vertical-align:middle;">
+                    <img src="{{asset('resources/assets/images/tamara-logo.svg')}}"     alt="Tamara"     style="height:22px; width:auto;">
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Copyright section -->
 <section class="copyright">
     <div class="container">
