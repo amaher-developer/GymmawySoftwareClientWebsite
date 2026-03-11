@@ -114,5 +114,8 @@ return [
     'joining_date_must_be_valid_date' => 'يجب أن يكون تاريخ بدء الاشتراك تاريخًا صحيحًا',
     'joining_date_cannot_be_in_past' => 'لا يمكن أن يكون تاريخ بدء الاشتراك في الماضي',
     'joining_date_cannot_exceed_one_month' => 'لا يمكن أن يتجاوز تاريخ بدء الاشتراك شهرًا واحدًا من اليوم',
+    'terms' => 'الشروط والأحكام',
+    'policy' => 'سياسة الخصوصية',
+    'commercial_registration' => 'السجل التجاري السعودي',
 
 ];

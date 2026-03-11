@@ -115,5 +115,8 @@ return [
     'joining_date_cannot_be_in_past' => 'Subscription start date cannot be in the past',
     'joining_date_cannot_exceed_one_month' => 'Subscription start date cannot exceed one month from today',
     'register' => 'Register',
+    'terms' => 'Terms & Conditions',
+    'policy' => 'Privacy Policy',
+    'commercial_registration' => 'Saudi Commercial Registration Number',
 
     ];
