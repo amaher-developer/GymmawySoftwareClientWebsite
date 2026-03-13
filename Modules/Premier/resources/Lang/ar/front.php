@@ -116,6 +116,7 @@ return [
     'joining_date_cannot_exceed_one_month' => 'لا يمكن أن يتجاوز تاريخ بدء الاشتراك شهرًا واحدًا من اليوم',
     'terms' => 'الشروط والأحكام',
     'policy' => 'سياسة الخصوصية',
+    'refund_policy' => 'سياسة الاسترداد',
     'commercial_registration' => 'السجل التجاري السعودي',
 
 ];

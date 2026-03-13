@@ -22,6 +22,7 @@ Route::name('newsletter')->post('/newsletter', [MainFrontController::class, 'new
 Route::name('thanks')->get('/thanks', [MainFrontController::class, 'thanks']);
 Route::name('terms')->get('/terms', [MainFrontController::class, 'terms']);
 Route::name('policy')->get('/policy', [MainFrontController::class, 'policy']);
+Route::name('refund')->get('/refund-policy', [MainFrontController::class, 'refund']);
 
 //Route::name('rss')->get('/rss', [MainFrontController::class, 'rss']);
 Route::name('sitemap')->get('/sitemap', [MainFrontController::class, 'sitemap']);

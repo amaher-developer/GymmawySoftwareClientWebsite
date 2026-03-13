@@ -91,6 +91,13 @@ class MainFrontController extends GenericFrontController
         ]);
     }
 
+    public function refund()
+    {
+        return view('cakorinas::Front.pages.refund', [
+            'title' => trans('front.refund_policy'),
+        ]);
+    }
+
     public function contactCreate()
     {
 

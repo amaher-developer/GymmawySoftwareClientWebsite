@@ -11,6 +11,7 @@ Route::name('contact')->post('/contact', [\App\Modules\Cakorinas\app\Http\Contro
 Route::name('banner')->get('/banner', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'banner']);
 Route::name('terms')->get('/terms', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'terms']);
 Route::name('policy')->get('/policy', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'policy']);
+Route::name('refund')->get('/refund-policy', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'refund']);
 
 Route::name('downloadApp')->get('/download-app', [\App\Modules\Cakorinas\app\Http\Controllers\Front\MainFrontController::class, 'downloadApp']);
 

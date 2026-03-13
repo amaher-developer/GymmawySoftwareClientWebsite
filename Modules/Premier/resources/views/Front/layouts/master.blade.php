@@ -257,6 +257,8 @@
                     <a href="https://premierfitnes.com/{{$lang}}/terms" target="_blank" style="color:#aaa; margin: 0 8px;">{{trans('front.terms')}}</a>
                     |
                     <a href="https://premierfitnes.com/{{$lang}}/policy" target="_blank" style="color:#aaa; margin: 0 8px;">{{trans('front.policy')}}</a>
+                    |
+                    <a href="https://premierfitnes.com/{{$lang}}/refund-policy" target="_blank" style="color:#aaa; margin: 0 8px;">{{trans('front.refund_policy')}}</a>
                 </p>
                 <p style="margin-bottom: 6px; color:#aaa; font-size:12px;">{{trans('front.commercial_registration')}}: 5906338027</p>
                 <p> {{trans('front.dev_des')}} <a href="https://demo.gymmawy.com" target="_blank"><img

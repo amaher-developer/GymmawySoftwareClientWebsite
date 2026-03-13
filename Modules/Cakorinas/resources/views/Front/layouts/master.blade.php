@@ -227,6 +227,13 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
+                <p style="margin-bottom: 6px;">
+                    <a href="{{route('terms')}}" style="color:#aaa; margin: 0 8px;">{{trans('front.terms')}}</a>
+                    |
+                    <a href="{{route('policy')}}" style="color:#aaa; margin: 0 8px;">{{trans('front.policy')}}</a>
+                    |
+                    <a href="{{route('refund')}}" style="color:#aaa; margin: 0 8px;">{{trans('front.refund_policy')}}</a>
+                </p>
                 <p> {{trans('front.dev_des')}} <a href="https://demo.gymmawy.com" target="_blank"><img
                                 style="width: 24px;"
                                 src="https://gymmawy.com/resources/assets/front/img/logo/favicon.ico"/> {{trans('front.gymmawy')}}

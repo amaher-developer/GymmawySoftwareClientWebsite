@@ -117,6 +117,7 @@ return [
     'register' => 'Register',
     'terms' => 'Terms & Conditions',
     'policy' => 'Privacy Policy',
+    'refund_policy' => 'Refund Policy',
     'commercial_registration' => 'Saudi Commercial Registration Number',
 
     ];

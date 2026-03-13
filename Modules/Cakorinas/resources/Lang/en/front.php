@@ -109,5 +109,8 @@ return [
     'payment_success_msg' => 'Your subscription has been activated. Thank you for your payment.',
     'view_invoice' => 'View Invoice',
     'back_to_home' => 'Back to Home',
+    'terms' => 'Terms & Conditions',
+    'policy' => 'Privacy Policy',
+    'refund_policy' => 'Refund Policy',
 
     ];
