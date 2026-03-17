@@ -230,6 +230,7 @@
 
         <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
     </form>
+    <div style="padding-bottom: 60px;"></div>
 
     <script>
         window.tamaraWidgetConfig = {
