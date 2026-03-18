@@ -101,18 +101,27 @@
                             @php
                                 $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
                                 $originalPrice = $record['price'];
-                                $discountPercentage = $record['discount'] ?? 0;
-                                $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+                                $discountType  = $record['default_discount_type'] ?? 0;
+                                $discountValue = $record['default_discount_value'] ?? 0;
+                                if ($discountType == 1 && $discountValue > 0) {
+                                    $discountAmount = round(($discountValue / 100) * $originalPrice, 2);
+                                    $discountLabel  = trans('front.discount') . ' (' . $discountValue . '%)';
+                                } elseif ($discountType == 2 && $discountValue > 0) {
+                                    $discountAmount = round($discountValue, 2);
+                                    $discountLabel  = trans('front.discount');
+                                } else {
+                                    $discountAmount = 0;
+                                    $discountLabel  = '';
+                                }
                                 $priceBeforeVat = round($originalPrice - $discountAmount, 2);
                                 $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
-                                $priceWithVat = $priceBeforeVat + $vatAmount;
-                                $priceWithVat = (float)round($priceWithVat, 2);
+                                $priceWithVat = (float)round($priceBeforeVat + $vatAmount, 2);
                             @endphp
                             <h4>{{$record['name']}}
                                 <span style="color: #f97d04;float: {{$floatOpposite}};font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
-                                    @if($discountPercentage > 0)
+                                    @if($discountAmount > 0)
                                         <small style="text-decoration: line-through; color: #999;">{{number_format($originalPrice, 2)}} {{trans('front.pound_unit')}}</small><br>
-                                        <small style="color: green;">{{trans('front.discount')}} ({{$discountPercentage}}%): -{{number_format($discountAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                        <small style="color: green;">{{$discountLabel}}: -{{number_format($discountAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
                                     @endif
                                     {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
                                     @if($vatPercentage > 0)
@@ -325,12 +334,18 @@
     @php
         $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
         $originalPrice = $record['price'];
-        $discountPercentage = $record['discount'] ?? 0;
-        $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+        $discountType  = $record['default_discount_type'] ?? 0;
+        $discountValue = $record['default_discount_value'] ?? 0;
+        if ($discountType == 1 && $discountValue > 0) {
+            $discountAmount = round(($discountValue / 100) * $originalPrice, 2);
+        } elseif ($discountType == 2 && $discountValue > 0) {
+            $discountAmount = round($discountValue, 2);
+        } else {
+            $discountAmount = 0;
+        }
         $priceBeforeVat = round($originalPrice - $discountAmount, 2);
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
-        $priceWithVat = $priceBeforeVat + $vatAmount;
-        $priceWithVat = (float)round($priceWithVat, 2);
+        $priceWithVat = (float)round($priceBeforeVat + $vatAmount, 2);
     @endphp
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
