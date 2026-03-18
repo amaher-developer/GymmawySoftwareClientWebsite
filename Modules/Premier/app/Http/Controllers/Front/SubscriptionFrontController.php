@@ -189,7 +189,7 @@ class SubscriptionFrontController extends GenericFrontController
     public function paytabs_payment($subscription = [], $member = []){
 
         $payment = new PaytabsPayment();
-        $payment = $payment->pay(@$subscription['price'],
+        $payment = $payment->pay(round($member['amount'], 2),
             2,
             @$member['name'],
             "",
@@ -291,10 +291,10 @@ class SubscriptionFrontController extends GenericFrontController
     // tabby
     public function tabby_payment($subscription = [], $member = []){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
-        
-        $vatPercentage = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
-        $priceBeforeVat = $subscription['price'];
-        $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+
+        // Use the discounted+VAT amount already calculated in invoiceSubmit
+        $totalAmount    = round($member['amount'], 2);
+        $priceBeforeVat = round($totalAmount - $member['vat'], 2);
 
         // Use actual member dates for registered users, fallback to now for guests
         if (@$this->current_user && @$this->current_user->id) {
@@ -340,7 +340,7 @@ class SubscriptionFrontController extends GenericFrontController
             'title' => $subscription['name'],
             "description" => @$subscription['content'],
             'quantity' => 1,
-            'unit_price' => $subscription['price'],
+            'unit_price' => $priceBeforeVat,
             'category' => 'Gym Membership',
         ]);
 
@@ -386,7 +386,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $order_data = [
-            'amount'=> round((@$subscription['price'] + $vatAmount), 2),
+            'amount'=> $totalAmount,
             'currency' => @env('TABBY_CURRENCY', 'SAR'),
             'description'=> @$subscription['content'],
             'full_name'=> $member['name'],
@@ -896,9 +896,9 @@ class SubscriptionFrontController extends GenericFrontController
     {
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
 
-        $vatPercentage = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
-        $priceBeforeVat = $subscription['price'];
-        $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
+        // Use the discounted+VAT amount already calculated in invoiceSubmit
+        $totalAmount    = round($member['amount'], 2);
+        $priceBeforeVat = round($totalAmount - $member['vat'], 2);
         $unique_id = uniqid();
 
         $paymentOnlineInvoice = PaymentOnlineInvoice::create([
@@ -926,13 +926,13 @@ class SubscriptionFrontController extends GenericFrontController
             'title' => $subscription['name'],
             'description' => @$subscription['content'],
             'quantity' => 1,
-            'unit_price' => $subscription['price'],
-            'total_amount' => round((@$subscription['price'] + $vatAmount), 2),
+            'unit_price' => $priceBeforeVat,
+            'total_amount' => $totalAmount,
             'reference_id' => (string) $paymentOnlineInvoice->id,
         ]);
 
         $order_data = [
-            'amount' => round((@$subscription['price'] + $vatAmount), 2),
+            'amount' => $totalAmount,
             'currency' => @env('TAMARA_CURRENCY', 'SAR'),
             'description' => @$subscription['content'],
             'full_name' => $member['name'],
