@@ -100,13 +100,20 @@
                         <div class="blog-content">
                             @php
                                 $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
-                                $priceBeforeVat = $record['price'];
+                                $originalPrice = $record['price'];
+                                $discountPercentage = $record['discount'] ?? 0;
+                                $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+                                $priceBeforeVat = round($originalPrice - $discountAmount, 2);
                                 $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
                                 $priceWithVat = $priceBeforeVat + $vatAmount;
                                 $priceWithVat = (float)round($priceWithVat, 2);
                             @endphp
                             <h4>{{$record['name']}}
                                 <span style="color: #f97d04;float: {{$floatOpposite}};font-size: 14px;padding: 10px;background-color: #6c757d26;border-radius: 5px;line-height: 1.8;">
+                                    @if($discountPercentage > 0)
+                                        <small style="text-decoration: line-through; color: #999;">{{number_format($originalPrice, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                        <small style="color: green;">{{trans('front.discount')}} ({{$discountPercentage}}%): -{{number_format($discountAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                    @endif
                                     {{trans('front.price')}}: {{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}<br>
                                     @if($vatPercentage > 0)
                                         <small style="font-size: 12px;color: #555;">{{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
@@ -161,8 +168,9 @@
                                                             </div>
 
                                                         </div>
+                                                        <label style="font-size: 13px; color: #555; margin-bottom: 2px; display: block; padding: 0 10px;">{{trans('front.birthdate')}}</label>
                                                         <input type="date" name="dob" class="form-control"
-                                                               placeholder="{{trans('front.birthdate')}}" required="">
+                                                               required="">
                                                         <input type="text" name="address" class="form-control"
                                                                placeholder="{{trans('front.address')}}" required="">
                                                         <!--                                <input type="text" class="form-control" placeholder="عدد">-->
@@ -183,6 +191,7 @@
                                         <div class="row">
                                             <div class="col-md-12  ">
                                                 <div class="highlight-text" STYLE="border-color: grey !important;">
+                                                <label style="font-size: 13px; color: #555; margin-bottom: 2px; display: block; padding: 0 10px;">{{trans('front.register_info_joining_date')}}</label>
                                                 <input type="date" name="joining_date" class="form-control"
                                                        value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
                                                        min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
@@ -315,11 +324,13 @@
 @section('script')
     @php
         $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
-        $priceBeforeVat = $record['price'];
+        $originalPrice = $record['price'];
+        $discountPercentage = $record['discount'] ?? 0;
+        $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+        $priceBeforeVat = round($originalPrice - $discountAmount, 2);
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = $priceBeforeVat + $vatAmount;
         $priceWithVat = (float)round($priceWithVat, 2);
-
     @endphp
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>

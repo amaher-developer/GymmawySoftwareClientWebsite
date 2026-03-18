@@ -10,7 +10,10 @@
         $textAlign = $isRtl ? 'right' : 'left';
 
         $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
-        $priceBeforeVat = $record['price'];
+        $originalPrice = $record['price'];
+        $discountPercentage = $record['discount'] ?? 0;
+        $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+        $priceBeforeVat = round($originalPrice - $discountAmount, 2);
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = $priceBeforeVat + $vatAmount;
         $priceWithVat = (float)round($priceWithVat, 2);
@@ -146,6 +149,10 @@
     <div class="subscription-header">
         <h4>{{ $record['name'] }}</h4>
         <div class="price-box">
+            @if($discountPercentage > 0)
+                <small style="text-decoration: line-through; color: #999;">{{ number_format($originalPrice, 2) }} {{trans('front.pound_unit')}}</small><br>
+                <small style="color: green;">{{trans('front.discount')}} ({{ $discountPercentage }}%): -{{ number_format($discountAmount, 2) }} {{trans('front.pound_unit')}}</small><br>
+            @endif
             {{trans('front.price')}}: {{ number_format($priceBeforeVat, 2) }} {{trans('front.pound_unit')}}<br>
             @if($vatPercentage > 0)
                 <small>{{trans('front.vat')}} ({{ $vatPercentage }}%): {{ number_format($vatAmount, 2) }} {{trans('front.pound_unit')}}</small><br>
@@ -173,7 +180,8 @@
                     <input type="radio" name="gender" value="{{ \App\Http\Classes\Constants::FEMALE }}" id="female_m" {{ old('gender') == \App\Http\Classes\Constants::FEMALE ? 'checked' : '' }}>
                     <label for="female_m">{{trans('front.female')}}</label>
                 </div>
-                <input type="date" name="dob" class="form-control" placeholder="{{trans('front.birthdate')}}" value="{{ old('dob') }}" required>
+                <label style="font-size: 13px; color: #555; margin-bottom: 2px; display: block;">{{trans('front.birthdate')}}</label>
+                <input type="date" name="dob" class="form-control" value="{{ old('dob') }}" required>
                 <input type="text" name="address" class="form-control" placeholder="{{trans('front.address')}}" value="{{ old('address') }}" required>
             </div>
         @else
@@ -186,6 +194,7 @@
 
         <h5 class="section-title">{{trans('front.register_info_joining_date')}}:</h5>
         <div class="highlight-text">
+            <label style="font-size: 13px; color: #555; margin-bottom: 2px; display: block;">{{trans('front.register_info_joining_date')}}</label>
             <input type="date" name="joining_date" class="form-control"
                    value="{{ old('joining_date', \Carbon\Carbon::now()->format('Y-m-d')) }}"
                    min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"

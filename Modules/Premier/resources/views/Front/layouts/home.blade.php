@@ -481,10 +481,17 @@
                             </ul>
                             @php
                                 $vatPercentage = @$mainSettings['vat_details']['vat_percentage'] ?? 0;
-                                $priceBeforeVat = $subscription->price;
+                                $originalPrice = $subscription->price;
+                                $discountPercentage = $subscription->discount ?? 0;
+                                $discountAmount = $discountPercentage > 0 ? round(($discountPercentage / 100) * $originalPrice, 2) : 0;
+                                $priceBeforeVat = round($originalPrice - $discountAmount, 2);
                                 $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
-                                $priceWithVat = $priceBeforeVat + $vatAmount;
+                                $priceWithVat = round($priceBeforeVat + $vatAmount, 2);
                             @endphp
+                            @if($discountPercentage > 0)
+                                <small style="text-decoration: line-through; color: #bbb; font-size: 13px;">{{number_format($originalPrice, 2)}} {{trans('front.pound_unit')}}</small><br>
+                                <small style="color: #90ee90; font-size: 12px;">{{trans('front.discount')}} ({{$discountPercentage}}%): -{{number_format($discountAmount, 2)}} {{trans('front.pound_unit')}}</small><br>
+                            @endif
                             <h3>{{number_format($priceBeforeVat, 2)}} {{trans('front.pound_unit')}}</h3>
                             @if($vatPercentage > 0)
                                 <small style="font-size: 12px;color: #999;">+ {{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</small><br>

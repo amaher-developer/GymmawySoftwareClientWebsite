@@ -87,6 +87,7 @@ return [
     'buyer_name' => 'Buyer name',
     'app_currency' => 'Rial',
     'price' => 'Price',
+    'discount' => 'Discount',
     'error_title_msg' => 'Oops! Something went wrong.',
     'error_body_msg' => 'While trying to reserve money from your account',
     'try_again' => 'Try again',

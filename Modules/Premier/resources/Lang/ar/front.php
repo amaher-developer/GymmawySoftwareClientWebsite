@@ -87,6 +87,7 @@ return [
     'including_vat' => 'شامل ضريبه القيمة المضافة',
     'vat' => 'الضريبة',
     'price' => 'السعر',
+    'discount' => 'الخصم',
     'error_member_exist' => 'خطأ, هذا الرقم مسجل بالفعل. برجاء <a href="'.route('login').'">تسجيل الدخول اولا</a>',
     'error_member_subscription_joining_date' => 'خطأ, هذا تاريخ بداية العضويه متعارض مع عضويه مسجله بالفعل',
     'error_member_subscription_active' => 'خطأ, لديك عضويه مفعلة',
