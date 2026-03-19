@@ -74,5 +74,9 @@
 
 @endsection
 @section('script')
-
+<script>
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+        setTimeout(function () { history.back(); }, 3000);
+    }
+</script>
 @endsection

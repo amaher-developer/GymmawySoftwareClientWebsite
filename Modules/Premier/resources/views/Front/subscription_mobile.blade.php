@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
     @php
         $isRtl = app()->getLocale() === 'ar';
         $textAlign = $isRtl ? 'right' : 'left';
@@ -140,19 +141,13 @@
 <body>
 
     @if(\Session::has('error'))
-        <div class="alert alert-danger">{!! \Session::get('error') !!}</div>
+        <script>window._toastrError = {!! json_encode(\Session::get('error')) !!};</script>
     @endif
     @if(@$error)
-        <div class="alert alert-danger">{!! @$error !!}</div>
+        <script>window._toastrError = {!! json_encode($error) !!};</script>
     @endif
     @if($errors->any())
-        <div class="alert alert-danger">
-            <ul style="margin: 0; padding-{{ $isRtl ? 'right' : 'left' }}: 15px;">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+        <script>window._toastrValidation = {!! json_encode($errors->all()) !!};</script>
     @endif
 
     <div class="subscription-header">
@@ -271,6 +266,32 @@
             publicKey: '{{ env("TABBY_PK") }}',
             merchantCode: '{{ env("TABBY_MERCHANT_CODE") }}'
         });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+    <script>
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: '{{ app()->getLocale() === "ar" ? "toast-top-left" : "toast-top-right" }}',
+            timeOut: 6000,
+            extendedTimeOut: 2000
+        };
+
+        if (typeof window._toastrError !== 'undefined') {
+            toastr.error(window._toastrError);
+        }
+        if (typeof window._toastrValidation !== 'undefined') {
+            window._toastrValidation.forEach(function(msg) {
+                toastr.error(msg);
+            });
+        }
+        // Show error from query param (e.g. after JS redirect from error pages)
+        var urlParams = new URLSearchParams(window.location.search);
+        var qError = urlParams.get('error');
+        if (qError) {
+            toastr.error(decodeURIComponent(qError));
+        }
     </script>
 </body>
 </html>

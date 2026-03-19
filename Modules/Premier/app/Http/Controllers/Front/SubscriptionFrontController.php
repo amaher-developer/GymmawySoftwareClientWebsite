@@ -90,6 +90,22 @@ class SubscriptionFrontController extends GenericFrontController
         return view('premier::Front.invoice', compact('title', 'invoice', 'qr_img_invoice'));
     }
 
+    public function invoiceMobile($invoice_id)
+    {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
+        $invoice = $this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
+        $title = trans('front.invoice');
+
+        if (!$invoice) {
+            return abort(404);
+        }
+
+        $qr_img_invoice = @$invoice->qr_code;
+        return view('premier::Front.invoice_mobile', compact('title', 'invoice', 'qr_img_invoice'));
+    }
+
     public function getInvoiceDetails($invoice_id, $member_id){
         $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id])->first();
         return $invoice;
@@ -689,9 +705,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', [
-                'id' => $paymentInvoice->member_subscription_id
-            ]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         // 2️⃣ Validate Tabby payment id consistency
@@ -823,9 +838,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', [
-                'id' => $memberSubscription->id
-            ]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         // fallback (rare)
@@ -986,9 +1000,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', [
-                'id' => $paymentInvoice->member_subscription_id
-            ]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         $joiningDate = $paymentInvoice->response_code['joining_date']
@@ -1004,9 +1017,8 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription', [
-                'id' => $paymentInvoice->subscription_id
-            ]);
+            $subscriptionRoute = $paymentInvoice->payment_channel == 3 ? 'subscription-mobile' : 'subscription';
+            return redirect()->route($subscriptionRoute, ['id' => $paymentInvoice->subscription_id]);
         }
 
         $tamaraService = new TamaraService();
@@ -1086,9 +1098,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', [
-                'id' => $memberSubscription->id
-            ]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         // Fallback
@@ -1664,7 +1675,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed by concurrent IPN
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', ['id' => $paymentInvoice->member_subscription_id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         $tranRef    = $paymentInvoice->transaction_id;
@@ -1690,7 +1702,8 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
+            $subscriptionRoute = $paymentInvoice->payment_channel == 3 ? 'subscription-mobile' : 'subscription';
+            return redirect()->route($subscriptionRoute, ['id' => $paymentInvoice->subscription_id]);
         }
 
         $paymentInvoice->status = Constants::SUCCESS;
@@ -1708,7 +1721,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', ['id' => $memberSubscription->id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         $paymentInvoice->status = Constants::FAILED;

@@ -119,5 +119,8 @@ return [
     'policy' => 'سياسة الخصوصية',
     'refund_policy' => 'سياسة الاسترداد',
     'commercial_registration' => 'السجل التجاري السعودي',
+    'payment_success_title' => 'تمت عملية الدفع بنجاح',
+    'payment_success_body' => 'تم تفعيل اشتراكك بنجاح.',
+    'expire_date' => 'تاريخ الانتهاء',
 
 ];

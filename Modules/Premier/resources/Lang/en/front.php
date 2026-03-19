@@ -120,5 +120,8 @@ return [
     'policy' => 'Privacy Policy',
     'refund_policy' => 'Refund Policy',
     'commercial_registration' => 'Saudi Commercial Registration Number',
+    'payment_success_title' => 'Payment Successful',
+    'payment_success_body' => 'Your subscription has been activated successfully.',
+    'expire_date' => 'Expiry Date',
 
     ];

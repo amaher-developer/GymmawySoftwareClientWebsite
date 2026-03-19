@@ -7,6 +7,7 @@ Route::name('subscription')->get('/subscription/{id}', [SubscriptionFrontControl
 Route::name('subscription-mobile')->get('/subscription-mobile/{id}', [SubscriptionFrontController::class, 'showMobile']);
 Route::name('invoice')->get('/invoice/{id}', [SubscriptionFrontController::class, 'invoice']);
 Route::name('invoice')->post('/invoice/{id}', [SubscriptionFrontController::class, 'invoiceSubmit']);
+Route::name('invoice-mobile')->get('/invoice-mobile/{id}', [SubscriptionFrontController::class, 'invoiceMobile']);
 Route::name('tabby-error-cancel')->get('/tabby/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tabbyCancel']);
 Route::name('tabby-error-failure')->get('/tabby/error/failure/{payment?}', [SubscriptionFrontController::class, 'tabbyFailure']);
 Route::name('tamara-error-cancel')->get('/tamara/error/cancel/{payment?}', [SubscriptionFrontController::class, 'tamaraCancel']);
