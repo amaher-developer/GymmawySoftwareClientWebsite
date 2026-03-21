@@ -268,7 +268,7 @@
 
                         @include('demo::errors')
 
-                        <form method="post" action="{{ route('contact') }}" autocomplete="off">
+                        <form method="post" action="{{ route('contact.store') }}" autocomplete="off">
                             {{ csrf_field() }}
 
                             <div class="row">

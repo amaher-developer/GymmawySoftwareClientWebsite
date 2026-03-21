@@ -11,7 +11,7 @@ Route::name('setCurrentArea')->post('set-area', [MainFrontController::class, 'se
 
 
 Route::name('contact')->get('/contact', [MainFrontController::class, 'contactCreate']);
-Route::name('contact')->post('/', [MainFrontController::class, 'contactStore']);
+Route::name('contact.store')->post('/contact', [MainFrontController::class, 'contactStore']);
 Route::name('feedback')->post('/feedback', [MainFrontController::class, 'feedbackStore']);
 Route::name('newsletter')->post('/newsletter', [MainFrontController::class, 'newsletter']);
 
