@@ -315,7 +315,7 @@
                         <div class="ok-row">
                             <div class="clear-section" style="padding-bottom: 20px;"></div>
                             <!-- FORM -->
-                            <form  action=""  method="post"   class="form-small form">
+                            <form  action="{{ route('contact.store') }}"  method="post"   class="form-small form">
                                 {{csrf_field()}}
                                 <div class="ok-row">
                                     <div class="post ok-md-3 ok-xsd-6" data-animate="fadeInLeft" data-delay="50">
