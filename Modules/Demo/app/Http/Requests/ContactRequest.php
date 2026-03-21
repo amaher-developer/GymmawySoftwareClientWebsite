@@ -24,11 +24,11 @@ class ContactRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
-            'phone' => 'required',
-            'email' => 'required',
-//            'message' => 'required',
-//            'g-recaptcha-response' => 'required',
+            'name'    => 'required',
+            'phone'   => 'required',
+            'email'   => 'required|email',
+            'country' => 'nullable|string|max:100',
+            'message' => 'nullable|string|max:2000',
         ];
     }
 

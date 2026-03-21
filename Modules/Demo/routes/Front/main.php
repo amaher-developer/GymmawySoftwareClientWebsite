@@ -28,3 +28,12 @@ Route::name('downloadApp')->get('/download-app', [MainFrontController::class, 'd
 Route::post('add-favorite-by-ajax', [MainFrontController::class, 'addFavoriteByAjax'])->name('addFavoriteByAjax');
 Route::post('remove-favorite-by-ajax', [MainFrontController::class, 'removeFavoriteByAjax'])->name('removeFavoriteByAjax');
 
+// Solution sub-pages
+Route::prefix('/')->group(function () {
+    Route::name('solution.gym-manager')   ->get('/gym-manager',    [MainFrontController::class, 'solutionGymManager']);
+    Route::name('solution.training-plans')->get('/training-plans', [MainFrontController::class, 'solutionTrainingPlans']);
+    Route::name('solution.reservations')  ->get('/reservations',   [MainFrontController::class, 'solutionReservations']);
+    Route::name('solution.pos')           ->get('/pos',            [MainFrontController::class, 'solutionPos']);
+    Route::name('solution.pt-manager')    ->get('/pt-manager',     [MainFrontController::class, 'solutionPtManager']);
+});
+

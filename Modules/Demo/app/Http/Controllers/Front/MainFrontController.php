@@ -97,19 +97,20 @@ class MainFrontController extends GenericFrontController
      */
     public function contactStore(ContactRequest $request)
     {
-        $name = $request->name;
-        $phone = $request->phone;
+        $name    = $request->name;
+        $phone   = $request->phone;
         $country = $request->country;
-        $email = $request->email;
+        $email   = $request->email;
+        $message = @$request->message;
         $setting = $this->mainSettings;
-        //Contact::create(request()->all());
 
-        $data = array(
-            'name' => $name
-        , 'phone' => $phone
-        , 'email' => $email
-        , 'country' => $country
-        );
+        $data = [
+            'name'    => $name,
+            'phone'   => $phone,
+            'email'   => $email,
+            'country' => $country,
+            'msg'     => @$message,
+        ];
 
 //        Mail::send('emails.contact_us', $data, function ($message) use ($data, $setting) {
 //            $message->from($data['email'], $data['name']);
@@ -127,8 +128,14 @@ class MainFrontController extends GenericFrontController
                 ->subject(trans('global.contact_us'));
         });
 
-        $data['type'] = 1;
-        Contact::create($data);
+        Contact::create([
+            'name'    => $name,
+            'phone'   => $phone,
+            'email'   => $email,
+            'country' => $country,
+            'message' => @$message,
+            'type'    => 1,
+        ]);
 
 
         return redirect()->route('thanks');
@@ -164,6 +171,41 @@ class MainFrontController extends GenericFrontController
         }
 
         return redirect()->to(env('APP_URL'));
+    }
+
+    public function solutionGymManager()
+    {
+        return view('demo::Front.pages.solutions.gym-manager', [
+            'title' => trans('global.solution_gym_manager'),
+        ]);
+    }
+
+    public function solutionTrainingPlans()
+    {
+        return view('demo::Front.pages.solutions.training-plans', [
+            'title' => trans('global.solution_training_plans'),
+        ]);
+    }
+
+    public function solutionReservations()
+    {
+        return view('demo::Front.pages.solutions.reservations', [
+            'title' => trans('global.solution_reservations'),
+        ]);
+    }
+
+    public function solutionPos()
+    {
+        return view('demo::Front.pages.solutions.pos', [
+            'title' => trans('global.solution_pos'),
+        ]);
+    }
+
+    public function solutionPtManager()
+    {
+        return view('demo::Front.pages.solutions.pt-manager', [
+            'title' => trans('global.solution_pt_manager'),
+        ]);
     }
 
     public function downloadApp()

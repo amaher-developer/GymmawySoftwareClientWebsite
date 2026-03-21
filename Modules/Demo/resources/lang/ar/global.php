@@ -443,5 +443,12 @@ return [
     'calorie' => 'سعر حراري',
     'calories_for' => 'السعرات لكل',
     'home_calories_table_msg' => 'دليلك لجسم رشيق و وزن مثالي',
-    'regards'=> 'لك خالص التقدير'
+    'regards'=> 'لك خالص التقدير',
+
+    'solution_gym_manager'    => 'إدارة النادي',
+    'solution_training_plans' => 'خطط التدريب',
+    'solution_reservations'   => 'الحجوزات',
+    'solution_pos'            => 'نقطة البيع',
+    'solution_pt_manager'     => 'إدارة المدربين',
+    'try_live_demo'           => 'جرب العرض التجريبي',
 ];

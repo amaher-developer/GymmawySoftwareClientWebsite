@@ -394,5 +394,12 @@ return [
     'calorie' => 'Calories',
     'calories_for' => 'Calories for',
     'home_calories_table_msg' => 'Your guide to a slim body and perfect weight',
-    'regards'=> 'Regards'
+    'regards'=> 'Regards',
+
+    'solution_gym_manager'    => 'Gym Manager',
+    'solution_training_plans' => 'Training Plans',
+    'solution_reservations'   => 'Reservations',
+    'solution_pos'            => 'Point of Sale',
+    'solution_pt_manager'     => 'PT Manager',
+    'try_live_demo'           => 'Try Live Demo',
 ];

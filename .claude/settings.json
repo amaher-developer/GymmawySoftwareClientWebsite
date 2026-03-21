@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "c:\\wamp64\\www\\gym\\client_website\\Modules\\Demo\\resources\\views\\Front\\pages"
+    ]
+  }
+}
