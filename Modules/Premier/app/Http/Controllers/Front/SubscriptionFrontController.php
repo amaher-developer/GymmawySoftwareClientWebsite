@@ -17,6 +17,7 @@ use Modules\Premier\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Illuminate\Support\Facades\View;
@@ -265,7 +266,7 @@ class SubscriptionFrontController extends GenericFrontController
                 if($member){
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -284,13 +285,14 @@ class SubscriptionFrontController extends GenericFrontController
                         $notes = $notes.' - '.trans('sw.vat_added');
                     }
 
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
+                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => $this->resolvePaymentType($payment_invoice), 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
 
                     if(!@$this->current_user->id){
                         $auth = new AuthFrontController();
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    $this->sendSubscriptionNotification(@$member_subscription->id, @$payment_invoice['phone'], $type_of_payment);
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }
@@ -620,7 +622,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
-                'payment_type'    => Constants::ONLINE_PAYMENT,
+                'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
             // 6️⃣ Update invoice
@@ -662,12 +664,14 @@ class SubscriptionFrontController extends GenericFrontController
                 'notes' => $notes,
                 'member_id' => $member->id,
                 'type' => $typeOfPayment,
-                'payment_type' => Constants::ONLINE_PAYMENT,
+                'payment_type' => $this->resolvePaymentType($paymentInvoice),
                 'member_subscription_id' => $memberSubscription->id,
                 'online_subscription_id' => $paymentInvoice->id,
             ]);
 
             DB::commit();
+
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             return response()->json(['status' => 'success'], 200);
 
@@ -1279,7 +1283,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
-                'payment_type'    => Constants::ONLINE_PAYMENT,
+                'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
             $paymentInvoice->status = Constants::SUCCESS;
@@ -1297,6 +1301,8 @@ class SubscriptionFrontController extends GenericFrontController
             $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
 
             DB::commit();
+
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             Log::info('Tamara webhook processed successfully', [
                 'tamara_order_id' => $orderId,
@@ -1477,7 +1483,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit' => $subscription->freeze_limit ?? null,
                 'number_times_freeze' => $subscription->number_times_freeze ?? null,
                 'amount_before_discount' => $subscription->price ?? null,
-                'payment_type' => Constants::ONLINE_PAYMENT,
+                'payment_type' => $this->resolvePaymentType($invoice),
             ]);
 
             $invoice->member_subscription_id = $memberSubscription->id;
@@ -1502,10 +1508,40 @@ class SubscriptionFrontController extends GenericFrontController
         if (empty($result['early']) && @$result['generatedCode'] && @$result['member']->phone) {
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
+        if (empty($result['early']) && @$result['memberSubscription']->id && @$result['member']->phone) {
+            $this->sendSubscriptionNotification($result['memberSubscription']->id, $result['member']->phone, $result['type']);
+        }
         return $result['memberSubscription'];
         } finally {
             DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
+    }
+
+    protected function sendSubscriptionNotification(int $memberSubscriptionId, string $phone, int $type): void
+    {
+        try {
+            $event = $type === Constants::CreateMember ? 'new_member' : 'renew_member';
+            Http::timeout(10)->post('https://premier.gymmawy.com/api/send-subscription-notification', [
+                'lang'                   => 'ar',
+                'member_subscription_id' => $memberSubscriptionId,
+                'event'                  => $event,
+                'phone'                  => $phone,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Subscription notification failed', [
+                'member_subscription_id' => $memberSubscriptionId,
+                'error'                  => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function resolvePaymentType(PaymentOnlineInvoice $invoice): int
+    {
+        return match((int) $invoice->payment_gateway) {
+            Constants::TABBY  => 4,
+            Constants::TAMARA => 5,
+            default           => 7, // Paytabs (old/standard) and any other gateway
+        };
     }
 
     protected function createMoneyBoxEntry(PaymentOnlineInvoice $invoice, Member $member, int $type): void
@@ -1534,7 +1570,7 @@ class SubscriptionFrontController extends GenericFrontController
             'notes' => $notes,
             'member_id' => $member->id,
             'type' => $type,
-            'payment_type' => Constants::ONLINE_PAYMENT,
+            'payment_type' => $this->resolvePaymentType($invoice),
             'member_subscription_id' => $invoice->member_subscription_id,
             'online_subscription_id' => $invoice->id,
         ]);
@@ -1846,7 +1882,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'           => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze'    => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
-                'payment_type'           => Constants::ONLINE_PAYMENT,
+                'payment_type'           => $this->resolvePaymentType($paymentInvoice),
             ]);
 
             $paymentInvoice->status                 = Constants::SUCCESS;
@@ -1860,6 +1896,8 @@ class SubscriptionFrontController extends GenericFrontController
             $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
 
             DB::commit();
+
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             Log::info('Paytabs IPN processed successfully', [
                 'tran_ref'               => $tranRef,
