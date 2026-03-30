@@ -1427,6 +1427,10 @@ class SubscriptionFrontController extends GenericFrontController
                 $member = Member::find($invoice->member_id);
             }
 
+            if (!$member && $invoice->member_id) {
+                $member = Member::find($invoice->member_id);
+            }
+
             // Fallback: look up by phone to avoid creating a duplicate member.
             if (!$member && $invoice->phone) {
                 $member = Member::where('phone', $invoice->phone)->first();
