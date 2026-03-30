@@ -37,7 +37,7 @@ class SubscriptionRequest extends FormRequest
         }
 
         $today = \Carbon\Carbon::now()->format('Y-m-d');
-        $maxDate = \Carbon\Carbon::now()->addMonths(6)->format('Y-m-d');
+        $maxDate = \Carbon\Carbon::now()->addDays(7)->format('Y-m-d');
 
         $data = [
             'subscription_id' => 'required',
