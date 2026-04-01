@@ -163,6 +163,7 @@ return [
     'non_member_moneybox_edit_msg' => 'عميل يومي ":member" تعديل اشترك في هذه الانشطة ":activities"',
     'non_member_moneybox_delete_msg' => 'عميل يومي ":member" حذف اشترك في هذه الانشطة ":activities"',
 
+    'discount_msg' => 'خصم: :value',
     'member_moneybox_add_msg' => 'اشتراك: عميل مشترك ":member" اضافة اشترك في ":subscription", دفع مبلغ ":amount_paid", متبقي الان ":amount_remaining"',
     'member_moneybox_renew_msg' => 'تجديد: عميل مشترك ":member" تجديد اشترك في ":subscription", دفع مبلغ ":amount_paid", متبقي الان ":amount_remaining"',
     'member_moneybox_remain_msg' => 'دفع: عميل مشترك ":member" مشترك في ":subscription", دفع مبلغ ":amount_paid", متبقي الان ":amount_remaining"',

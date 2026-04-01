@@ -266,7 +266,7 @@ class SubscriptionFrontController extends GenericFrontController
                 if($member){
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
+                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -280,6 +280,11 @@ class SubscriptionFrontController extends GenericFrontController
                             'amount_paid' => @$payment_invoice->amount,
                             'amount_remaining' => 0,
                         ]);
+
+                    $discountVal = $this->calculateDiscountValue($payment_invoice->subscription);
+                    if ($discountVal > 0) {
+                        $notes = $notes.' - '.trans('sw.discount_msg', ['value' => $discountVal]);
+                    }
 
                     if(@$payment_invoice->vat_percentage){
                         $notes = $notes.' - '.trans('sw.vat_added');
@@ -623,6 +628,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
+                'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
@@ -652,6 +658,11 @@ class SubscriptionFrontController extends GenericFrontController
                 'amount_paid'  => $paymentInvoice->amount,
                 'amount_remaining' => 0,
             ]);
+
+            $discountVal = $this->calculateDiscountValue($paymentInvoice->subscription);
+            if ($discountVal > 0) {
+                $notes .= ' - ' . trans('sw.discount_msg', ['value' => $discountVal]);
+            }
 
             if ($paymentInvoice->vat_percentage) {
                 $notes .= ' - ' . trans('sw.vat_added');
@@ -1285,6 +1296,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
+                'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
@@ -1486,6 +1498,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'number_times_freeze' => $subscription->number_times_freeze ?? null,
                 'amount_before_discount' => $subscription->price ?? null,
                 'discount_value' => $this->calculateDiscountValue($subscription),
+                'discount_type' => $this->getDiscountType($subscription),
                 'payment_type' => $this->resolvePaymentType($invoice),
             ]);
 
@@ -1561,6 +1574,11 @@ class SubscriptionFrontController extends GenericFrontController
             'amount_remaining' => 0,
         ]);
 
+        $discountVal = $this->calculateDiscountValue($invoice->subscription);
+        if ($discountVal > 0) {
+            $notes .= ' - ' . trans('sw.discount_msg', ['value' => $discountVal]);
+        }
+
         if ($invoice->vat_percentage) {
             $notes .= ' - ' . trans('sw.vat_added');
         }
@@ -1604,6 +1622,12 @@ class SubscriptionFrontController extends GenericFrontController
             return round($discountValue, 2);
         }
         return 0.0;
+    }
+
+    protected function getDiscountType($subscription): ?int
+    {
+        $type = (int) ($subscription->default_discount_type ?? 0);
+        return $type > 0 ? $type : null;
     }
 
     public static function amountAfter($amount, $amountBefore, $operation)
@@ -1900,6 +1924,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'number_times_freeze'    => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
                 'discount_value'         => $this->calculateDiscountValue($paymentInvoice->subscription),
+                'discount_type'          => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'           => $this->resolvePaymentType($paymentInvoice),
             ]);
 
