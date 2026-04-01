@@ -266,7 +266,7 @@ class SubscriptionFrontController extends GenericFrontController
                 if($member){
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
+                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -622,6 +622,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
+                'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
@@ -1283,6 +1284,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'    => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze' => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
+                'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
             ]);
 
@@ -1483,6 +1485,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit' => $subscription->freeze_limit ?? null,
                 'number_times_freeze' => $subscription->number_times_freeze ?? null,
                 'amount_before_discount' => $subscription->price ?? null,
+                'discount_value' => $this->calculateDiscountValue($subscription),
                 'payment_type' => $this->resolvePaymentType($invoice),
             ]);
 
@@ -1587,6 +1590,20 @@ class SubscriptionFrontController extends GenericFrontController
         //} catch (\Throwable $throwable) {
             //Log::warning('Auto login after Tabby payment failed', ['error' => $throwable->getMessage()]);
         //}
+    }
+
+    protected function calculateDiscountValue($subscription): float
+    {
+        $originalPrice = (float) ($subscription->price ?? 0);
+        $discountType  = (int)   ($subscription->default_discount_type ?? 0);
+        $discountValue = (float) ($subscription->default_discount_value ?? 0);
+
+        if ($discountType === 1 && $discountValue > 0) {
+            return round(($discountValue / 100) * $originalPrice, 2);
+        } elseif ($discountType === 2 && $discountValue > 0) {
+            return round($discountValue, 2);
+        }
+        return 0.0;
     }
 
     public static function amountAfter($amount, $amountBefore, $operation)
@@ -1882,6 +1899,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'freeze_limit'           => $paymentInvoice->subscription->freeze_limit,
                 'number_times_freeze'    => $paymentInvoice->subscription->number_times_freeze,
                 'amount_before_discount' => $paymentInvoice->subscription->price,
+                'discount_value'         => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'payment_type'           => $this->resolvePaymentType($paymentInvoice),
             ]);
 
