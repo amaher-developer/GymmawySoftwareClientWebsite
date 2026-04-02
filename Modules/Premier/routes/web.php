@@ -1,19 +1,9 @@
-// In routes/web.php
-
-use App\Http\Controllers\PaymentController;
-use Illuminate\Support\Facades\Route;
-
-// Change from Route::get to Route::match or Route::post
-
 <?php
-
-use Modules\Premier\app\Http\Controllers\Admin\DashboardAdminController;
 use Modules\Premier\app\Http\Controllers\Admin\GenericAdminController;
 use Modules\Premier\app\Http\Controllers\Front\MainFrontController;
 use Modules\Premier\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
 
 Route::get('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
 Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
@@ -21,8 +11,8 @@ Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::cl
 Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::class, 'tamara_payment_verify'])->name('tamara-verify-payment');
 //Route::get('/payments/paytabs-verify/{payment?}', [SubscriptionFrontController::class, 'paytabs_payment_verify'])->name('paytabs-verify-payment');
 
-Route::match(['get', 'post'], 'payments/paytabs-verify', [PaymentController::class, 'verify'])
-    ->name('payments.paytabs.verify');
+Route::match(['get', 'post'], 'payments/paytabs-verify', [SubscriptionFrontController::class, 'paytabs_payment_verify'])
+    ->name('paytabs-verify-payment');
 // tamara-notify moved to Api/main.php to avoid CSRF blocking webhook POSTs
 Route::post('/payments/tamara-refund/{invoice}', [SubscriptionFrontController::class, 'tamaraRefund'])->name('tamara-refund')->middleware(['permission:super']);
 Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
