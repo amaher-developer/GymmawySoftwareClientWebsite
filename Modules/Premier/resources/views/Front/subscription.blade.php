@@ -249,7 +249,7 @@
                                     <div class="col-md-11">
                                         <p><label for="tabby">{{trans('front.tabby_installment_msg')}}</label></p>
                                         <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
                                                  src="{{asset('resources/assets/images/tabby-logo.webp')}}">
                                         <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span></p>
                                         <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
@@ -268,7 +268,7 @@
                                     <div class="col-md-11">
                                         <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
                                         <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
                                                  src="https://cdn.tamara.co/assets/png/tamara-logo-badge-{{ app()->getLocale() == 'ar' ? 'ar' : 'en' }}.png">
                                         <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span></p>
                                         <div class="row col-md-12 col-xs-12" style="padding-top: 10px;">
@@ -287,13 +287,17 @@
                                     <div class="col-md-11">
                                         <p><label for="paytabs">{{trans('front.paytabs_payment_msg')}}</label></p>
                                         <p>
-                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="https://cdn.paytabs.com/assets/images/paytabs-logo.png"
+                                            <img style="height: 45px; width: auto; padding: 0px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/paytabs-logo.svg')}}"
                                                  onerror="this.style.display='none'">
-                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
                                                  src="{{asset('resources/assets/images/visa_logo.svg')}}">
-                                            <img style="width: 80px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/mastercard-logo.svg')}}">
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
                                                  src="{{asset('resources/assets/images/mada-logo.svg')}}">
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                                                 src="{{asset('resources/assets/images/apple-pay-logo.svg')}}">
                                         </p>
                                         <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
                                     </div>
