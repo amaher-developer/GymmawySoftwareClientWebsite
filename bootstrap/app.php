@@ -34,6 +34,9 @@ return MultidomainApplication::configure(
             'lang' => \Modules\Generic\Http\Middleware\Lang::class,
             'sw_customer' => \Modules\Software\Http\Middleware\RedirectCustomerIfNotAuth::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'payments/paytabs-verify', // Exclude the PayTabs callback from CSRF
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
