@@ -230,16 +230,26 @@
             </div>
         </div>
 
-        <!-- <div class="payment-option">
+        <div class="payment-option">
             <input type="radio" name="payment_method" value="5" id="paytabs_m" {{ old('payment_method') == '5' ? 'checked' : '' }}>
             <div class="payment-details">
                 <label for="paytabs_m">{{trans('front.paytabs_payment_msg')}}</label>
-                <img src="https://cdn.paytabs.com/assets/images/paytabs-logo.png" alt="Paytabs" onerror="this.style.display='none'">
-                <img src="{{ asset('resources/assets/images/visa_logo.svg') }}" alt="Visa">
-                <img src="{{ asset('resources/assets/images/mada-logo.svg') }}" alt="Mada">
+                <p>
+                    <img style="height: 45px; width: auto; padding: 0px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                            src="{{asset('resources/assets/images/paytabs-logo.svg')}}"
+                            onerror="this.style.display='none'">
+                    <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                            src="{{asset('resources/assets/images/visa_logo.svg')}}">
+                    <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                            src="{{asset('resources/assets/images/mastercard-logo.svg')}}">
+                    <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                            src="{{asset('resources/assets/images/mada-logo.svg')}}">
+                    <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                            src="{{asset('resources/assets/images/apple-pay-logo.svg')}}">
+                </p>
                 <span class="policy-msg">{{trans('front.paytabs_policy_msg')}}</span>
             </div>
-        </div> -->
+        </div> 
 
         <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
     </form>
