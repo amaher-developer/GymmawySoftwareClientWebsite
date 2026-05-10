@@ -38,7 +38,7 @@ class SubscriptionFrontController extends GenericFrontController
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
 
-        if (!$record) {
+        if (!$record || !$record->is_web) {
             \Session::flash('error', trans('front.error_in_data'));
             return redirect()->route('home');
         }
@@ -67,7 +67,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         $record = Subscription::where('id', $id)->first();
 
-        if (!$record) {
+        if (!$record || !$record->is_mobile) {
             return abort(404);
         }
 
