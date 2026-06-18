@@ -172,6 +172,36 @@
 <br/>
 اذا كان لديك اسئلة او اهتمامات حول جمعنا واستخدامنا لمعلوماتك الشخصية ,الرجاء الاتصال على فريق مركز العناية بالمستخدمين أو مراسلتنا على العنوان البريدي الخاص بمركز خدمة العملاء ببلدك
 <br/>
+
+<!-- Arabic Version -->
+<section dir="rtl" lang="ar">
+    <h2>حذف الحساب والبيانات الشخصية</h2>
+
+    <p>
+        يمكن للمستخدمين طلب حذف حساباتهم وبياناتهم الشخصية مباشرة من داخل التطبيق.
+    </p>
+
+    <p><strong>خطوات حذف الحساب:</strong></p>
+
+    <ol>
+        <li>الانتقال إلى صفحة الملف الشخصي.</li>
+        <li>الضغط على خيار "حذف الحساب".</li>
+        <li>تأكيد طلب الحذف.</li>
+    </ol>
+
+    <p>
+        بعد تأكيد الطلب، سيتم حذف حساب المستخدم وبياناته الشخصية المرتبطة به من الأنظمة النشطة بشكل دائم، باستثناء البيانات التي يتطلب الاحتفاظ بها بموجب القوانين أو اللوائح المحاسبية أو لأغراض أمنية أو تشغيلية مشروعة.
+    </p>
+
+    <p>
+        كما يمكن للمستخدم التواصل معنا عبر البريد الإلكتروني:
+        <a href="mailto:info@thecakorinas.com">info@thecakorinas.com</a>
+        للمساعدة في طلبات حذف الحساب أو البيانات.
+    </p>
+</section>
+
+
+
                         </div>
 @else
 <div  style="text-align: left;direction: ltr;">
@@ -277,6 +307,35 @@ However, no internet transmission is completely secure.
 If you have any questions about this Privacy Policy,
 please contact our Customer Support team.
 </p>
+
+<!-- English Version -->
+<section>
+    <h2>Account and Data Deletion</h2>
+
+    <p>
+        Users can request the deletion of their account and personal data directly from within the application.
+    </p>
+
+    <p><strong>To delete an account:</strong></p>
+
+    <ol>
+        <li>Open the Profile page.</li>
+        <li>Select the "Delete Account" option.</li>
+        <li>Confirm the deletion request.</li>
+    </ol>
+
+    <p>
+        Upon confirmation, the user's account and associated personal data will be permanently removed from our active systems, except where retention is required by law, accounting regulations, security purposes, or legitimate business requirements.
+    </p>
+
+    <p>
+        Users may also contact us at
+        <a href="mailto:info@thecakorinas.com">info@thecakorinas.com</a>
+        for assistance regarding account or data deletion requests.
+    </p>
+</section>
+
+
 </div>
 @endif
 
