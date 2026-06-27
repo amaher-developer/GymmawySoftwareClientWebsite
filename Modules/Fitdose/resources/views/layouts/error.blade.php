@@ -1,0 +1,1 @@
+@extends('fitdose::layouts.master')

@@ -1,0 +1,11 @@
+{
+    "name": "Fitdose",
+    "alias": "fitdose",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Fitdose\\Providers\\FitdoseServiceProvider"
+    ],
+    "files": []
+}

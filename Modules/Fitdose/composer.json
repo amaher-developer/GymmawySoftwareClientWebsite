@@ -1,0 +1,28 @@
+{
+    "name": "nwidart/fitdose",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": []
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Fitdose\\": "app/",
+            "Modules\\Fitdose\\Database\\Factories\\": "database/factories/",
+            "Modules\\Fitdose\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Fitdose\\Tests\\": "tests/"
+        }
+    }
+}
