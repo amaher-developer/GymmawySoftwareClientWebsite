@@ -26,7 +26,7 @@
     width: 100%;
     height: 100%;
     position: absolute;
-    background-size: contain;
+    /* background-size: contain; */
     -moz-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
     -o-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
@@ -38,7 +38,11 @@
     -moz-webkit-perspective: 1300px;
     -ms-webkit-perspective: 1300px;
     -o-webkit-perspective: 1300px;
-    perspective: 1300px
+    perspective: 1300px;
+
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 .pogoSlider-loading {
     position: absolute;
