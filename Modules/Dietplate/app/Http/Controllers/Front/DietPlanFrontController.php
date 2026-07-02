@@ -6,6 +6,7 @@ use App\Http\Classes\Constants;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Modules\Common\Services\GymmawyNotificationService;
 use Modules\Dietplate\Models\Member;
 use Modules\Dietplate\Models\ReservationMember;
 use Modules\Dietplate\Models\Subscription;
@@ -439,6 +440,8 @@ class DietPlanFrontController extends SubscriptionFrontController
             'amount'           => $priceWithVat,
             'currency'         => trans('front.pound_unit'),
         ]);
+
+        GymmawyNotificationService::notifyReservation();
 
         session()->forget(['diet_plan_step1', 'diet_plan_step2']);
 

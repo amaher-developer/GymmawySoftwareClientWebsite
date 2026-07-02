@@ -688,6 +688,7 @@ class SubscriptionFrontController extends GenericFrontController
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
             $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
+            GymmawyNotificationService::notifyPayment();
 
             return response()->json(['status' => 'success'], 200);
 
@@ -1322,6 +1323,7 @@ class SubscriptionFrontController extends GenericFrontController
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
             $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
+            GymmawyNotificationService::notifyPayment();
 
             Log::info('Tamara webhook processed successfully', [
                 'tamara_order_id' => $orderId,
@@ -2002,6 +2004,7 @@ class SubscriptionFrontController extends GenericFrontController
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
             $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
+            GymmawyNotificationService::notifyPayment();
 
             Log::info('Paytabs IPN processed successfully', [
                 'tran_ref'               => $tranRef,
