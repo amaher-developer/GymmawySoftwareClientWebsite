@@ -666,6 +666,86 @@
     }
     .bmi-ideal-weight i { color: #7e4c8a; margin-top: 2px; flex-shrink: 0; }
 
+    /* ===== BMI Recommendation Spotlight Card ===== */
+    .bmi-recommend-card {
+        position: relative;
+        background: linear-gradient(135deg, #ffffff 0%, #f6ecfb 100%);
+        border-radius: 26px 26px 26px 6px;
+        padding: 30px 32px;
+        box-shadow: 0 10px 40px rgba(126,76,138,0.22);
+        border: 2px solid #e6cdf0;
+        display: flex; align-items: center; gap: 26px;
+        flex-wrap: wrap;
+        overflow: hidden;
+        opacity: 0; transform: translateY(18px) scale(0.97);
+        transition: opacity .45s ease, transform .45s ease;
+    }
+    .bmi-recommend-card.show { opacity: 1; transform: translateY(0) scale(1); }
+    .bmi-recommend-card:before {
+        content: '';
+        position: absolute; top: -60px; {{ $lang == 'ar' ? 'left' : 'right' }}: -60px;
+        width: 180px; height: 180px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(249,167,4,0.18) 0%, rgba(249,167,4,0) 70%);
+    }
+    .bmi-recommend-badge {
+        position: absolute; top: 18px; {{ $lang == 'ar' ? 'left' : 'right' }}: -38px;
+        background: linear-gradient(135deg, #f9a825, #f97d04);
+        color: #fff; font-size: 11px; font-weight: 800;
+        padding: 6px 46px; transform: rotate({{ $lang == 'ar' ? '-45deg' : '45deg' }});
+        box-shadow: 0 3px 10px rgba(249,125,4,0.45);
+        letter-spacing: .3px;
+    }
+    .bmi-recommend-img-wrap {
+        position: relative; width: 108px; height: 108px; flex-shrink: 0;
+        border-radius: 50%; z-index: 1;
+    }
+    .bmi-recommend-img-wrap:before {
+        content: ''; position: absolute; inset: -8px; border-radius: 50%;
+        border: 3px solid #7e4c8a; opacity: .35;
+        animation: bmiPulseRing 2.2s ease-out infinite;
+    }
+    .bmi-recommend-img-wrap img {
+        width: 108px; height: 108px; border-radius: 50%; object-fit: cover;
+        border: 4px solid #fff; box-shadow: 0 6px 18px rgba(126,76,138,0.35);
+        position: relative; z-index: 1; background: #fff;
+    }
+    @keyframes bmiPulseRing {
+        0%   { transform: scale(0.9); opacity: .55; }
+        70%  { transform: scale(1.35); opacity: 0; }
+        100% { transform: scale(1.35); opacity: 0; }
+    }
+    .bmi-recommend-body { flex: 1; min-width: 220px; z-index: 1; }
+    .bmi-recommend-title {
+        font-size: 12px; color: #a06bb0; font-weight: 800;
+        text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+    }
+    .bmi-recommend-title i { margin-{{ $lang == 'ar' ? 'left' : 'right' }}: 4px; }
+    .bmi-recommend-name { font-size: 22px; font-weight: 900; color: #4a2955; margin-bottom: 10px; }
+    .bmi-recommend-meta { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 16px; }
+    .bmi-recommend-meta-item {
+        font-size: 12px; color: #777; background: rgba(126,76,138,0.06);
+        padding: 8px 14px; border-radius: 12px;
+    }
+    .bmi-recommend-meta-item strong { display: block; font-size: 16px; color: #333; }
+    .bmi-recommend-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, #7e4c8a, #4a2955);
+        color: #fff !important; border: none;
+        padding: 13px 30px; border-radius: 25px; font-weight: 700; font-size: 14px;
+        text-decoration: none !important; white-space: nowrap;
+        box-shadow: 0 6px 18px rgba(126,76,138,0.4);
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .bmi-recommend-btn:hover {
+        color: #fff !important; text-decoration: none !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(126,76,138,0.5);
+    }
+    @media (max-width: 575px) {
+        .bmi-recommend-card { padding: 26px 20px 22px; }
+        .bmi-recommend-badge { display: none; }
+    }
+
     /* ===== PRODUCTS SECTION ===== */
     .products-sec {
         padding: 0;
@@ -1339,9 +1419,39 @@
                     </div>
                 </div>
             </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-10" style="margin-top:20px;">
+                    <div class="bmi-recommend-card" id="bmi-recommend-card" style="display:none;">
+                        <span class="bmi-recommend-badge">
+                            <i class="fa fa-star"></i> {{ trans('front.bmi_recommended_badge') }}
+                        </span>
+                        <div class="bmi-recommend-img-wrap">
+                            <img id="bmi-recommend-img" src="" alt="">
+                        </div>
+                        <div class="bmi-recommend-body">
+                            <div class="bmi-recommend-title"><i class="fa fa-magic"></i>{{ trans('front.bmi_recommended_package') }}</div>
+                            <div class="bmi-recommend-name" id="bmi-recommend-name">--</div>
+                            <div class="bmi-recommend-meta">
+                                <div class="bmi-recommend-meta-item">
+                                    {{ trans('front.bmi_recommended_calories') }}
+                                    <strong id="bmi-recommend-calories">--</strong>
+                                </div>
+                                <div class="bmi-recommend-meta-item">
+                                    {{ trans('front.bmi_recommended_meals') }}
+                                    <strong id="bmi-recommend-meals">--</strong>
+                                </div>
+                            </div>
+                            <a href="#" id="bmi-recommend-link" class="bmi-recommend-btn">
+                                {{ trans('front.bmi_view_package') }}
+                                <i class="fa fa-arrow-{{ $lang == 'ar' ? 'left' : 'right' }}"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-    
+
     @if(isset($activities) && (count($activities) > 0))
     <!-- Activities Section -->
     <section id="activities" class="activities-modern-sec">
@@ -1579,6 +1689,70 @@ document.querySelectorAll('.subscription-tab-item').forEach(function(tab) {
 // BMI Calculator
 var bmiGender = 'male';
 var bmiLang   = '{{ $lang }}';
+
+// Diet plan recommendation data
+@php
+    $bmiDietSubscriptionsJson = json_encode(($subscriptions ?? collect())->map(function ($s) {
+        return ['id' => $s->id, 'category_id' => $s->category_id, 'workouts' => (int) $s->workouts, 'image' => $s->image];
+    })->values());
+    $bmiBulkingCategoryId     = optional(($subscriptionCategories ?? collect())->first(function ($c) { return $c->name_ar === 'باقة الضخامة'; }))->id;
+    $bmiCuttingCategoryId     = optional(($subscriptionCategories ?? collect())->first(function ($c) { return $c->name_ar === 'باقة النشافة'; }))->id;
+    $bmiMaintenanceCategoryId = optional(($subscriptionCategories ?? collect())->first(function ($c) { return $c->name_ar === 'باقة غداء العمل'; }))->id;
+@endphp
+var bmiDietSubscriptions = {!! $bmiDietSubscriptionsJson !!};
+var bmiBulkingCategoryId     = {{ $bmiBulkingCategoryId ?? 'null' }};
+var bmiCuttingCategoryId     = {{ $bmiCuttingCategoryId ?? 'null' }};
+var bmiMaintenanceCategoryId = {{ $bmiMaintenanceCategoryId ?? 'null' }};
+var bmiSubscribeUrlTemplate  = '{{ route("diet-plan.subscribe", "__ID__") }}';
+
+function recommendDietPackage(bmi, age, weightKg, heightCm) {
+    var card = document.getElementById('bmi-recommend-card');
+    if (!card) return;
+
+    var bmr = bmiGender === 'male'
+        ? (10 * weightKg + 6.25 * heightCm - 5 * age + 5)
+        : (10 * weightKg + 6.25 * heightCm - 5 * age - 161);
+    var tdee = Math.round(bmr * 1.375); // lightly-active default (no activity-level input)
+
+    var mealCount;
+    if (tdee < 1400) mealCount = 1;
+    else if (tdee < 1800) mealCount = 2;
+    else if (tdee < 2200) mealCount = 3;
+    else if (tdee < 2600) mealCount = 4;
+    else mealCount = 5;
+
+    var categoryId = bmi < 18.5 ? bmiBulkingCategoryId : (bmi < 25 ? bmiMaintenanceCategoryId : bmiCuttingCategoryId);
+    var targetWorkouts = mealCount * 30;
+
+    var match = bmiDietSubscriptions.find(function (s) {
+        return s.category_id === categoryId && s.workouts === targetWorkouts;
+    });
+
+    if (!categoryId || !match) {
+        card.classList.remove('show');
+        card.style.display = 'none';
+        return;
+    }
+
+    var categoryName = bmi < 18.5
+        ? (bmiLang === 'ar' ? 'باقة الضخامة' : 'Bulking Package')
+        : (bmi < 25 ? (bmiLang === 'ar' ? 'باقة غداء العمل' : 'Business Lunch Package') : (bmiLang === 'ar' ? 'باقة النشافة' : 'Cutting Package'));
+
+    document.getElementById('bmi-recommend-name').textContent = categoryName;
+    document.getElementById('bmi-recommend-calories').textContent = tdee + ' ' + (bmiLang === 'ar' ? 'سعرة' : 'kcal');
+    document.getElementById('bmi-recommend-meals').textContent = mealCount;
+    document.getElementById('bmi-recommend-link').setAttribute('href', bmiSubscribeUrlTemplate.replace('__ID__', match.id));
+    document.getElementById('bmi-recommend-img').setAttribute('src', match.image || '');
+
+    card.classList.remove('show');
+    card.style.display = 'flex';
+    // Force reflow so the transition re-triggers even if the card was already visible.
+    void card.offsetWidth;
+    requestAnimationFrame(function () { card.classList.add('show'); });
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function setBmiGender(g) {
     bmiGender = g;
     document.querySelectorAll('.bmi-gender-btn').forEach(function(btn) {
@@ -1593,6 +1767,7 @@ function bmiAdjust(field, delta) {
 function calculateBMI() {
     var weight = parseFloat(document.getElementById('bmi-weight').value);
     var heightCm = parseFloat(document.getElementById('bmi-height').value);
+    var age = parseFloat(document.getElementById('bmi-age').value);
     if (!weight || !heightCm || heightCm <= 0) return;
     var h = heightCm / 100;
     var bmi = Math.round((weight / (h * h)) * 10) / 10;
@@ -1629,6 +1804,8 @@ function calculateBMI() {
         : 'Your ideal weight range: ' + idealMin + ' – ' + idealMax + ' kg';
     document.getElementById('bmi-ideal-text').textContent = idealText;
     document.getElementById('bmi-ideal-weight').style.display = 'flex';
+
+    recommendDietPackage(bmi, age, weight, heightCm);
 }
 
 $(document).ready(function(){

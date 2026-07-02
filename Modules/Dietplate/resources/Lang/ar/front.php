@@ -206,5 +206,10 @@ return [
     'bmi_normal_weight'   => 'وزن طبيعي',
     'bmi_overweight'      => 'زيادة الوزن',
     'bmi_obese'           => 'سمنة',
+    'bmi_recommended_badge'    => 'الأنسب لك',
+    'bmi_recommended_package'  => 'الباقة الموصى بها لك',
+    'bmi_recommended_calories' => 'احتياجك اليومي التقريبي من السعرات',
+    'bmi_recommended_meals'    => 'عدد الوجبات المقترح',
+    'bmi_view_package'         => 'عرض الباقة',
 
 ];

@@ -207,5 +207,10 @@ return [
     'bmi_normal_weight'   => 'Normal Weight',
     'bmi_overweight'      => 'Overweight',
     'bmi_obese'           => 'Obese',
+    'bmi_recommended_badge'    => 'Best Fit For You',
+    'bmi_recommended_package'  => 'Recommended Package For You',
+    'bmi_recommended_calories' => 'Your approximate daily calorie needs',
+    'bmi_recommended_meals'    => 'Suggested number of meals',
+    'bmi_view_package'         => 'View Package',
 
     ];
