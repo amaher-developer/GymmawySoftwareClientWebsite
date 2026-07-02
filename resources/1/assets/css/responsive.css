@@ -155,7 +155,7 @@
 		transform: translateY(-50%);
 		text-align: center;
 		font-size: 35px;
-		color: #75c043;
+		/* color: #75c043; */
 	}
 	.pogoSlider {
 		height: 50vh;

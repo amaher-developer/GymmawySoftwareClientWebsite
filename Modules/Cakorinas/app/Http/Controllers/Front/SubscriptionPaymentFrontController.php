@@ -24,6 +24,7 @@ use Nafezly\Payments\Classes\PaytabsPayment;
 use App\Modules\Cakorinas\app\Interfaces\PaymentGatewayInterface;
 use App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\View;
+use Modules\Common\Services\GymmawyNotificationService;
 
 class SubscriptionPaymentFrontController extends GenericFrontController
 {
@@ -348,6 +349,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
                         request()->session()->put('user', $user->member);
                     }
 
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             } else {

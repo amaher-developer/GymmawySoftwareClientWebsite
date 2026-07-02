@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Illuminate\Support\Facades\View;
+use Modules\Common\Services\GymmawyNotificationService;
 
 
 class SubscriptionFrontController extends GenericFrontController
@@ -274,6 +275,7 @@ class SubscriptionFrontController extends GenericFrontController
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }
@@ -1494,6 +1496,7 @@ class SubscriptionFrontController extends GenericFrontController
         if (empty($result['early']) && @$result['generatedCode'] && @$result['member']->phone) {
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
+        GymmawyNotificationService::notifyPayment();
         return $result['memberSubscription'];
         } finally {
             DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);

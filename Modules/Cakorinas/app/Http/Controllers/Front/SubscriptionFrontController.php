@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Modules\Common\Services\GymmawyNotificationService;
 class SubscriptionFrontController extends GenericFrontController
 {
     public function __construct()
@@ -329,6 +330,7 @@ class SubscriptionFrontController extends GenericFrontController
                     }
 
                     // Redirect to success page with invoice
+                    GymmawyNotificationService::notifyPayment();
                     return redirect()->route('payment-success')->with('invoice_id', @$member_subscription->id);
                 }
             } else {
@@ -422,6 +424,7 @@ class SubscriptionFrontController extends GenericFrontController
 //            $member_data['vat_percentage'] = @$request->vat_percentage;
 //            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
             ReservationMember::create($member_data);
+            GymmawyNotificationService::notifyReservation();
 
         }
         return redirect()->back()->with('message', trans('front.success_msg'));

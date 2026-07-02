@@ -1,0 +1,1 @@
+@extends('Dietplate::layouts.master')

@@ -1,0 +1,11 @@
+{
+    "name": "Dietplate",
+    "alias": "Dietplate",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Dietplate\\Providers\\DietplateServiceProvider"
+    ],
+    "files": []
+}

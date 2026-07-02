@@ -18,6 +18,7 @@ use App\Modules\Almadagym\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Modules\Common\Services\GymmawyNotificationService;
 class SubscriptionFrontController extends GenericFrontController
 {
     public function success()
@@ -114,6 +115,7 @@ class SubscriptionFrontController extends GenericFrontController
 //            $member_data['vat_percentage'] = @$request->vat_percentage;
 //            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
             ReservationMember::create($member_data);
+            GymmawyNotificationService::notifyReservation();
 
         }
         return redirect()->back()->with('message', trans('front.success_msg'));
@@ -263,6 +265,7 @@ class SubscriptionFrontController extends GenericFrontController
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }
@@ -499,6 +502,7 @@ class SubscriptionFrontController extends GenericFrontController
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }

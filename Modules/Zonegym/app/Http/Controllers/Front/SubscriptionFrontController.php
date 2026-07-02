@@ -16,6 +16,7 @@ use Modules\Zonegym\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Modules\Common\Services\GymmawyNotificationService;
 
 class SubscriptionFrontController extends GenericFrontController
 {
@@ -225,6 +226,7 @@ class SubscriptionFrontController extends GenericFrontController
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }
@@ -461,6 +463,7 @@ class SubscriptionFrontController extends GenericFrontController
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
             }

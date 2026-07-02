@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Modules\Common\Services\PaymobService;
+use Modules\Common\Services\GymmawyNotificationService;
 use App\Modules\Redbone\app\Interfaces\PaymentGatewayInterface;
 use App\Modules\Redbone\app\Http\Controllers\Front\SubscriptionFrontController;
 class SubscriptionPaymentFrontController extends GenericFrontController
@@ -102,6 +103,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
 //            $member_data['vat_percentage'] = @$request->vat_percentage;
 //            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
             ReservationMember::create($member_data);
+            GymmawyNotificationService::notifyReservation();
 
         }
         return redirect()->back()->with('message', trans('front.success_msg'));
