@@ -44,4 +44,14 @@ class Subscription extends GenericModel
         return $this->belongsTo(SubscriptionCategory::class, 'category_id');
     }
 
+    public function optionGroups()
+    {
+        return $this->hasMany(SubscriptionOptionGroup::class, 'subscription_id')->orderBy('list_order');
+    }
+
+    public function subscriptionProducts()
+    {
+        return $this->hasMany(SubscriptionProduct::class, 'subscription_id')->orderBy('list_order');
+    }
+
 }

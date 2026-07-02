@@ -91,6 +91,34 @@
                 display: none;
             }
         }
+        /* ── WhatsApp Floating Button ── */
+        #wa-float {
+            position: fixed;
+            bottom: 26px;
+            {{ $lang == 'ar' ? 'left: 20px; right: auto;' : 'right: 20px; left: auto;' }}
+            z-index: 9990;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #25D366;
+            color: #fff !important;
+            border-radius: 25px;
+            text-decoration: none !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: inherit;
+            box-shadow: 0 4px 22px rgba(37,211,102,0.50);
+            transition: opacity 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        #wa-float:hover {
+            opacity: 0.9;
+            box-shadow: 0 6px 28px rgba(37,211,102,0.65);
+            color: #fff !important;
+            text-decoration: none !important;
+        }
+        #wa-float .fa-whatsapp { font-size: 20px; line-height: 1; }
 
     </style>
 
@@ -163,6 +191,25 @@
     </div>
 </header>
 
+
+{{-- WhatsApp floating button --}}
+@php
+    $waPhone = $mainSettings->getRawOriginal('phone') ?? '';
+    $waDetails = $mainSettings->wa_details;
+    if ($waDetails && is_array($waDetails) && !empty($waDetails['number'])) {
+        $waPhone = $waDetails['number'];
+    }
+    $waPhone = preg_replace('/[^0-9]/', '', $waPhone);
+@endphp
+@if($waPhone)
+<a id="wa-float"
+   href="https://wa.me/{{ $waPhone }}"
+   target="_blank"
+   rel="noopener">
+    <i class="fa fa-whatsapp"></i>
+    <span>{{ $lang == 'ar' ? 'واتساب' : 'WhatsApp' }}</span>
+</a>
+@endif
 
 @yield('content')
 

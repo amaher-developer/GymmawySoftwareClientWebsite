@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Illuminate\Support\Facades\View;
 use Modules\Common\Services\GymmawyNotificationService;
@@ -233,7 +234,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 7, // PAYTABS_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::MADA,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => array_merge(['joining_date' => $member['joining_date']], $member['extra_invoice_data'] ?? []),
         ]);
 
         return $payment['redirect_url'];
@@ -354,7 +355,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 4, // TABBY_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TABBY,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => array_merge(['joining_date' => $member['joining_date']], $member['extra_invoice_data'] ?? []),
         ]);
 
 
@@ -686,6 +687,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
 
             return response()->json(['status' => 'success'], 200);
 
@@ -950,7 +952,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 6, // TAMARA_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TAMARA,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => array_merge(['joining_date' => $member['joining_date']], $member['extra_invoice_data'] ?? []),
         ]);
 
         $items = collect([]);
@@ -1319,6 +1321,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
 
             Log::info('Tamara webhook processed successfully', [
                 'tamara_order_id' => $orderId,
@@ -1529,6 +1532,9 @@ class SubscriptionFrontController extends GenericFrontController
         if (empty($result['early']) && @$result['memberSubscription']->id && @$result['member']->phone) {
             $this->sendSubscriptionNotification($result['memberSubscription']->id, $result['member']->phone, $result['type']);
         }
+        if (empty($result['early'])) {
+            $this->sendDietOrderAdminEmail($invoice, @$result['member'], @$result['memberSubscription']);
+        }
         GymmawyNotificationService::notifyPayment();
         return $result['memberSubscription'];
         } finally {
@@ -1550,6 +1556,57 @@ class SubscriptionFrontController extends GenericFrontController
             Log::warning('Subscription notification failed', [
                 'member_subscription_id' => $memberSubscriptionId,
                 'error'                  => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Emails the company support address with the full diet-plan order details.
+     * No-op for plain (non-diet) subscriptions since they never set `diet_selections`.
+     */
+    protected function sendDietOrderAdminEmail(PaymentOnlineInvoice $invoice, ?Member $member = null, ?MemberSubscription $memberSubscription = null): void
+    {
+        $diet = $invoice->response_code['diet_selections'] ?? null;
+        if (!$diet) {
+            return;
+        }
+
+        $this->sendDietOrderAdminEmailFromData([
+            'isPaid'           => (bool) $memberSubscription,
+            'name'             => $member->name ?? $invoice->name,
+            'phone'            => $member->phone ?? $invoice->phone,
+            'email'            => $invoice->email,
+            'address'          => $invoice->address,
+            'subscriptionName' => optional($invoice->subscription)->name,
+            'startDate'        => $diet['start_date'] ?? null,
+            'selectionGroups'  => $diet['selection_groups'] ?? [],
+            'mealGroups'       => $diet['meal_groups'] ?? [],
+            'notes'            => $diet['notes'] ?? null,
+            'amount'           => $invoice->amount,
+            'currency'         => trans('front.pound_unit'),
+        ], $invoice->id);
+    }
+
+    /**
+     * Sends the diet-order admin notification from a plain data array — used both by
+     * sendDietOrderAdminEmail() (paid orders) and the no-gateway lead-capture branch.
+     */
+    protected function sendDietOrderAdminEmailFromData(array $data, $invoiceId = null): void
+    {
+        try {
+            $setting = $this->mainSettings;
+            if (!$setting || empty($setting->support_email)) {
+                return;
+            }
+
+            Mail::send('emails.diet_order_notification', $data, function ($message) use ($setting, $data) {
+                $message->to($setting->support_email, trans('global.contact_us'))
+                    ->subject($data['isPaid'] ? 'طلب اشتراك دايت بليت مدفوع' : 'طلب اشتراك دايت بليت جديد');
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Diet order admin email failed', [
+                'error'      => $e->getMessage(),
+                'invoice_id' => $invoiceId,
             ]);
         }
     }
@@ -1699,7 +1756,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method'  => 8, // PAYTABS_STANDARD_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::PAYTABS_STANDARD,
-            'response_code'   => ['joining_date' => $member['joining_date']],
+            'response_code'   => array_merge(['joining_date' => $member['joining_date']], $member['extra_invoice_data'] ?? []),
         ]);
 
         $errorRoute = @$member['payment_channel'] == 3
@@ -1944,6 +2001,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendDietOrderAdminEmail($paymentInvoice, $member, $memberSubscription);
 
             Log::info('Paytabs IPN processed successfully', [
                 'tran_ref'               => $tranRef,

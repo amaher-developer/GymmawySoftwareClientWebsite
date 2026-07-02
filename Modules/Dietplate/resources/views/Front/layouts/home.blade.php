@@ -1141,7 +1141,7 @@
     
 
     @if(isset($subscriptions) && (count($subscriptions) > 0))
-    <!-- Featured Programs Section -->
+    <!-- Subscriptions Section -->
     <section id="subscriptions" class="featured-programs-sec">
         <div class="container">
             <div class="row justify-content-center">
@@ -1157,21 +1157,31 @@
                 $subscriptionCategories = $subscriptionCategories ?? collect();
                 $uncategorizedSubscriptions = $uncategorizedSubscriptions ?? collect();
                 $hasUncategorized = count($uncategorizedSubscriptions) > 0;
-                $tabsCount = count($subscriptionCategories) + ($hasUncategorized ? 1 : 0);
+                $hasCats = $subscriptionCategories->count() > 0;
+                $langPrefix = (isset($lang) && in_array($lang, ['ar','en'])) ? '/' . $lang : '';
             @endphp
 
-            @if($tabsCount > 1)
+            {{-- Category Filter Tabs --}}
+            @if($hasCats)
             <div class="subscription-tabs-nav">
                 @foreach($subscriptionCategories as $index => $category)
-                <button type="button" class="subscription-tab-item {{ $index === 0 ? 'active' : '' }}" data-target="#subscription-panel-{{ $category->id }}">
+                <button type="button"
+                    class="subscription-tab-item {{ $index === 0 ? 'active' : '' }}"
+                    data-target="#subscription-panel-{{ $category->id }}">
                     <span class="subscription-tab-img">
-                        <img src="{{ $category->image }}" alt="{{ $category->name }}">
+                        @if($category->getRawOriginal('image'))
+                            <img src="{{ $category->image }}" alt="{{ $category->name }}">
+                        @else
+                            <i class="fa fa-cutlery subscription-tab-img-generic"></i>
+                        @endif
                     </span>
                     <span class="subscription-tab-name">{{ $category->name }}</span>
                 </button>
                 @endforeach
                 @if($hasUncategorized)
-                <button type="button" class="subscription-tab-item {{ count($subscriptionCategories) === 0 ? 'active' : '' }}" data-target="#subscription-panel-other">
+                <button type="button"
+                    class="subscription-tab-item"
+                    data-target="#subscription-panel-other">
                     <span class="subscription-tab-img subscription-tab-img-generic">
                         <i class="fa fa-star"></i>
                     </span>
@@ -1181,9 +1191,11 @@
             </div>
             @endif
 
+            {{-- Subscription Panels --}}
             <div class="subscription-tabs-content">
                 @foreach($subscriptionCategories as $index => $category)
-                <div id="subscription-panel-{{ $category->id }}" class="subscription-tab-panel {{ $index === 0 ? 'active' : '' }}">
+                <div id="subscription-panel-{{ $category->id }}"
+                    class="subscription-tab-panel {{ $index === 0 ? 'active' : '' }}">
                     <div class="row">
                         @foreach($category->subscriptions as $subscription)
                         <div class="col-lg-3 col-md-6 d-flex">
@@ -1191,11 +1203,20 @@
                         </div>
                         @endforeach
                     </div>
+                    <div class="text-center" style="margin-top:28px;">
+                        <a href="{{ url($langPrefix . '/diet-plan/' . $category->id) }}"
+                            class="btn-subscribe-new"
+                            style="display:inline-block;padding:13px 40px;border-radius:12px;font-size:15px;">
+                            <i class="fa fa-th-large" style="margin-{{app()->getLocale()==='ar'?'left':'right'}}:8px;"></i>
+                            {{ trans('front.view_all_plans') }}
+                        </a>
+                    </div>
                 </div>
                 @endforeach
 
                 @if($hasUncategorized)
-                <div id="subscription-panel-other" class="subscription-tab-panel {{ count($subscriptionCategories) === 0 ? 'active' : '' }}">
+                <div id="subscription-panel-other"
+                    class="subscription-tab-panel {{ !$hasCats ? 'active' : '' }}">
                     <div class="row">
                         @foreach($uncategorizedSubscriptions as $subscription)
                         <div class="col-lg-3 col-md-6 d-flex">
@@ -1206,9 +1227,9 @@
                 </div>
                 @endif
             </div>
+
         </div>
     </section>
-
     @endif
 <!-- BMI Calculator Section -->
     <section id="bmi-calculator" class="bmi-calc-sec">
@@ -1543,7 +1564,7 @@
 @endsection
 @section('script')
 <script>
-// Subscription category tabs
+// Subscription category tabs — filter subscriptions by category
 document.querySelectorAll('.subscription-tab-item').forEach(function(tab) {
     tab.addEventListener('click', function() {
         var target = document.querySelector(tab.dataset.target);
