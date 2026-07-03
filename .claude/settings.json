@@ -1,7 +1,17 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(php -l Modules/Dietplate/app/Http/Controllers/Front/DietPlanFrontController.php)",
+      "Bash(php -l Modules/Dietplate/app/Http/Controllers/Front/SubscriptionFrontController.php)",
+      "Bash(php artisan *)",
+      "Bash(curl -s -o /tmp/meals.html -w \"%{http_code}\\\\n\" --max-time 10 \"http://step.localhost/ar/diet-plan/meals/71\")",
+      "Bash(xargs -I{} tail -20 {})",
+      "Bash(cd \"/c/wamp64/www/gym/client_website\" && php artisan view:clear >/dev/null 2>&1 *)",
+      "Read(//tmp/**)"
+    ],
     "additionalDirectories": [
-      "c:\\wamp64\\www\\gym\\client_website\\Modules\\Demo\\resources\\views\\Front\\pages"
+      "c:\\wamp64\\www\\gym\\client_website\\Modules\\Demo\\resources\\views\\Front\\pages",
+      "\\tmp"
     ]
   }
 }

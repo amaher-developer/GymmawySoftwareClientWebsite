@@ -124,6 +124,47 @@
 .delivery-type-btn.selected { border-color: #7e4c8a; background: #7e4c8a; color: #fff; }
 .delivery-type-btn.selected i { color: #fff; }
 
+/* Use current location */
+.btn-use-location {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #f5eeff; color: #7e4c8a; border: 2px solid #e0d0f0;
+    padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+}
+.btn-use-location:hover { border-color: #7e4c8a; background: #ece0fb; }
+.btn-use-location:disabled { opacity: 0.6; cursor: default; }
+.btn-use-location i { color: #7e4c8a; }
+#locationStatus.success { color: #2e7d32; }
+#locationStatus.error { color: #c62828; }
+#locationStatus.loading { color: #888; }
+
+/* Location picker modal */
+.diet-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.diet-modal-overlay.show { display: flex; }
+.diet-modal {
+    background: #fff; border-radius: 18px; padding: 30px;
+    max-width: 480px; width: 90%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.diet-modal.map-modal { max-width: 620px; }
+.diet-modal-title { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 18px; }
+.diet-modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+.btn-modal-save {
+    flex: 1; padding: 12px; border-radius: 10px;
+    background: #28a745; color: #fff; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.btn-modal-close {
+    padding: 12px 20px; border-radius: 10px;
+    background: #f5f5f5; color: #333; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+}
+#locationPickerMap { width: 100%; height: 360px; border-radius: 12px; }
+
 /* Off days checkboxes */
 .days-week-grid { display: flex; gap: 8px; flex-wrap: wrap; }
 .day-week-btn {
@@ -364,16 +405,25 @@
                             <input type="hidden" name="delivery_type" id="deliveryTypeInput" value="home">
                         </div>
                         <div class="form-group-diet">
+                            <label>{{ trans('front.address') }}</label>
+                            <input type="text" name="address" id="addressInput" class="diet-input"
+                                placeholder="{{ trans('front.enter_address') }}"
+                                value="{{ old('address') }}">
+                        </div>
+                        <div class="form-group-diet">
                             <label>{{ trans('front.area') }}</label>
-                            <input type="text" name="area" class="diet-input"
+                            <input type="text" name="area" id="areaInput" class="diet-input"
                                 placeholder="{{ trans('front.enter_area') }}"
                                 value="{{ old('area') }}">
                         </div>
                         <div class="form-group-diet">
-                            <label>{{ trans('front.address') }}</label>
-                            <input type="text" name="address" class="diet-input"
-                                placeholder="{{ trans('front.enter_address') }}"
-                                value="{{ old('address') }}">
+                            <button type="button" class="btn-use-location" id="useLocationBtn" onclick="openLocationPicker()">
+                                <i class="fa fa-map-marker"></i>
+                                <span id="useLocationBtnText">{{ trans('front.choose_on_map') }}</span>
+                            </button>
+                            <p id="locationStatus" style="font-size:12px;margin:8px 0 0;display:none;"></p>
+                            <input type="hidden" name="delivery_lat" id="deliveryLatInput" value="{{ old('delivery_lat') }}">
+                            <input type="hidden" name="delivery_lng" id="deliveryLngInput" value="{{ old('delivery_lng') }}">
                         </div>
                     </div>
 
@@ -481,9 +531,26 @@
         </form>
     </div>
 </section>
+
+<!-- Location Picker Modal -->
+<div class="diet-modal-overlay" id="locationPickerModal">
+    <div class="diet-modal map-modal">
+        <div class="diet-modal-title">
+            <i class="fa fa-map-marker" style="color:#7e4c8a;margin-{{ $isRtl ? 'left':'right' }}:8px;"></i>
+            {{ trans('front.choose_location_title') }}
+        </div>
+        <div id="locationPickerMap"></div>
+        <p id="locationPickerStatus" style="font-size:13px;margin:12px 0 0;color:#888;"></p>
+        <div class="diet-modal-footer">
+            <button type="button" class="btn-modal-close" onclick="closeLocationPicker()">{{ trans('front.close') ?? 'إغلاق' }}</button>
+            <button type="button" class="btn-modal-save" onclick="confirmLocation()">{{ trans('front.choose_location') }}</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('script')
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyBUtpFU1OSQwyfjIdsUdKgzRAdedm5Atmg" type="text/javascript"></script>
 <script>
 // ── State ─────────────────────────────────────────────────────────────────
 var priceRows = {};  // key => {label, amount}
@@ -519,6 +586,173 @@ function selectDeliveryType(btn) {
     btn.classList.add('selected');
     document.getElementById('deliveryTypeInput').value = btn.dataset.dtype;
 }
+
+// ── Location picker (map, with geolocation as a shortcut) ──────────────────
+var locationPickerMap, locationPickerMarker, locationPickerInitialized = false;
+var locationDefaultLat = {{ (float) ($mainSettings->latitude ?: 24.7136) }};
+var locationDefaultLng = {{ (float) ($mainSettings->longitude ?: 46.6753) }};
+var deliveryRadiusKm = {{ (float) env('DIET_DELIVERY_RADIUS_KM', 20) }};
+
+// Haversine distance between two lat/lng points, in kilometers.
+function distanceKm(lat1, lng1, lat2, lng2) {
+    var toRad = function (v) { return v * Math.PI / 180; };
+    var R = 6371;
+    var dLat = toRad(lat2 - lat1);
+    var dLng = toRad(lng2 - lng1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isWithinDeliveryZone(pos) {
+    return distanceKm(pos.lat(), pos.lng(), locationDefaultLat, locationDefaultLng) <= deliveryRadiusKm;
+}
+
+// Live feedback as the marker moves — shows the warning immediately rather than only on confirm.
+function checkZoneAndUpdateStatus(pos) {
+    var pickerStatusEl = document.getElementById('locationPickerStatus');
+    if (isWithinDeliveryZone(pos)) {
+        pickerStatusEl.style.color = '#888';
+        pickerStatusEl.textContent = '';
+        return true;
+    }
+    pickerStatusEl.style.color = '#c62828';
+    pickerStatusEl.textContent = '{{ trans("front.out_of_delivery_zone") }}';
+    return false;
+}
+
+function openLocationPicker() {
+    document.getElementById('locationPickerModal').classList.add('show');
+
+    if (typeof google === 'undefined' || !google.maps) {
+        document.getElementById('locationPickerStatus').textContent = '{{ trans("front.map_unavailable") }}';
+        return;
+    }
+
+    if (!locationPickerInitialized) {
+        initLocationPickerMap();
+    } else {
+        // Re-trigger a resize since the map div was hidden (display:none) on first render.
+        google.maps.event.trigger(locationPickerMap, 'resize');
+        locationPickerMap.setCenter(locationPickerMarker.getPosition());
+    }
+
+    // If the delivery inputs are still empty, try to center on the user's current
+    // location automatically; if geolocation is unavailable/denied, the marker
+    // simply stays at the default center and the user can click/drag to place it.
+    var latInput = document.getElementById('deliveryLatInput');
+    if (!latInput.value && navigator.geolocation) {
+        document.getElementById('locationPickerStatus').textContent = '{{ trans("front.locating") }}';
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                var pos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                locationPickerMap.setCenter(pos);
+                locationPickerMarker.setPosition(pos);
+                checkZoneAndUpdateStatus(pos);
+            },
+            function () {
+                document.getElementById('locationPickerStatus').textContent = '{{ trans("front.location_error") }}';
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+}
+
+function initLocationPickerMap() {
+    var savedLat = parseFloat(document.getElementById('deliveryLatInput').value);
+    var savedLng = parseFloat(document.getElementById('deliveryLngInput').value);
+    var center = (savedLat && savedLng)
+        ? new google.maps.LatLng(savedLat, savedLng)
+        : new google.maps.LatLng(locationDefaultLat, locationDefaultLng);
+
+    locationPickerMap = new google.maps.Map(document.getElementById('locationPickerMap'), {
+        center: center,
+        zoom: 14,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    // Visual boundary of the accepted delivery zone around the branch location.
+    var deliveryZoneCircle = new google.maps.Circle({
+        map: locationPickerMap,
+        center: new google.maps.LatLng(locationDefaultLat, locationDefaultLng),
+        radius: deliveryRadiusKm * 1000, // meters
+        strokeColor: '#7e4c8a',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#7e4c8a',
+        fillOpacity: 0.08,
+        clickable: false
+    });
+    locationPickerMap.fitBounds(deliveryZoneCircle.getBounds());
+
+    locationPickerMarker = new google.maps.Marker({
+        position: center,
+        map: locationPickerMap,
+        draggable: true
+    });
+
+    locationPickerMap.addListener('click', function (event) {
+        locationPickerMarker.setPosition(event.latLng);
+        checkZoneAndUpdateStatus(event.latLng);
+    });
+
+    locationPickerMarker.addListener('dragend', function () {
+        checkZoneAndUpdateStatus(locationPickerMarker.getPosition());
+    });
+
+    locationPickerInitialized = true;
+}
+
+function confirmLocation() {
+    if (!locationPickerMarker) {
+        closeLocationPicker();
+        return;
+    }
+    var pos = locationPickerMarker.getPosition();
+
+    if (!checkZoneAndUpdateStatus(pos)) {
+        return; // keep the modal open — do not confirm an out-of-zone location
+    }
+
+    document.getElementById('deliveryLatInput').value = pos.lat();
+    document.getElementById('deliveryLngInput').value = pos.lng();
+
+    var statusEl = document.getElementById('locationStatus');
+    statusEl.className = 'success';
+    statusEl.style.display = 'block';
+    statusEl.textContent = '{{ trans("front.location_captured") }}';
+
+    fillAddressFromLocation(pos);
+
+    closeLocationPicker();
+}
+
+// ── Reverse geocode the picked point and auto-fill the address/area fields ──
+function fillAddressFromLocation(latLng) {
+    if (typeof google === 'undefined' || !google.maps) return;
+
+    new google.maps.Geocoder().geocode({ location: latLng }, function (results, status) {
+        if (status !== 'OK' || !results || !results[0]) return;
+
+        document.getElementById('addressInput').value = results[0].formatted_address;
+
+        var areaComponent = results[0].address_components.find(function (c) {
+            return c.types.indexOf('sublocality') !== -1 || c.types.indexOf('neighborhood') !== -1;
+        });
+        if (areaComponent) {
+            document.getElementById('areaInput').value = areaComponent.long_name;
+        }
+    });
+}
+
+function closeLocationPicker() {
+    document.getElementById('locationPickerModal').classList.remove('show');
+}
+
+document.getElementById('locationPickerModal').addEventListener('click', function (e) {
+    if (e.target === this) closeLocationPicker();
+});
 
 // ── Off days ──────────────────────────────────────────────────────────────
 var offDays = [];

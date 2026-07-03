@@ -58,6 +58,22 @@
             <label>العنوان / Address</label>
             <div class="value">{{ $address ?? '—' }}</div>
         </div>
+        <div class="field">
+            <label>النوع / Gender</label>
+            <div class="value">
+                @if((int) ($gender ?? 0) === 1) ذكر / Male
+                @elseif((int) ($gender ?? 0) === 2) أنثى / Female
+                @else — @endif
+            </div>
+        </div>
+        <div class="field">
+            <label>تاريخ الميلاد / Date of Birth</label>
+            <div class="value">
+                @if(!empty($dob))
+                    {{ \Illuminate\Support\Carbon::parse($dob)->format('Y-m-d') }}
+                @else — @endif
+            </div>
+        </div>
 
         <div class="section-title">تفاصيل الاشتراك / Subscription</div>
         <div class="field">
@@ -86,6 +102,16 @@
         @if(!empty($mealGroups))
         <div class="section-title">الوجبات المختارة / Selected Meals</div>
         @foreach($mealGroups as $group)
+        <div class="field">
+            <label>{{ $group['label'] }}</label>
+            <div class="value">{{ $group['value'] }}</div>
+        </div>
+        @endforeach
+        @endif
+
+        @if(!empty($customizeGroups))
+        <div class="section-title">تخصيصات الوجبات / Meal Customizations</div>
+        @foreach($customizeGroups as $group)
         <div class="field">
             <label>{{ $group['label'] }}</label>
             <div class="value">{{ $group['value'] }}</div>

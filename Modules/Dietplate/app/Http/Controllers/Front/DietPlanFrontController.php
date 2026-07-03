@@ -109,6 +109,17 @@ class DietPlanFrontController extends SubscriptionFrontController
                 ->withErrors(['options' => 'يرجى اختيار: ' . implode('، ', $errors)]);
         }
 
+        // Server-side backstop for the map picker's client-side zone check — only applies
+        // when coordinates were actually submitted (i.e. the user used the map picker).
+        if ($request->filled('delivery_lat') && $request->filled('delivery_lng') && !$this->isWithinDeliveryZone(
+            (float) $request->input('delivery_lat'),
+            (float) $request->input('delivery_lng')
+        )) {
+            return back()
+                ->withInput()
+                ->withErrors(['options' => trans('front.out_of_delivery_zone')]);
+        }
+
         // Build selections map: group_id => [option_id, ...]
         $selections = [];
         $allGroups = SubscriptionOptionGroup::where('subscription_id', $subscriptionId)
@@ -167,6 +178,8 @@ class DietPlanFrontController extends SubscriptionFrontController
             'delivery_type'         => $request->input('delivery_type', ''),
             'area'                  => $request->input('area', ''),
             'address'               => $request->input('address', ''),
+            'delivery_lat'          => $request->input('delivery_lat', ''),
+            'delivery_lng'          => $request->input('delivery_lng', ''),
             'notes'                 => $request->input('notes', ''),
         ];
 
@@ -264,7 +277,14 @@ class DietPlanFrontController extends SubscriptionFrontController
 
         // Save meal selections to session
         $mealSelections = $request->input('meal_selections', []);
-        session(['diet_plan_step2' => ['meal_selections' => $mealSelections]]);
+
+        // customize_selections is a JSON string built client-side: { productId: { name, options: [labels] } }
+        $customizeSelections = json_decode((string) $request->input('customize_selections', ''), true) ?: [];
+
+        session(['diet_plan_step2' => [
+            'meal_selections'      => $mealSelections,
+            'customize_selections' => $customizeSelections,
+        ]]);
 
         return redirect()->route('diet-plan.payment', $subscriptionId);
     }
@@ -432,10 +452,17 @@ class DietPlanFrontController extends SubscriptionFrontController
             'phone'            => $member_data['phone'],
             'email'            => $member_data['email'],
             'address'          => $member_data['address'],
+            'gender'           => $member_data['gender'] ?? null,
+            'dob'              => $member_data['dob'] ?? null,
             'subscriptionName' => $subscription->name,
             'startDate'        => $dietSelections['start_date'],
             'selectionGroups'  => $dietSelections['selection_groups'],
             'mealGroups'       => $dietSelections['meal_groups'],
+            'customizeGroups'  => $dietSelections['customize_groups'],
+            'deliveryType'     => $dietSelections['delivery_type'],
+            'deliveryArea'     => $dietSelections['delivery_area'],
+            'deliveryAddress'  => $dietSelections['delivery_address'],
+            'locationUrl'      => $dietSelections['location_url'],
             'notes'            => $dietSelections['notes'],
             'amount'           => $priceWithVat,
             'currency'         => trans('front.pound_unit'),
@@ -473,6 +500,25 @@ class DietPlanFrontController extends SubscriptionFrontController
     }
 
     /**
+     * Straight-line (Haversine) distance check against the branch location configured
+     * in Settings, used as the server-side backstop for the map picker's zone check.
+     */
+    protected function isWithinDeliveryZone(float $lat, float $lng): bool
+    {
+        $branchLat = (float) ($this->mainSettings->latitude ?: 24.7136);
+        $branchLng = (float) ($this->mainSettings->longitude ?: 46.6753);
+        $radiusKm  = (float) env('DIET_DELIVERY_RADIUS_KM', 20);
+
+        $earthRadiusKm = 6371;
+        $dLat = deg2rad($lat - $branchLat);
+        $dLng = deg2rad($lng - $branchLng);
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($branchLat)) * cos(deg2rad($lat)) * sin($dLng / 2) ** 2;
+        $distanceKm = $earthRadiusKm * 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $distanceKm <= $radiusKm;
+    }
+
+    /**
      * Resolves step1 (fixed options) + step2 (meal picks) into human-readable group/option
      * name pairs, used for both the admin email and the lead's notes.
      */
@@ -502,11 +548,30 @@ class DietPlanFrontController extends SubscriptionFrontController
             ];
         }
 
+        $customizeGroups = [];
+        foreach ($step2['customize_selections'] ?? [] as $productId => $customization) {
+            if (empty($customization['options'])) continue;
+            $customizeGroups[] = [
+                'label' => $customization['name'] ?? ('#' . $productId),
+                'value' => implode('، ', (array) $customization['options']),
+            ];
+        }
+
+        $locationUrl = null;
+        if (!empty($step1['delivery_lat']) && !empty($step1['delivery_lng'])) {
+            $locationUrl = 'https://www.google.com/maps?q=' . $step1['delivery_lat'] . ',' . $step1['delivery_lng'];
+        }
+
         return [
             'selection_groups' => $selectionGroups,
             'meal_groups'      => $mealGroups,
+            'customize_groups' => $customizeGroups,
             'notes'            => $step1['notes'] ?? null,
             'start_date'       => $step1['start_date'] ?? null,
+            'delivery_type'    => $step1['delivery_type'] ?? null,
+            'delivery_area'    => $step1['area'] ?? null,
+            'delivery_address' => $step1['address'] ?? null,
+            'location_url'     => $locationUrl,
         ];
     }
 
@@ -524,6 +589,21 @@ class DietPlanFrontController extends SubscriptionFrontController
         }
         foreach ($dietSelections['meal_groups'] as $group) {
             $lines[] = $group['label'] . ': ' . $group['value'];
+        }
+        foreach ($dietSelections['customize_groups'] ?? [] as $group) {
+            $lines[] = 'تخصيص ' . $group['label'] . ': ' . $group['value'];
+        }
+        if (!empty($dietSelections['delivery_type'])) {
+            $lines[] = 'نوع التوصيل: ' . $dietSelections['delivery_type'];
+        }
+        if (!empty($dietSelections['delivery_area'])) {
+            $lines[] = 'المنطقة: ' . $dietSelections['delivery_area'];
+        }
+        if (!empty($dietSelections['delivery_address'])) {
+            $lines[] = 'عنوان التوصيل: ' . $dietSelections['delivery_address'];
+        }
+        if (!empty($dietSelections['location_url'])) {
+            $lines[] = 'الموقع على الخريطة: ' . $dietSelections['location_url'];
         }
         if (!empty($dietSelections['notes'])) {
             $lines[] = 'ملاحظات: ' . $dietSelections['notes'];

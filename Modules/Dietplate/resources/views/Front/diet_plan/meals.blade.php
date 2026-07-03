@@ -302,6 +302,7 @@
         <!-- Meal Panels -->
         <form method="POST" action="{{ route('diet-plan.checkout', $subscription->id) }}" id="mealsForm">
             @csrf
+            <input type="hidden" name="customize_selections" id="customizeSelectionsInput" value="">
             @foreach($activeGroups as $index => $group)
             @php $baseName = str_replace(' (اختيار الوجبات)', '', $group->name_ar); @endphp
             <div class="meal-tab-panel {{ $index === 0 ? 'active' : '' }}" id="tab_{{ $group->id }}"
@@ -437,6 +438,8 @@ var selectedMeals = {};   // groupId => [optionIds]
 var totalMacros = { cal: 0, protein: 0, carbs: 0, fat: 0 };
 var requiredCount = {{ $mealCount }};
 var customizeProductId = null;
+var customizeProductName = null;
+var customizeSelections = {}; // productId => { name: productName, options: [labels] }
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(btn, tabId) {
@@ -502,6 +505,7 @@ function updateCounters() {
 // ── Customize modal ───────────────────────────────────────────────────────
 function openCustomize(productId, productName) {
     customizeProductId = productId;
+    customizeProductName = productName;
     document.getElementById('customizeModalTitle').textContent = productName;
     document.getElementById('customizeModalContent').innerHTML =
         '<div style="text-align:center;padding:30px;"><i class="fa fa-spinner fa-spin" style="font-size:30px;color:#7e4c8a;"></i></div>';
@@ -523,9 +527,11 @@ function openCustomize(productId, productName) {
                 '{{ trans("front.plain_pasta") ?? "مكرونة ساده" }}',
                 '{{ trans("front.red_sauce_pasta") ?? "مكرونة بالصلصة الحمراء" }}',
             ];
+            var savedOptions = (customizeSelections[productId] && customizeSelections[productId].options) || [];
             carbOptions.forEach(function(name, i) {
+                var checked = savedOptions.indexOf(name) !== -1 ? 'checked' : '';
                 html += '<label style="display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #e0d0f0;border-radius:10px;cursor:pointer;">' +
-                    '<input type="checkbox" name="customize_' + productId + '[]" value="' + i + '" style="accent-color:#7e4c8a;">' +
+                    '<input type="checkbox" class="customize-option-checkbox" value="' + name.replace(/"/g, '&quot;') + '" ' + checked + ' style="accent-color:#7e4c8a;">' +
                     '<span style="font-size:13px;font-weight:600;">' + name + '</span></label>';
             });
             html += '</div>';
@@ -542,7 +548,18 @@ function closeCustomize() {
 }
 
 function saveCustomize() {
-    // TODO: save customization data to form
+    var checked = Array.prototype.slice.call(
+        document.querySelectorAll('#customizeModalContent .customize-option-checkbox:checked')
+    ).map(function(cb) { return cb.value; });
+
+    if (checked.length > 0) {
+        customizeSelections[customizeProductId] = { name: customizeProductName, options: checked };
+    } else {
+        delete customizeSelections[customizeProductId];
+    }
+
+    document.getElementById('customizeSelectionsInput').value = JSON.stringify(customizeSelections);
+
     closeCustomize();
 }
 
