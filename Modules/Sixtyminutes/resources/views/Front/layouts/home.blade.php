@@ -267,6 +267,110 @@
         #activities .sm-activity-card { height: 190px; }
         #activities .sm-activity-card:hover { transform: none; }
     }
+
+    /* ── Modern PT classes (training) grid ── */
+    #pt-classes.sm-pt-sec {
+        background: #0d0d0d;
+        padding: 90px 0;
+    }
+    #pt-classes.sm-pt-sec .default-title h2 {
+        color: #ffffff;
+    }
+    #pt-classes.sm-pt-sec .title-bdr {
+        background: #ffffff;
+    }
+    #pt-classes .sm-pt-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 26px;
+        margin-top: 20px;
+    }
+    #pt-classes .sm-pt-card {
+        position: relative;
+        background: linear-gradient(160deg, rgba(28,28,28,0.96), rgba(8,8,8,0.92));
+        border: 1px solid rgba(117,192,67,0.22);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    #pt-classes .sm-pt-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 22px 48px rgba(117,192,67,0.28);
+        border-color: #75c043;
+    }
+    #pt-classes .sm-pt-img-wrap {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        background: #101010;
+    }
+    #pt-classes .sm-pt-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+    }
+    #pt-classes .sm-pt-card:hover .sm-pt-img-wrap img {
+        transform: scale(1.08);
+    }
+    #pt-classes .sm-pt-img-wrap.sm-pt-noimg img {
+        object-fit: contain;
+        padding: 30px;
+        background: #181818;
+    }
+    #pt-classes .sm-pt-price-badge {
+        position: absolute;
+        bottom: 12px;
+        {{ $lang == 'ar' ? 'right: 12px;' : 'left: 12px;' }}
+        z-index: 2;
+        background: linear-gradient(135deg, #75c043, #9ee36b);
+        color: #0d1a05;
+        font-weight: 800;
+        font-size: 0.82rem;
+        padding: 6px 16px;
+        border-radius: 20px;
+        box-shadow: 0 4px 14px rgba(117,192,67,0.5);
+    }
+    #pt-classes .sm-pt-body {
+        padding: 22px 24px 26px;
+    }
+    #pt-classes .sm-pt-name {
+        font-size: 19px;
+        font-weight: 800;
+        margin-bottom: 16px;
+    }
+    #pt-classes .sm-pt-name a {
+        color: #fff;
+        text-decoration: none !important;
+        transition: color 0.2s ease;
+    }
+    #pt-classes .sm-pt-card:hover .sm-pt-name a {
+        color: #9ee36b;
+    }
+    #pt-classes .sm-pt-cta {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 11px 0;
+        border-radius: 30px;
+        background: transparent;
+        border: 2px solid #75c043;
+        color: #9ee36b !important;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    #pt-classes .sm-pt-cta:hover {
+        background: linear-gradient(135deg, #75c043, #9ee36b);
+        color: #0d1a05 !important;
+    }
+
+    @media only screen and (max-width: 576px) {
+        #pt-classes.sm-pt-sec { padding: 60px 0; }
+        #pt-classes .sm-pt-img-wrap { height: 170px; }
+        #pt-classes .sm-pt-card:hover { transform: none; }
+    }
 </style>
 @endsection
 @section('content')
@@ -518,7 +622,7 @@
 @endif
 
 @if(isset($pt_classes) && (count($pt_classes) > 0))
-    <section id="subscriptions"  class="blog-sec">
+    <section id="pt-classes" class="sm-pt-sec">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-6">
@@ -527,32 +631,26 @@
                         <div class="title-bdr">
                             <div class="title-bdr-inside"></div>
                         </div>
-                        <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص.</p>-->
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-center animatedParent animateOnce">
+            <div class="sm-pt-grid">
                 @foreach($pt_classes as $pt_class)
-                    <div class="col-lg-4 col-md-6 animated bounceInUp slow">
-                        <div class="blog-box col-default-mb30 animated fadeInUpShort slow">
-                            <div class="blog-img">
-                                <img src="{{$pt_class->image ?? asset('placeholder_black.png')}}" alt="">
-                                <div class="blog-date">
-                                    <ul>
-                                        <li><i class="icofont icofont-businessman"></i><a href="{{route('pt-class', $pt_class->id)}}">{{$pt_class->name}}</a>
-                                        </li>
-                                        <li><i class="icofont icofont-number"></i><a href="#">{{ number_format(($pt_class->price + ($pt_class->price * (@$record->vat_details['vat_percentage']/100))), 2)}}  {{trans('front.pound_unit')}}</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="blog-content">
-                                <h4><a href="{{route('pt-class', $pt_class->id)}}">{{$pt_class->name}}</a></h4>
-                                <a class="btn btn-primary simple-btn" href="{{route('pt-class', $pt_class->id)}}" role="button">{{trans('front.details')}}</a>
-                            </div>
+                    @php $hasPtImage = !empty($pt_class->image_name); @endphp
+                    <div class="sm-pt-card">
+                        <div class="sm-pt-img-wrap {{ $hasPtImage ? '' : 'sm-pt-noimg' }}">
+                            @if($hasPtImage)
+                                <img src="{{ $pt_class->image }}" alt="{{ $pt_class->name }}">
+                            @else
+                                <img src="{{ asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png') }}" alt="{{ $pt_class->name }}">
+                            @endif
+                            <span class="sm-pt-price-badge">{{ number_format(($pt_class->price + ($pt_class->price * (@$record->vat_details['vat_percentage']/100))), 2) }} {{trans('front.pound_unit')}}</span>
+                        </div>
+                        <div class="sm-pt-body">
+                            <h4 class="sm-pt-name"><a href="{{route('pt-class', $pt_class->id)}}">{{$pt_class->name}}</a></h4>
+                            <a class="sm-pt-cta" href="{{route('pt-class', $pt_class->id)}}">{{trans('front.details')}}</a>
                         </div>
                     </div>
-
                 @endforeach
             </div>
         </div>
