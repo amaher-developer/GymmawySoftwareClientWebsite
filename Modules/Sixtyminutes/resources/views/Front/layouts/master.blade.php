@@ -99,6 +99,47 @@
             margin-right: 22px;
             font-size: 16px;
         }
+
+        /* ── WhatsApp Floating Button ── */
+        #wa-float {
+            position: fixed;
+            bottom: 26px;
+            {{ $lang == 'ar' ? 'left: 20px; right: auto;' : 'right: 20px; left: auto;' }}
+            z-index: 9990;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #25D366;
+            color: #fff !important;
+            border-radius: 25px;
+            text-decoration: none !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: inherit;
+            box-shadow: 0 4px 22px rgba(37,211,102,0.50);
+            transition: opacity 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        #wa-float:hover {
+            opacity: 0.9;
+            box-shadow: 0 6px 28px rgba(37,211,102,0.65);
+            color: #fff !important;
+            text-decoration: none !important;
+        }
+        #wa-float .fa-whatsapp { font-size: 20px; line-height: 1; }
+
+        @media only screen and (max-width: 576px) {
+            #wa-float {
+                bottom: 16px;
+                {{ $lang == 'ar' ? 'left: 14px;' : 'right: 14px;' }}
+                padding: 12px;
+                border-radius: 50%;
+                box-shadow: 0 4px 16px rgba(37,211,102,0.55);
+            }
+            #wa-float span { display: none; }
+            #wa-float .fa-whatsapp { font-size: 22px; }
+        }
     </style>
 
     @yield('style')
@@ -146,11 +187,11 @@
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#gallery">{{trans('front.gallery')}}</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#schedule">{{trans('front.activities')}}</a>
+                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#activities">{{trans('front.activities')}}</a>
                                 </li>
-                                <li class="nav-item">
+                                {{-- <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
-                                </li>
+                                </li> --}}
 
                                 <!--                                <li class="nav-item">-->
                                 <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
@@ -183,6 +224,25 @@
 </header>
 
 
+{{-- WhatsApp floating button --}}
+@php
+    $waPhone = $mainSettings->getRawOriginal('phone') ?? '';
+    $waDetails = $mainSettings->wa_details;
+    if ($waDetails && is_array($waDetails) && !empty($waDetails['number'])) {
+        $waPhone = $waDetails['number'];
+    }
+    $waPhone = preg_replace('/[^0-9]/', '', $waPhone);
+@endphp
+@if($waPhone)
+<a id="wa-float"
+   href="https://wa.me/{{ $waPhone }}"
+   target="_blank"
+   rel="noopener">
+    <i class="fa fa-whatsapp"></i>
+    <span>{{ $lang == 'ar' ? 'واتساب' : 'WhatsApp' }}</span>
+</a>
+@endif
+
 @yield('content')
 
 <!-- Scroll Up -->
@@ -201,7 +261,7 @@
             <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="footer-about-col col-default-mb30">
                     <h4>{{trans('front.about')}}</h4>
-                    <p>{{strip_tags($mainSettings['about'])}}</p>
+                    <p style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.6;">{{strip_tags($mainSettings['about'])}}</p>
                     <!--                    <p><i class="fa fa-clock-o" aria-hidden="true"></i> الأحد - الجمعة (10:00 - 22:00)</p>-->
                     <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص. إن كنت تريد أن تستخدم نص لوريم إيبسوم ما، عليك أن تتحقق أولاً أن ليس هناك أي كلمات أو عبارات محرجة أو غير لائقة مخبأة في هذا النص. بينما تعمل </p>-->
 
@@ -229,8 +289,8 @@
                         <a class="tag-btn js-scroll-trigger"
                            href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#schedule">{{trans('front.activities')}}</a>
-                        <a class="tag-btn js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a>
+                        <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#activities">{{trans('front.activities')}}</a>
+                        {{-- <a class="tag-btn js-scroll-trigger" href="{{route('banner')}}">{{trans('front.schedule_banner')}}</a> --}}
                         <a class="tag-btn js-scroll-trigger" href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a>
                         <a class="tag-btn js-scroll-trigger" href="{{route('terms')}}">{{trans('front.terms')}}</a>
                     </div>

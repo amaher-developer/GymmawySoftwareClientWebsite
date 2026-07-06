@@ -165,16 +165,6 @@
 }
 #locationPickerMap { width: 100%; height: 360px; border-radius: 12px; }
 
-/* Off days checkboxes */
-.days-week-grid { display: flex; gap: 8px; flex-wrap: wrap; }
-.day-week-btn {
-    padding: 8px 14px; border-radius: 8px;
-    border: 2px solid #e0d0f0; background: #fff;
-    cursor: pointer; font-size: 13px; font-weight: 600; color: #555;
-    transition: all 0.2s;
-}
-.day-week-btn.selected { border-color: #e53935; background: #e53935; color: #fff; }
-
 /* Price summary */
 .price-summary {
     background: #f9f5ff;
@@ -259,7 +249,7 @@
             </div>
             <div class="diet-progress-step">
                 <div class="diet-progress-circle">2</div>
-                <div class="diet-progress-label">{{ trans('front.meal_selection') }}</div>
+                <div class="diet-progress-label">{{ trans('front.payment') }}</div>
             </div>
         </div>
 
@@ -437,28 +427,6 @@
                                 min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                 value="{{ old('start_date', date('Y-m-d', strtotime('+1 day'))) }}">
                         </div>
-                    </div>
-
-                    <!-- Days Off -->
-                    <div class="diet-card">
-                        <div class="diet-card-title">
-                            <i class="fa fa-ban"></i> {{ trans('front.off_days') }}
-                        </div>
-                        <p style="font-size:13px;color:#888;margin-bottom:14px;">{{ trans('front.off_days_hint') }}</p>
-                        <div class="days-week-grid">
-                            @php
-                                $weekDays = [
-                                    'sat' => 'السبت', 'sun' => 'الأحد', 'mon' => 'الاثنين',
-                                    'tue' => 'الثلاثاء', 'wed' => 'الأربعاء', 'thu' => 'الخميس', 'fri' => 'الجمعة'
-                                ];
-                            @endphp
-                            @foreach($weekDays as $key => $name)
-                            <button type="button" class="day-week-btn" data-day="{{ $key }}" onclick="toggleOffDay(this)">
-                                {{ $name }}
-                            </button>
-                            @endforeach
-                        </div>
-                        <div id="offDaysInputs"></div>
                     </div>
 
                     <!-- Add-ons -->
@@ -753,28 +721,6 @@ function closeLocationPicker() {
 document.getElementById('locationPickerModal').addEventListener('click', function (e) {
     if (e.target === this) closeLocationPicker();
 });
-
-// ── Off days ──────────────────────────────────────────────────────────────
-var offDays = [];
-function toggleOffDay(btn) {
-    var day = btn.dataset.day;
-    if (btn.classList.contains('selected')) {
-        btn.classList.remove('selected');
-        offDays = offDays.filter(d => d !== day);
-    } else {
-        btn.classList.add('selected');
-        offDays.push(day);
-    }
-    var container = document.getElementById('offDaysInputs');
-    container.innerHTML = '';
-    offDays.forEach(function(d) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'off_days[]';
-        input.value = d;
-        container.appendChild(input);
-    });
-}
 
 // ── Add-ons ───────────────────────────────────────────────────────────────
 function toggleAddon(el, optionId, price, name) {

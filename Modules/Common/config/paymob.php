@@ -10,13 +10,22 @@ return [
     |
     */
 
-    // Paymob API credentials
+    // Legacy Paymob API key (used only for /api/auth/tokens - order lookup & refunds)
     'api_key' => env('PAYMOB_API_KEY', ''),
+
+    // Paymob Secret Key - authorizes the Unified Intention API (v1/intention/) requests
+    'secret_key' => env('PAYMOB_SECRET_KEY', ''),
+
+    // Paymob Public Key - used to build the Unified Checkout redirect URL
+    'public_key' => env('PAYMOB_PUBLIC_KEY', ''),
+
+    // HMAC secret used to verify the authenticity of Paymob payment callbacks
+    'hmac_secret' => env('PAYMOB_HMAC_SECRET', ''),
 
     // Paymob integration ID (provided by Paymob dashboard)
     'integration_id' => env('PAYMOB_INTEGRATION_ID', ''),
 
-    // Paymob iframe ID (for embedded payment form)
+    // Paymob iframe ID (legacy embedded payment form, unused by the Unified Checkout flow)
     'iframe_id' => env('PAYMOB_IFRAME_ID', ''),
 
     // Base endpoint for Paymob API

@@ -120,6 +120,35 @@
         }
         #wa-float .fa-whatsapp { font-size: 20px; line-height: 1; }
 
+        /* ── BMI Calculator Floating Button ── */
+        #bmi-float {
+            position: fixed;
+            bottom: 88px;
+            {{ $lang == 'ar' ? 'left: 20px; right: auto;' : 'right: 20px; left: auto;' }}
+            z-index: 9990;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #7e4c8a;
+            color: #fff !important;
+            border-radius: 25px;
+            text-decoration: none !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: inherit;
+            box-shadow: 0 4px 22px rgba(126,76,138,0.50);
+            transition: opacity 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        #bmi-float:hover {
+            opacity: 0.9;
+            box-shadow: 0 6px 28px rgba(126,76,138,0.65);
+            color: #fff !important;
+            text-decoration: none !important;
+        }
+        #bmi-float .fa-calculator { font-size: 18px; line-height: 1; }
+
     </style>
 
     @yield('style')
@@ -210,6 +239,11 @@
     <span>{{ $lang == 'ar' ? 'واتساب' : 'WhatsApp' }}</span>
 </a>
 @endif
+
+<a id="bmi-float" href="{{ route('home') }}#bmi-calculator">
+    <i class="fa fa-calculator"></i>
+    <span>{{ trans('front.bmi_float_button') }}</span>
+</a>
 
 @yield('content')
 

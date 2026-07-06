@@ -17,6 +17,12 @@ use Modules\Dietplate\Models\StoreProduct;
 
 class DietPlanFrontController extends SubscriptionFrontController
 {
+    /**
+     * Temporarily hides the meal-selection step (Screen 4) from the checkout flow —
+     * flip back to true to re-enable it without restoring any deleted code.
+     */
+    protected const MEALS_STEP_ENABLED = false;
+
     public function __construct()
     {
         parent::__construct();
@@ -174,7 +180,6 @@ class DietPlanFrontController extends SubscriptionFrontController
             'selected_addon_names'  => $selectedAddOnNames,
             'base_price'            => $totalPrice,
             'start_date'            => $request->input('start_date'),
-            'off_days'              => $request->input('off_days', []),
             'delivery_type'         => $request->input('delivery_type', ''),
             'area'                  => $request->input('area', ''),
             'address'               => $request->input('address', ''),
@@ -185,6 +190,10 @@ class DietPlanFrontController extends SubscriptionFrontController
 
         session(['diet_plan_step1' => $sessionData]);
 
+        if (!self::MEALS_STEP_ENABLED) {
+            return redirect()->route('diet-plan.payment', $subscriptionId);
+        }
+
         return redirect()->route('diet-plan.meals', $subscriptionId);
     }
 
@@ -194,6 +203,10 @@ class DietPlanFrontController extends SubscriptionFrontController
      */
     public function meals($subscriptionId)
     {
+        if (!self::MEALS_STEP_ENABLED) {
+            return redirect()->route('diet-plan.payment', $subscriptionId);
+        }
+
         $step1 = session('diet_plan_step1');
         if (!$step1 || $step1['subscription_id'] != $subscriptionId) {
             return redirect()->route('diet-plan.subscribe', $subscriptionId);

@@ -337,9 +337,9 @@
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#page-top">{{trans('front.home')}}</a>
                                 </li>
-                                <li class="nav-item">
+                                {{-- <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
-                                </li>
+                                </li> --}}
                                 <!--                                <li class="nav-item">-->
                                 <!--                                    <a class="nav-link js-scroll-trigger" href="#courses">الدورات</a>-->
                                 <!--                                </li>-->
@@ -351,6 +351,12 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#subscriptions">{{trans('front.subscriptions')}}</a>
+                                </li>
+                                {{-- <li class="nav-item">
+                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#testimonials">{{trans('front.success_stories')}}</a>
+                                </li> --}}
+                                <li class="nav-item">
+                                    <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#faq">{{trans('front.faq')}}</a>
                                 </li>
                                 <!--                                <li class="nav-item">-->
                                 <!--                                    <a class="nav-link js-scroll-trigger" href="#blog">مدونة او مذكرة</a>-->
@@ -463,7 +469,7 @@
             <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="footer-about-col col-default-mb30">
                     <h4>{{trans('front.about')}}</h4>
-                    <p><?php echo strip_tags($mainSettings['about'])?> </p>
+                    <p>{{ \Illuminate\Support\Str::limit(strip_tags($mainSettings['about']), 160) }}</p>
                     <div class="social text-left">
                         <?php if ($mainSettings['facebook']) { ?><a href="<?php echo $mainSettings['facebook'] ?>"><i
                                     class="fa fa-facebook" aria-hidden="true"></i></a><?php } ?>
@@ -487,6 +493,8 @@
                         <a class="tag-btn " href="{{route('home')}}#activities">{{trans('front.activities')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a>
+                        <a class="tag-btn " href="{{route('home')}}#testimonials">{{trans('front.success_stories')}}</a>
+                        <a class="tag-btn " href="{{route('home')}}#faq">{{trans('front.faq')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a>
                     </div>
                 </div>

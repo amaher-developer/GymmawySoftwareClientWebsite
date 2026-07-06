@@ -37,7 +37,7 @@ class SubscriptionFrontController extends GenericFrontController
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
-        $record = Subscription::where('id', $id)->first();
+        $record = Subscription::with('activities')->where('id', $id)->first();
 
         if (!$record || !$record->is_web) {
             \Session::flash('error', trans('front.error_in_data'));
@@ -136,7 +136,7 @@ class SubscriptionFrontController extends GenericFrontController
         // redirect to payment gateway
         $member_data = [];
         $subscription_id = $request->subscription_id;
-        $subscription = Subscription::where('id', $subscription_id)->first();
+        $subscription = Subscription::with('activities')->where('id', $subscription_id)->first();
         if($subscription) {
             if (!$this->current_user) {
                 $member = Member::where('phone', @$request->phone)->first();
@@ -183,6 +183,36 @@ class SubscriptionFrontController extends GenericFrontController
             } else {
                 $member_data['vat'] = 0;
             }
+
+            // Snapshot the member's chosen activities (capped to activity_limit) so it can
+            // ride along through the payment-gateway redirect the same way joining_date does,
+            // then be written onto the MemberSubscription once payment succeeds.
+            $activityLimit = (int)($subscription->activity_limit ?? 0);
+            $requestedActivityIds = array_map('intval', (array)($request->activities ?? []));
+            $selectedActivities = null;
+            if ($activityLimit > 0 && !empty($requestedActivityIds)) {
+                $requestedActivityIds = array_slice(array_unique($requestedActivityIds), 0, $activityLimit);
+                $selectedActivities = [];
+                foreach ($subscription->activities as $activity) {
+                    if (in_array((int)$activity->id, $requestedActivityIds)) {
+                        $selectedActivities[] = [
+                            'id' => $activity->pivot->id,
+                            'activity_id' => (string)$activity->id,
+                            'subscription_id' => (string)$subscription->id,
+                            'training_times' => (string)$activity->pivot->training_times,
+                            'activity' => [
+                                'id' => $activity->id,
+                                'name_ar' => $activity->getRawOriginal('name_ar'),
+                                'name_en' => $activity->getRawOriginal('name_en'),
+                                'name' => $activity->name,
+                                'content' => $activity->content,
+                                'image_name' => $activity->image_name,
+                            ],
+                        ];
+                    }
+                }
+            }
+            $member_data['activities'] = $selectedActivities;
 
             if(@$request->payment_method == Constants::MADA){
                 // paytabs
@@ -233,7 +263,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 7, // PAYTABS_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::MADA,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => ['joining_date' => $member['joining_date'], 'selected_activities' => $member['activities'] ?? null],
         ]);
 
         return $payment['redirect_url'];
@@ -247,6 +277,9 @@ class SubscriptionFrontController extends GenericFrontController
         }])->where('payment_id', $request['payment_id'])->first();
 
         if($payment_invoice){
+            // Read before response_code gets overwritten below with the gateway's raw process_data.
+            $selectedActivities = $payment_invoice->response_code['selected_activities'] ?? null;
+
             $request['tran_ref'] = $payment_invoice->transaction_id;
             $payment = $payment->verify($request);
             if($payment['success']) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
@@ -267,7 +300,7 @@ class SubscriptionFrontController extends GenericFrontController
                 if($member){
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
+                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice), 'activities' => $selectedActivities]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -354,7 +387,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 4, // TABBY_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TABBY,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => ['joining_date' => $member['joining_date'], 'selected_activities' => $member['activities'] ?? null],
         ]);
 
 
@@ -459,6 +492,7 @@ class SubscriptionFrontController extends GenericFrontController
         $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
         $payment = @(array)$payment;
         $payment['joining_date'] = $member['joining_date'];
+        $payment['selected_activities'] = $member['activities'] ?? null;
         $paymentOnlineInvoice->response_code = $payment;
         $paymentOnlineInvoice->save();
 
@@ -632,6 +666,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
+                'activities'      => $paymentInvoice->response_code['selected_activities'] ?? null,
             ]);
 
             // 6️⃣ Update invoice
@@ -950,7 +985,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method' => 6, // TAMARA_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TAMARA,
-            'response_code' => ['joining_date' => $member['joining_date']],
+            'response_code' => ['joining_date' => $member['joining_date'], 'selected_activities' => $member['activities'] ?? null],
         ]);
 
         $items = collect([]);
@@ -993,6 +1028,7 @@ class SubscriptionFrontController extends GenericFrontController
         $paymentOnlineInvoice->transaction_id = @$response->order_id;
         $responseArray = @(array)$response;
         $responseArray['joining_date'] = $member['joining_date'];
+        $responseArray['selected_activities'] = $member['activities'] ?? null;
         $paymentOnlineInvoice->response_code = $responseArray;
         $paymentOnlineInvoice->save();
 
@@ -1300,6 +1336,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
+                'activities'      => $paymentInvoice->response_code['selected_activities'] ?? null,
             ]);
 
             $paymentInvoice->status = Constants::SUCCESS;
@@ -1502,6 +1539,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value' => $this->calculateDiscountValue($subscription),
                 'discount_type' => $this->getDiscountType($subscription),
                 'payment_type' => $this->resolvePaymentType($invoice),
+                'activities' => $invoice->response_code['selected_activities'] ?? null,
             ]);
 
             $invoice->member_subscription_id = $memberSubscription->id;
@@ -1699,7 +1737,7 @@ class SubscriptionFrontController extends GenericFrontController
             'payment_method'  => 8, // PAYTABS_STANDARD_TRANSACTION
             'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::PAYTABS_STANDARD,
-            'response_code'   => ['joining_date' => $member['joining_date']],
+            'response_code'   => ['joining_date' => $member['joining_date'], 'selected_activities' => $member['activities'] ?? null],
         ]);
 
         $errorRoute = @$member['payment_channel'] == 3
@@ -1729,6 +1767,7 @@ class SubscriptionFrontController extends GenericFrontController
         $paymentOnlineInvoice->transaction_id = @$response['tran_ref'];
         $responseArray                         = $response;
         $responseArray['joining_date']         = $member['joining_date'];
+        $responseArray['selected_activities']  = $member['activities'] ?? null;
         $paymentOnlineInvoice->response_code   = $responseArray;
         $paymentOnlineInvoice->save();
 
@@ -1929,6 +1968,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'         => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'          => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'           => $this->resolvePaymentType($paymentInvoice),
+                'activities'             => $paymentInvoice->response_code['selected_activities'] ?? null,
             ]);
 
             $paymentInvoice->status                 = Constants::SUCCESS;

@@ -79,6 +79,18 @@ class GenericFrontController extends GenericController
 
         $selectedBranchId = $urlBranch ?: $sessionBranch ?: $cookieBranch ?: $jsCookieBranch ?: null;
 
+        \Illuminate\Support\Facades\Log::info('BRANCH_DEBUG', [
+            'path' => request()->path(),
+            'urlBranch' => $urlBranch,
+            'sessionBranch' => $sessionBranch,
+            'cookieRaw' => $cookieRaw,
+            'cookieBranch' => $cookieBranch,
+            'jsCookieBranch' => $jsCookieBranch,
+            'selectedBranchId' => $selectedBranchId,
+            'hasSession' => request()->hasSession(),
+            'sessionId' => request()->hasSession() ? request()->session()->getId() : null,
+        ]);
+
         // Always write the resolved branch back to session + cookie so it survives navigation
         if ($selectedBranchId && request()->hasSession()) {
             request()->session()->put('selected_branch_id', $selectedBranchId);

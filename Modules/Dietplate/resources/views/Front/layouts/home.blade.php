@@ -841,7 +841,7 @@
             <div class="pogoSlider-slide" data-transition="shrinkReveal" data-duration="1000" style="background-image:url({{$cover_image}});">
                 <!-- Slider Elements -->
                 <div class="silder-elements">
-                    <h2 class="pogoSlider-slide-element slider-main-title" data-in="slideDown" data-out="slideUp" data-duration="750" data-delay="500"> <span class="invisible-mobile ">{{$mainSettings['name']}}</span></h2>
+                    <h2 class="pogoSlider-slide-element slider-main-title" data-in="slideDown" data-out="slideUp" data-duration="750" data-delay="500"> <span class="invisible-mobile " style="color: white;">{{$mainSettings['name']}}</span></h2>
                     <!--                <p class="pogoSlider-slide-element slider-para" data-in="slideUp" data-out="slideUp" data-duration="1500" data-delay="500">اللياقة ضرورية لكل إنسان</p>-->
                     <a href="#contact" class="btn btn-default pogoSlider-slide-element join-btn" data-in="expand" data-out="slideUp" data-duration="1500" data-delay="500" type="submit">{{trans('front.join_us')}}</a>
                 </div>
@@ -891,57 +891,238 @@
     </section>
     @endif
 
-    <!-- Features Section Start -->
-<!-- <section class="features-sec">
-    <div class="container">
-        <div class="row justify-content-center animatedParent animateOnce">
-            <div class="col-lg-4 col-md-6 animated bounceInUp slow">
-                <div class="features-col col-default-mb30">
-                    <div class="features-img">
-                        <img src="images/rtl-images/features/1.jpg" alt="">
-                        <div class="features-title">
-                            <h3>رفع الاثقال</h3>
-                            <p>اجعل جسمك لائقًا</p>
-                        </div>
-                        <div class="features-content">
-                            <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل </p>
-                        </div>
+  
+    @if(isset($subscriptions) && (count($subscriptions) > 0))
+    <!-- Subscriptions Section -->
+    <section id="subscriptions" class="featured-programs-sec">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="default-title text-center">
+                        <h2><span>{{trans('front.subscriptions')}}</span></h2>
+                        <div class="title-bdr"><div class="title-bdr-inside"></div></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 animated bounceInUp slow delay-250">
-                <div class="features-col col-default-mb30">
-                    <div class="features-img">
-                        <img src="images/rtl-images/features/2.jpg" alt="">
-                        <div class="features-title">
-                            <h3>تدريب اليوجا</h3>
-                            <p>اجعل جسمك لائقًا</p>
+            @php
+                $subscriptionCategories = $subscriptionCategories ?? collect();
+                $uncategorizedSubscriptions = $uncategorizedSubscriptions ?? collect();
+                $hasUncategorized = count($uncategorizedSubscriptions) > 0;
+                $hasCats = $subscriptionCategories->count() > 0;
+                $langPrefix = (isset($lang) && in_array($lang, ['ar','en'])) ? '/' . $lang : '';
+            @endphp
+
+            {{-- Category Filter Tabs --}}
+            @if($hasCats)
+            <div class="subscription-tabs-nav">
+                @foreach($subscriptionCategories as $index => $category)
+                <button type="button"
+                    class="subscription-tab-item {{ $index === 0 ? 'active' : '' }}"
+                    data-target="#subscription-panel-{{ $category->id }}">
+                    <span class="subscription-tab-img">
+                        @if($category->getRawOriginal('image'))
+                            <img src="{{ $category->image }}" alt="{{ $category->name }}">
+                        @else
+                            <i class="fa fa-cutlery subscription-tab-img-generic"></i>
+                        @endif
+                    </span>
+                    <span class="subscription-tab-name">{{ $category->name }}</span>
+                </button>
+                @endforeach
+                @if($hasUncategorized)
+                <button type="button"
+                    class="subscription-tab-item"
+                    data-target="#subscription-panel-other">
+                    <span class="subscription-tab-img subscription-tab-img-generic">
+                        <i class="fa fa-star"></i>
+                    </span>
+                    <span class="subscription-tab-name">{{trans('front.other_subscriptions')}}</span>
+                </button>
+                @endif
+            </div>
+            @endif
+
+            {{-- Subscription Panels --}}
+            <div class="subscription-tabs-content">
+                @foreach($subscriptionCategories as $index => $category)
+                <div id="subscription-panel-{{ $category->id }}"
+                    class="subscription-tab-panel {{ $index === 0 ? 'active' : '' }}">
+                    <div class="row">
+                        @foreach($category->subscriptions as $subscription)
+                        <div class="col-lg-3 col-md-6 d-flex">
+                            @include('Dietplate::Front.layouts.partials.subscription_card')
                         </div>
-                        <div class="features-content">
-                            <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل </p>
+                        @endforeach
+                    </div>
+                    <div class="text-center" style="margin-top:28px;">
+                        <a href="{{ url($langPrefix . '/diet-plan/' . $category->id) }}"
+                            class="btn-subscribe-new"
+                            style="display:inline-block;padding:13px 40px;border-radius:12px;font-size:15px;">
+                            <i class="fa fa-th-large" style="margin-{{app()->getLocale()==='ar'?'left':'right'}}:8px;"></i>
+                            {{ trans('front.view_all_plans') }}
+                        </a>
+                    </div>
+                </div>
+                @endforeach
+
+                @if($hasUncategorized)
+                <div id="subscription-panel-other"
+                    class="subscription-tab-panel {{ !$hasCats ? 'active' : '' }}">
+                    <div class="row">
+                        @foreach($uncategorizedSubscriptions as $subscription)
+                        <div class="col-lg-3 col-md-6 d-flex">
+                            @include('Dietplate::Front.layouts.partials.subscription_card')
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+
+        </div>
+    </section>
+    @endif
+<!-- BMI Calculator Section -->
+    <section id="bmi-calculator" class="bmi-calc-sec">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="default-title text-center">
+                        <h2><span>{{trans('front.bmi_calculator')}}</span></h2>
+                        <div class="title-bdr"><div class="title-bdr-inside"></div></div>
+                        <p>{{trans('front.bmi_calculator_desc')}}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center animatedParent animateOnce">
+                <!-- Form -->
+                <div class="col-lg-5 col-md-6 animated bounceInUp slow" style="margin-bottom:30px;">
+                    <div class="bmi-form-card">
+                        <div class="bmi-gender-row">
+                            <button type="button" class="bmi-gender-btn active" data-gender="male" onclick="setBmiGender('male')">
+                                <i class="fa fa-male"></i>
+                                <span>{{trans('front.bmi_male')}}</span>
+                            </button>
+                            <button type="button" class="bmi-gender-btn" data-gender="female" onclick="setBmiGender('female')">
+                                <i class="fa fa-female"></i>
+                                <span>{{trans('front.bmi_female')}}</span>
+                            </button>
+                        </div>
+                        <div class="bmi-input-group">
+                            <label>{{trans('front.bmi_age')}}</label>
+                            <div class="bmi-number-input">
+                                <button type="button" onclick="bmiAdjust('age', -1)">−</button>
+                                <input type="number" id="bmi-age" value="25" min="5" max="120">
+                                <button type="button" onclick="bmiAdjust('age', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="bmi-input-group">
+                            <label>{{trans('front.bmi_height')}}</label>
+                            <div class="bmi-number-input">
+                                <button type="button" onclick="bmiAdjust('height', -1)">−</button>
+                                <input type="number" id="bmi-height" value="170" min="50" max="250">
+                                <button type="button" onclick="bmiAdjust('height', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="bmi-input-group">
+                            <label>{{trans('front.bmi_weight')}}</label>
+                            <div class="bmi-number-input">
+                                <button type="button" onclick="bmiAdjust('weight', -1)">−</button>
+                                <input type="number" id="bmi-weight" value="70" min="10" max="300">
+                                <button type="button" onclick="bmiAdjust('weight', 1)">+</button>
+                            </div>
+                        </div>
+                        <button type="button" class="bmi-calc-btn" onclick="calculateBMI()">
+                            <i class="fa fa-calculator"></i> {{trans('front.bmi_calculate_now')}}
+                        </button>
+                    </div>
+                </div>
+                <!-- Result -->
+                <div class="col-lg-5 col-md-6 animated bounceInUp slow delay-250" style="margin-bottom:30px;">
+                    <div class="bmi-result-card">
+                        <div class="bmi-gauge-wrap">
+                            <svg viewBox="0 0 200 110" class="bmi-gauge-svg">
+                                <!-- Underweight arc (blue) -->
+                                <path d="M 30 100 A 70 70 0 0 1 56 46" stroke="#64b5f6" stroke-width="13" fill="none" stroke-linecap="round"/>
+                                <!-- Normal arc (green) -->
+                                <path d="M 56 46 A 70 70 0 0 1 100 30" stroke="#81c784" stroke-width="13" fill="none" stroke-linecap="round"/>
+                                <!-- Overweight arc (orange) -->
+                                <path d="M 100 30 A 70 70 0 0 1 135 39" stroke="#ffb74d" stroke-width="13" fill="none" stroke-linecap="round"/>
+                                <!-- Obese arc (red) -->
+                                <path d="M 135 39 A 70 70 0 0 1 170 100" stroke="#e57373" stroke-width="13" fill="none" stroke-linecap="round"/>
+                                <!-- Needle -->
+                                <line id="bmi-needle" x1="100" y1="100" x2="100" y2="36"
+                                      stroke="#7e4c8a" stroke-width="3" stroke-linecap="round"
+                                      transform="rotate(-90, 100, 100)"/>
+                                <circle cx="100" cy="100" r="7" fill="#7e4c8a"/>
+                            </svg>
+                        </div>
+                        <div class="bmi-value-display">
+                            <span class="bmi-value-num" id="bmi-value">--</span>
+                            <span class="bmi-value-label" id="bmi-category-label">{{trans('front.bmi_enter_data')}}</span>
+                        </div>
+                        <div class="bmi-categories">
+                            <div class="bmi-cat-item" id="bmi-cat-underweight">
+                                <span class="bmi-cat-dot" style="background:#64b5f6"></span>
+                                <span class="bmi-cat-range">&lt; 18.5</span>
+                                <span class="bmi-cat-name">{{trans('front.bmi_underweight')}}</span>
+                            </div>
+                            <div class="bmi-cat-item" id="bmi-cat-normal">
+                                <span class="bmi-cat-dot" style="background:#81c784"></span>
+                                <span class="bmi-cat-range">18.5 – 24.9</span>
+                                <span class="bmi-cat-name">{{trans('front.bmi_normal_weight')}}</span>
+                            </div>
+                            <div class="bmi-cat-item" id="bmi-cat-overweight">
+                                <span class="bmi-cat-dot" style="background:#ffb74d"></span>
+                                <span class="bmi-cat-range">25 – 29.9</span>
+                                <span class="bmi-cat-name">{{trans('front.bmi_overweight')}}</span>
+                            </div>
+                            <div class="bmi-cat-item" id="bmi-cat-obese">
+                                <span class="bmi-cat-dot" style="background:#e57373"></span>
+                                <span class="bmi-cat-range">≥ 30</span>
+                                <span class="bmi-cat-name">{{trans('front.bmi_obese')}}</span>
+                            </div>
+                        </div>
+                        <div class="bmi-ideal-weight" id="bmi-ideal-weight" style="display:none;">
+                            <i class="fa fa-info-circle"></i>
+                            <span id="bmi-ideal-text"></span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-4 col-md-6 animated bounceInUp slow delay-500">
-                <div class="features-col col-default-mb30">
-                    <div class="features-img">
-                        <img src="images/rtl-images/features/3.jpg" alt="">
-                        <div class="features-title">
-                            <h3>تدريب كروس فيت</h3>
-                            <p>اجعل جسمك لائقًا</p>
+            <div class="row justify-content-center">
+                <div class="col-lg-10" style="margin-top:20px;">
+                    <div class="bmi-recommend-card" id="bmi-recommend-card" style="display:none;">
+                        <span class="bmi-recommend-badge">
+                            <i class="fa fa-star"></i> {{ trans('front.bmi_recommended_badge') }}
+                        </span>
+                        <div class="bmi-recommend-img-wrap">
+                            <img id="bmi-recommend-img" src="" alt="">
                         </div>
-                        <div class="features-content">
-                            <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل </p>
+                        <div class="bmi-recommend-body">
+                            <div class="bmi-recommend-title"><i class="fa fa-magic"></i>{{ trans('front.bmi_recommended_package') }}</div>
+                            <div class="bmi-recommend-name" id="bmi-recommend-name">--</div>
+                            <div class="bmi-recommend-meta">
+                                <div class="bmi-recommend-meta-item">
+                                    {{ trans('front.bmi_recommended_calories') }}
+                                    <strong id="bmi-recommend-calories">--</strong>
+                                </div>
+                                <div class="bmi-recommend-meta-item">
+                                    {{ trans('front.bmi_recommended_meals') }}
+                                    <strong id="bmi-recommend-meals">--</strong>
+                                </div>
+                            </div>
+                            <a href="#" id="bmi-recommend-link" class="bmi-recommend-btn">
+                                {{ trans('front.bmi_view_package') }}
+                                <i class="fa fa-arrow-{{ $lang == 'ar' ? 'left' : 'right' }}"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section> -->
+    </section>
 
     <!-- About Section -->
     <section id="about" class="about-sec"  style="padding: 50px 0 0 !important;">
@@ -1220,237 +1401,6 @@
 
     
 
-    @if(isset($subscriptions) && (count($subscriptions) > 0))
-    <!-- Subscriptions Section -->
-    <section id="subscriptions" class="featured-programs-sec">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="default-title text-center">
-                        <h2><span>{{trans('front.subscriptions')}}</span></h2>
-                        <div class="title-bdr"><div class="title-bdr-inside"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            @php
-                $subscriptionCategories = $subscriptionCategories ?? collect();
-                $uncategorizedSubscriptions = $uncategorizedSubscriptions ?? collect();
-                $hasUncategorized = count($uncategorizedSubscriptions) > 0;
-                $hasCats = $subscriptionCategories->count() > 0;
-                $langPrefix = (isset($lang) && in_array($lang, ['ar','en'])) ? '/' . $lang : '';
-            @endphp
-
-            {{-- Category Filter Tabs --}}
-            @if($hasCats)
-            <div class="subscription-tabs-nav">
-                @foreach($subscriptionCategories as $index => $category)
-                <button type="button"
-                    class="subscription-tab-item {{ $index === 0 ? 'active' : '' }}"
-                    data-target="#subscription-panel-{{ $category->id }}">
-                    <span class="subscription-tab-img">
-                        @if($category->getRawOriginal('image'))
-                            <img src="{{ $category->image }}" alt="{{ $category->name }}">
-                        @else
-                            <i class="fa fa-cutlery subscription-tab-img-generic"></i>
-                        @endif
-                    </span>
-                    <span class="subscription-tab-name">{{ $category->name }}</span>
-                </button>
-                @endforeach
-                @if($hasUncategorized)
-                <button type="button"
-                    class="subscription-tab-item"
-                    data-target="#subscription-panel-other">
-                    <span class="subscription-tab-img subscription-tab-img-generic">
-                        <i class="fa fa-star"></i>
-                    </span>
-                    <span class="subscription-tab-name">{{trans('front.other_subscriptions')}}</span>
-                </button>
-                @endif
-            </div>
-            @endif
-
-            {{-- Subscription Panels --}}
-            <div class="subscription-tabs-content">
-                @foreach($subscriptionCategories as $index => $category)
-                <div id="subscription-panel-{{ $category->id }}"
-                    class="subscription-tab-panel {{ $index === 0 ? 'active' : '' }}">
-                    <div class="row">
-                        @foreach($category->subscriptions as $subscription)
-                        <div class="col-lg-3 col-md-6 d-flex">
-                            @include('Dietplate::Front.layouts.partials.subscription_card')
-                        </div>
-                        @endforeach
-                    </div>
-                    <div class="text-center" style="margin-top:28px;">
-                        <a href="{{ url($langPrefix . '/diet-plan/' . $category->id) }}"
-                            class="btn-subscribe-new"
-                            style="display:inline-block;padding:13px 40px;border-radius:12px;font-size:15px;">
-                            <i class="fa fa-th-large" style="margin-{{app()->getLocale()==='ar'?'left':'right'}}:8px;"></i>
-                            {{ trans('front.view_all_plans') }}
-                        </a>
-                    </div>
-                </div>
-                @endforeach
-
-                @if($hasUncategorized)
-                <div id="subscription-panel-other"
-                    class="subscription-tab-panel {{ !$hasCats ? 'active' : '' }}">
-                    <div class="row">
-                        @foreach($uncategorizedSubscriptions as $subscription)
-                        <div class="col-lg-3 col-md-6 d-flex">
-                            @include('Dietplate::Front.layouts.partials.subscription_card')
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-            </div>
-
-        </div>
-    </section>
-    @endif
-<!-- BMI Calculator Section -->
-    <section id="bmi-calculator" class="bmi-calc-sec">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="default-title text-center">
-                        <h2><span>{{trans('front.bmi_calculator')}}</span></h2>
-                        <div class="title-bdr"><div class="title-bdr-inside"></div></div>
-                        <p>{{trans('front.bmi_calculator_desc')}}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row justify-content-center animatedParent animateOnce">
-                <!-- Form -->
-                <div class="col-lg-5 col-md-6 animated bounceInUp slow" style="margin-bottom:30px;">
-                    <div class="bmi-form-card">
-                        <div class="bmi-gender-row">
-                            <button type="button" class="bmi-gender-btn active" data-gender="male" onclick="setBmiGender('male')">
-                                <i class="fa fa-male"></i>
-                                <span>{{trans('front.bmi_male')}}</span>
-                            </button>
-                            <button type="button" class="bmi-gender-btn" data-gender="female" onclick="setBmiGender('female')">
-                                <i class="fa fa-female"></i>
-                                <span>{{trans('front.bmi_female')}}</span>
-                            </button>
-                        </div>
-                        <div class="bmi-input-group">
-                            <label>{{trans('front.bmi_age')}}</label>
-                            <div class="bmi-number-input">
-                                <button type="button" onclick="bmiAdjust('age', -1)">−</button>
-                                <input type="number" id="bmi-age" value="25" min="5" max="120">
-                                <button type="button" onclick="bmiAdjust('age', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="bmi-input-group">
-                            <label>{{trans('front.bmi_height')}}</label>
-                            <div class="bmi-number-input">
-                                <button type="button" onclick="bmiAdjust('height', -1)">−</button>
-                                <input type="number" id="bmi-height" value="170" min="50" max="250">
-                                <button type="button" onclick="bmiAdjust('height', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="bmi-input-group">
-                            <label>{{trans('front.bmi_weight')}}</label>
-                            <div class="bmi-number-input">
-                                <button type="button" onclick="bmiAdjust('weight', -1)">−</button>
-                                <input type="number" id="bmi-weight" value="70" min="10" max="300">
-                                <button type="button" onclick="bmiAdjust('weight', 1)">+</button>
-                            </div>
-                        </div>
-                        <button type="button" class="bmi-calc-btn" onclick="calculateBMI()">
-                            <i class="fa fa-calculator"></i> {{trans('front.bmi_calculate_now')}}
-                        </button>
-                    </div>
-                </div>
-                <!-- Result -->
-                <div class="col-lg-5 col-md-6 animated bounceInUp slow delay-250" style="margin-bottom:30px;">
-                    <div class="bmi-result-card">
-                        <div class="bmi-gauge-wrap">
-                            <svg viewBox="0 0 200 110" class="bmi-gauge-svg">
-                                <!-- Underweight arc (blue) -->
-                                <path d="M 30 100 A 70 70 0 0 1 56 46" stroke="#64b5f6" stroke-width="13" fill="none" stroke-linecap="round"/>
-                                <!-- Normal arc (green) -->
-                                <path d="M 56 46 A 70 70 0 0 1 100 30" stroke="#81c784" stroke-width="13" fill="none" stroke-linecap="round"/>
-                                <!-- Overweight arc (orange) -->
-                                <path d="M 100 30 A 70 70 0 0 1 135 39" stroke="#ffb74d" stroke-width="13" fill="none" stroke-linecap="round"/>
-                                <!-- Obese arc (red) -->
-                                <path d="M 135 39 A 70 70 0 0 1 170 100" stroke="#e57373" stroke-width="13" fill="none" stroke-linecap="round"/>
-                                <!-- Needle -->
-                                <line id="bmi-needle" x1="100" y1="100" x2="100" y2="36"
-                                      stroke="#7e4c8a" stroke-width="3" stroke-linecap="round"
-                                      transform="rotate(-90, 100, 100)"/>
-                                <circle cx="100" cy="100" r="7" fill="#7e4c8a"/>
-                            </svg>
-                        </div>
-                        <div class="bmi-value-display">
-                            <span class="bmi-value-num" id="bmi-value">--</span>
-                            <span class="bmi-value-label" id="bmi-category-label">{{trans('front.bmi_enter_data')}}</span>
-                        </div>
-                        <div class="bmi-categories">
-                            <div class="bmi-cat-item" id="bmi-cat-underweight">
-                                <span class="bmi-cat-dot" style="background:#64b5f6"></span>
-                                <span class="bmi-cat-range">&lt; 18.5</span>
-                                <span class="bmi-cat-name">{{trans('front.bmi_underweight')}}</span>
-                            </div>
-                            <div class="bmi-cat-item" id="bmi-cat-normal">
-                                <span class="bmi-cat-dot" style="background:#81c784"></span>
-                                <span class="bmi-cat-range">18.5 – 24.9</span>
-                                <span class="bmi-cat-name">{{trans('front.bmi_normal_weight')}}</span>
-                            </div>
-                            <div class="bmi-cat-item" id="bmi-cat-overweight">
-                                <span class="bmi-cat-dot" style="background:#ffb74d"></span>
-                                <span class="bmi-cat-range">25 – 29.9</span>
-                                <span class="bmi-cat-name">{{trans('front.bmi_overweight')}}</span>
-                            </div>
-                            <div class="bmi-cat-item" id="bmi-cat-obese">
-                                <span class="bmi-cat-dot" style="background:#e57373"></span>
-                                <span class="bmi-cat-range">≥ 30</span>
-                                <span class="bmi-cat-name">{{trans('front.bmi_obese')}}</span>
-                            </div>
-                        </div>
-                        <div class="bmi-ideal-weight" id="bmi-ideal-weight" style="display:none;">
-                            <i class="fa fa-info-circle"></i>
-                            <span id="bmi-ideal-text"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                <div class="col-lg-10" style="margin-top:20px;">
-                    <div class="bmi-recommend-card" id="bmi-recommend-card" style="display:none;">
-                        <span class="bmi-recommend-badge">
-                            <i class="fa fa-star"></i> {{ trans('front.bmi_recommended_badge') }}
-                        </span>
-                        <div class="bmi-recommend-img-wrap">
-                            <img id="bmi-recommend-img" src="" alt="">
-                        </div>
-                        <div class="bmi-recommend-body">
-                            <div class="bmi-recommend-title"><i class="fa fa-magic"></i>{{ trans('front.bmi_recommended_package') }}</div>
-                            <div class="bmi-recommend-name" id="bmi-recommend-name">--</div>
-                            <div class="bmi-recommend-meta">
-                                <div class="bmi-recommend-meta-item">
-                                    {{ trans('front.bmi_recommended_calories') }}
-                                    <strong id="bmi-recommend-calories">--</strong>
-                                </div>
-                                <div class="bmi-recommend-meta-item">
-                                    {{ trans('front.bmi_recommended_meals') }}
-                                    <strong id="bmi-recommend-meals">--</strong>
-                                </div>
-                            </div>
-                            <a href="#" id="bmi-recommend-link" class="bmi-recommend-btn">
-                                {{ trans('front.bmi_view_package') }}
-                                <i class="fa fa-arrow-{{ $lang == 'ar' ? 'left' : 'right' }}"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     @if(isset($activities) && (count($activities) > 0))
     <!-- Activities Section -->

@@ -248,7 +248,7 @@
                     @endif
 
                     <div style="text-align:center;">
-                        <a href="{{ route('diet-plan.meals', $subscription->id) }}" style="color:#7e4c8a;font-size:13px;">
+                        <a href="{{ route('diet-plan.subscribe', $subscription->id) }}" style="color:#7e4c8a;font-size:13px;">
                             <i class="fa fa-arrow-{{ $isRtl ? 'right':'left' }}"></i>
                             {{ trans('front.previous') }}
                         </a>

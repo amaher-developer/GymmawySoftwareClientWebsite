@@ -1,5 +1,273 @@
 @extends('sixtyminutes::Front.layouts.master')
 @section('style')
+<style>
+    /* ── Modern pricing / subscription cards ── */
+    #subscriptions.sm-pricing-sec {
+        background: radial-gradient(ellipse at top, #1b1b1b 0%, #000 70%);
+        padding: 90px 0;
+    }
+    #subscriptions.sm-pricing-sec .default-title h2 {
+        color: #ffffff;
+    }
+    #subscriptions.sm-pricing-sec .default-title p {
+        color: #eeeeee;
+    }
+    #subscriptions.sm-pricing-sec .title-bdr {
+        background: #ffffff;
+    }
+    #subscriptions .sm-pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 28px;
+        margin-top: 20px;
+    }
+    #subscriptions .sm-plan-card {
+        position: relative;
+        background: linear-gradient(160deg, rgba(28,28,28,0.96), rgba(8,8,8,0.92));
+        border: 1px solid rgba(117,192,67,0.22);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    #subscriptions .sm-plan-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 22px 48px rgba(117,192,67,0.28);
+        border-color: #75c043;
+    }
+    #subscriptions .sm-plan-card.sm-featured {
+        border-color: #75c043;
+        background: linear-gradient(160deg, rgba(30,42,20,0.96), rgba(8,8,8,0.95));
+    }
+    #subscriptions .sm-featured-badge {
+        position: absolute;
+        top: 14px;
+        {{ $lang == 'ar' ? 'right: 14px;' : 'left: 14px;' }}
+        z-index: 2;
+        background: linear-gradient(135deg, #75c043, #9ee36b);
+        color: #0d1a05;
+        font-weight: 800;
+        font-size: 0.72rem;
+        padding: 6px 14px;
+        border-radius: 20px;
+        box-shadow: 0 4px 14px rgba(117,192,67,0.55);
+    }
+    #subscriptions .sm-plan-img-wrap {
+        width: 100%;
+        height: 170px;
+        overflow: hidden;
+        background: #101010;
+    }
+    #subscriptions .sm-plan-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+    }
+    #subscriptions .sm-plan-card:hover .sm-plan-img-wrap img {
+        transform: scale(1.08);
+    }
+    #subscriptions .sm-plan-body {
+        padding: 24px 26px 28px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+    #subscriptions .sm-plan-name {
+        font-size: 21px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+    #subscriptions .sm-plan-desc {
+        color: #9a9a9a;
+        font-size: 13px;
+        min-height: 18px;
+        margin-bottom: 14px;
+    }
+    #subscriptions .sm-plan-meta {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 18px;
+    }
+    #subscriptions .sm-plan-meta li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        font-size: 13px;
+        color: #d8d8d8;
+    }
+    #subscriptions .sm-plan-meta li i {
+        color: #75c043;
+        width: 16px;
+        text-align: center;
+    }
+    #subscriptions .sm-price-block {
+        margin: auto 0 20px;
+    }
+    #subscriptions .sm-price-old {
+        display: block;
+        text-decoration: line-through;
+        color: #777;
+        font-size: 13px;
+    }
+    #subscriptions .sm-price-discount {
+        display: block;
+        color: #9ee36b;
+        font-size: 12px;
+        margin: 3px 0;
+        font-weight: 700;
+    }
+    #subscriptions .sm-price-main {
+        font-size: 28px;
+        font-weight: 800;
+        color: #75c043;
+        margin: 2px 0;
+    }
+    #subscriptions .sm-price-vat {
+        display: block;
+        color: #9a9a9a;
+        font-size: 11px;
+    }
+    #subscriptions .sm-price-total {
+        display: block;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 3px;
+    }
+    #subscriptions .sm-plan-cta {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px 0;
+        border-radius: 30px;
+        background: transparent;
+        border: 2px solid #75c043;
+        color: #9ee36b !important;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    #subscriptions .sm-plan-cta:hover,
+    #subscriptions .sm-featured .sm-plan-cta {
+        background: linear-gradient(135deg, #75c043, #9ee36b);
+        color: #0d1a05 !important;
+    }
+
+    @media only screen and (max-width: 576px) {
+        #subscriptions.sm-pricing-sec { padding: 60px 0; }
+        #subscriptions .sm-plan-img-wrap { height: 140px; }
+        #subscriptions .sm-price-main { font-size: 24px; }
+        #subscriptions .sm-plan-card:hover { transform: none; }
+        #subscriptions .sm-plan-card.sm-featured { transform: none; }
+    }
+
+    /* ── Modern activities grid ── */
+    #activities.sm-activities-sec {
+        background: #0d0d0d;
+        padding: 90px 0;
+    }
+    #activities.sm-activities-sec .default-title h2 {
+        color: #ffffff;
+    }
+    #activities.sm-activities-sec .title-bdr {
+        background: #ffffff;
+    }
+    #activities .sm-activities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 24px;
+        margin-top: 20px;
+    }
+    #activities .sm-activity-card {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        height: 220px;
+        background-color: #1c1c1c;
+        background-size: cover;
+        background-position: center;
+        border: 1px solid rgba(117,192,67,0.18);
+        box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    #activities .sm-activity-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 44px rgba(117,192,67,0.3);
+        border-color: #75c043;
+    }
+    #activities .sm-activity-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(13,13,13,0.1) 30%, rgba(13,13,13,0.92) 100%);
+        transition: background 0.35s ease;
+    }
+    #activities .sm-activity-icon {
+        position: absolute;
+        top: 16px;
+        {{ $lang == 'ar' ? 'right: 16px;' : 'left: 16px;' }}
+        z-index: 2;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #75c043, #9ee36b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0d1a05;
+        font-size: 16px;
+        box-shadow: 0 6px 16px rgba(117,192,67,0.5);
+    }
+    #activities .sm-activity-body {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        padding: 20px;
+    }
+    #activities .sm-activity-body h5 {
+        color: #fff;
+        font-weight: 700;
+        font-size: 17px;
+        margin: 0;
+    }
+    /* Fallback variant for activities without an uploaded photo */
+    #activities .sm-activity-card.sm-activity-noimg {
+        background-image: none !important;
+        background: linear-gradient(160deg, #1c1c1c 0%, #2a2a2a 100%);
+        border-color: rgba(117,192,67,0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 14px;
+        padding: 20px;
+    }
+    #activities .sm-activity-card.sm-activity-noimg::before { display: none; }
+    #activities .sm-activity-card.sm-activity-noimg .sm-activity-icon {
+        position: static;
+        width: 60px;
+        height: 60px;
+        font-size: 22px;
+    }
+    #activities .sm-activity-card.sm-activity-noimg .sm-activity-body {
+        position: static;
+        padding: 0;
+    }
+
+    @media only screen and (max-width: 576px) {
+        #activities.sm-activities-sec { padding: 60px 0; }
+        #activities .sm-activity-card { height: 190px; }
+        #activities .sm-activity-card:hover { transform: none; }
+    }
+</style>
 @endsection
 @section('content')
 <!-- Main Slider Start -->
@@ -145,7 +413,7 @@
 
 
 @if(isset($subscriptions) && (count($subscriptions) > 0))
-    <section id="subscriptions" class="pricing-table-sec jarallax over-layer-black">
+    <section id="subscriptions" class="sm-pricing-sec">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-6">
@@ -154,25 +422,75 @@
                         <div class="title-bdr">
                             <div class="title-bdr-inside"></div>
                         </div>
-                        <!--                    <p>هنالك العديد من الأنواع المتوفرة لنصوص لوريم إيبسوم، ولكن الغالبية تم تعديلها بشكل ما عبر إدخال بعض النوادر أو الكلمات العشوائية إلى النص.</p>-->
                     </div>
                 </div>
             </div>
-            <div class="row animatedParent animateOnce">
+            @php
+                $featuredSubId = null;
+                if ($subscriptions->count() > 1) {
+                    $withDiscount = $subscriptions->filter(function ($s) {
+                        return ($s->default_discount_type ?? 0) > 0 && ($s->default_discount_value ?? 0) > 0;
+                    });
+                    if ($withDiscount->count() > 0) {
+                        $featuredSubId = $withDiscount->sortByDesc('default_discount_value')->first()->id;
+                    }
+                }
+                $vatPercentage = @$record->vat_details['vat_percentage'] ?? 0;
+            @endphp
+            <div class="sm-pricing-grid">
                 @foreach($subscriptions as $subscription)
-                    <div class="col-lg-3 col-md-6">
-                        <div class="pricing-box col-default-mb30 animated bounceInUp slow">
-                            <div class="pricing-header">
-                                <h2>{{$subscription->name}}</h2>
+                    @php
+                        $isFeatured = $featuredSubId && $subscription->id === $featuredSubId;
+
+                        $originalPrice = (float) $subscription->price;
+                        $discountType  = $subscription->default_discount_type ?? 0;
+                        $discountValue = (float) ($subscription->default_discount_value ?? 0);
+                        if ($discountType == 1 && $discountValue > 0) {
+                            $discountAmount = round(($discountValue / 100) * $originalPrice, 2);
+                            $discountLabel  = trans('front.discount') . ' (' . $discountValue . '%)';
+                        } elseif ($discountType == 2 && $discountValue > 0) {
+                            $discountAmount = round($discountValue, 2);
+                            $discountLabel  = trans('front.discount');
+                        } else {
+                            $discountAmount = 0;
+                            $discountLabel  = '';
+                        }
+                        $priceAfterDiscount = round($originalPrice - $discountAmount, 2);
+                        $vatAmount    = round(($vatPercentage / 100) * $priceAfterDiscount, 2);
+                        $priceWithVat = round($priceAfterDiscount + $vatAmount, 2);
+                    @endphp
+                    <div class="sm-plan-card {{ $isFeatured ? 'sm-featured' : '' }}">
+                        @if($isFeatured)
+                            <span class="sm-featured-badge">{{ trans('front.best_offer') }}</span>
+                        @endif
+                        <div class="sm-plan-img-wrap">
+                            @if($subscription->getRawOriginal('image'))
+                                <img src="{{ $subscription->image }}" alt="{{ $subscription->name }}">
+                            @else
+                                <img src="{{ asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/images/logo.png') }}" alt="{{ $subscription->name }}" style="object-fit: contain; padding: 20px; background: #181818;">
+                            @endif
+                        </div>
+                        <div class="sm-plan-body">
+                            <h2 class="sm-plan-name">{{$subscription->name}}</h2>
+                            @if($subscription->content)
+                                <p class="sm-plan-desc">{{ \Illuminate\Support\Str::limit(strip_tags($subscription->content), 70) }}</p>
+                            @endif
+                            <ul class="sm-plan-meta">
+                                <li><i class="fa fa-calendar"></i> {{trans('front.period')}}: {{$subscription->period}} {{trans('front.day')}}</li>
+                                <li><i class="fa fa-fire"></i> {{trans('front.session_num')}}: {{$subscription->workouts}}</li>
+                            </ul>
+                            <div class="sm-price-block">
+                                @if($discountAmount > 0)
+                                    <span class="sm-price-old">{{number_format($originalPrice, 2)}} {{trans('front.pound_unit')}}</span>
+                                    <span class="sm-price-discount">{{$discountLabel}}: -{{number_format($discountAmount, 2)}} {{trans('front.pound_unit')}}</span>
+                                @endif
+                                <span class="sm-price-main">{{number_format($priceAfterDiscount, 2)}} {{trans('front.pound_unit')}}</span>
+                                @if($vatPercentage > 0)
+                                    <span class="sm-price-vat">+ {{trans('front.vat')}} ({{$vatPercentage}}%): {{number_format($vatAmount, 2)}} {{trans('front.pound_unit')}}</span>
+                                    <span class="sm-price-total">{{trans('front.total_price')}}: {{number_format($priceWithVat, 2)}} {{trans('front.pound_unit')}}</span>
+                                @endif
                             </div>
-                            <div class="pricing-content">
-                                <ul>
-                                    <li> {{trans('front.period')}}: {{$subscription->period}} {{trans('front.day')}} </li>
-                                    <li> {{trans('front.session_num')}}: {{$subscription->workouts}}</li>
-                                </ul>
-                                <h3>{{number_format(($subscription->price + ($subscription->price * (@$record->vat_details['vat_percentage']/100))), 2)}} {{trans('front.pound_unit')}} </h3>
-                                <a class="btn btn-default sing-up-btn" style="border: 1px solid;" type="button" href="{{route('subscription', ['id' => $subscription->id])}}">{{trans('front.subscribe')}}</a>
-                            </div>
+                            <a class="sm-plan-cta" href="{{route('subscription', ['id' => $subscription->id])}}">{{trans('front.subscribe')}}</a>
                         </div>
                     </div>
                 @endforeach
@@ -821,22 +1139,35 @@
     </div>
 </section>
 @endif
-<!-- Counter Section -->
+<!-- Activities Section -->
 
 @if(isset($activities) && (count($activities) > 0))
-<section class="schedule-sec  jarallax over-layer-black">
+<section id="activities" class="sm-activities-sec">
     <div class="container">
-        <div class="row">
-            @foreach($activities as $activity)
-            <div class="col-lg-3 col-sm-6">
-                <div class="counter-col col-default-mb30 text-center">
-                    <h5 class=""><i class="fa fa-list"></i></h5>
-                    <div class="counter-bdr"></div>
-                    <h5>{{$activity->name}}</h5>
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="default-title text-center">
+                    <h2> <span>{{trans('front.activities')}}</span> </h2>
+                    <div class="title-bdr">
+                        <div class="title-bdr-inside"></div>
+                    </div>
                 </div>
             </div>
+        </div>
+        @php
+            $activityIcons = ['fa-heartbeat', 'fa-fire', 'fa-bolt', 'fa-trophy', 'fa-bicycle', 'fa-futbol-o'];
+        @endphp
+        <div class="sm-activities-grid">
+            @foreach($activities as $activity)
+                @php $hasActivityImage = !empty($activity->image_name); @endphp
+                <div class="sm-activity-card {{ $hasActivityImage ? '' : 'sm-activity-noimg' }}"
+                     @if($hasActivityImage) style="background-image:url('{{ $activity->image }}');" @endif>
+                    <span class="sm-activity-icon"><i class="fa {{ $activityIcons[$loop->index % count($activityIcons)] }}"></i></span>
+                    <div class="sm-activity-body">
+                        <h5>{{$activity->name}}</h5>
+                    </div>
+                </div>
             @endforeach
-
         </div>
     </div>
 </section>

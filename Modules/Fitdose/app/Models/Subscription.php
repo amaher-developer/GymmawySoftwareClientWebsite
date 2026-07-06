@@ -39,4 +39,11 @@ class Subscription extends GenericModel
         return asset('resources/assets/front/img/preview_icon.png');
     }
 
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class, 'sw_gym_activity_subscription', 'subscription_id', 'activity_id')
+            ->withPivot('id', 'training_times')
+            ->withTimestamps();
+    }
+
 }

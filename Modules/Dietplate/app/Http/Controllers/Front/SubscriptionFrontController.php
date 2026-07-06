@@ -633,6 +633,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
+                'activities'      => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
 
             // 6️⃣ Update invoice
@@ -1303,6 +1304,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'  => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'   => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
+                'activities'      => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
 
             $paymentInvoice->status = Constants::SUCCESS;
@@ -1460,7 +1462,13 @@ class SubscriptionFrontController extends GenericFrontController
                 return ['memberSubscription' => MemberSubscription::find($invoice->member_subscription_id), 'early' => true];
             }
 
-            $member = ($sessionMember && @$sessionMember->id) ? $sessionMember : null;
+            $member = null;
+            if ($sessionMember && @$sessionMember->id) {
+                // session('user') can hold either a real Member model or a plain stdClass
+                // built by AuthFrontController::getSubscriptionInfo() — normalize to a real
+                // Member model so it satisfies createMoneyBoxEntry()'s type hint below.
+                $member = $sessionMember instanceof Member ? $sessionMember : Member::find($sessionMember->id);
+            }
 
             if (!$member && $invoice->member_id) {
                 $member = Member::find($invoice->member_id);
@@ -1507,6 +1515,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value' => $this->calculateDiscountValue($subscription),
                 'discount_type' => $this->getDiscountType($subscription),
                 'payment_type' => $this->resolvePaymentType($invoice),
+                'activities' => $invoice->response_code['diet_selections'] ?? null,
             ]);
 
             $invoice->member_subscription_id = $memberSubscription->id;
@@ -1995,6 +2004,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'discount_value'         => $this->calculateDiscountValue($paymentInvoice->subscription),
                 'discount_type'          => $this->getDiscountType($paymentInvoice->subscription),
                 'payment_type'           => $this->resolvePaymentType($paymentInvoice),
+                'activities'             => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
 
             $paymentInvoice->status                 = Constants::SUCCESS;
