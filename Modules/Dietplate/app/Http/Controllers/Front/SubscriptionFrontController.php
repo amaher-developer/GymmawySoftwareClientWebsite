@@ -11,6 +11,7 @@ use Modules\Dietplate\app\Http\Requests\SubscriptionRequest;
 use Modules\Dietplate\Models\Member;
 
 use Modules\Dietplate\Models\MemberSubscription;
+use Modules\Dietplate\Models\MemberSubscriptionOption;
 use Modules\Dietplate\Models\MoneyBox;
 use Modules\Dietplate\Models\PaymentOnlineInvoice;
 use Modules\Dietplate\Models\Subscription;
@@ -459,8 +460,10 @@ class SubscriptionFrontController extends GenericFrontController
 
         $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
         $payment = @(array)$payment;
-        $payment['joining_date'] = $member['joining_date'];
-        $paymentOnlineInvoice->response_code = $payment;
+        // Merge (not overwrite) — creation already stored joining_date and, for diet-plan
+        // orders, the diet_selections summary in response_code; overwriting here would
+        // silently wipe that data before the user even reaches the gateway's checkout page.
+        $paymentOnlineInvoice->response_code = array_merge((array) $paymentOnlineInvoice->response_code, $payment);
         $paymentOnlineInvoice->save();
 
 
@@ -616,6 +619,7 @@ class SubscriptionFrontController extends GenericFrontController
             );
 
             $memberSubscription = MemberSubscription::create([
+                'branch_setting_id' => $this->mainSettings->id,
                 'subscription_id' => $paymentInvoice->subscription_id,
                 'member_id'       => $member->id,
                 'workouts'        => $paymentInvoice->subscription->workouts,
@@ -635,6 +639,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
                 'activities'      => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
+            $this->createMemberSubscriptionOptions($paymentInvoice, $memberSubscription);
 
             // 6️⃣ Update invoice
             $paymentInvoice->status = Constants::SUCCESS;
@@ -996,8 +1001,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         $paymentOnlineInvoice->transaction_id = @$response->order_id;
         $responseArray = @(array)$response;
-        $responseArray['joining_date'] = $member['joining_date'];
-        $paymentOnlineInvoice->response_code = $responseArray;
+        // Merge (not overwrite) — see the identical note in tabby_payment() above.
+        $paymentOnlineInvoice->response_code = array_merge((array) $paymentOnlineInvoice->response_code, $responseArray);
         $paymentOnlineInvoice->save();
 
         return $response->checkout_url;
@@ -1287,6 +1292,7 @@ class SubscriptionFrontController extends GenericFrontController
             );
 
             $memberSubscription = MemberSubscription::create([
+                'branch_setting_id' => $this->mainSettings->id,
                 'subscription_id' => $paymentInvoice->subscription_id,
                 'member_id'       => $member->id,
                 'workouts'        => $paymentInvoice->subscription->workouts,
@@ -1306,6 +1312,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'payment_type'    => $this->resolvePaymentType($paymentInvoice),
                 'activities'      => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
+            $this->createMemberSubscriptionOptions($paymentInvoice, $memberSubscription);
 
             $paymentInvoice->status = Constants::SUCCESS;
             $paymentInvoice->member_subscription_id = $memberSubscription->id;
@@ -1500,6 +1507,7 @@ class SubscriptionFrontController extends GenericFrontController
             $expire = (clone $joining)->addDays(max($periodDays, 0));
 
             $memberSubscription = MemberSubscription::create([
+                'branch_setting_id' => $this->mainSettings->id,
                 'subscription_id' => $invoice->subscription_id,
                 'member_id' => $member->id,
                 'workouts' => $subscription->workouts ?? null,
@@ -1517,6 +1525,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'payment_type' => $this->resolvePaymentType($invoice),
                 'activities' => $invoice->response_code['diet_selections'] ?? null,
             ]);
+            $this->createMemberSubscriptionOptions($invoice, $memberSubscription);
 
             $invoice->member_subscription_id = $memberSubscription->id;
             $invoice->status = Constants::SUCCESS;
@@ -1675,6 +1684,29 @@ class SubscriptionFrontController extends GenericFrontController
         ]);
     }
 
+    /**
+     * Persists the diet-plan option picks (days, protein/carb weight, delivery type,
+     * add-ons, ...) into sw_gym_member_subscription_options, so the SaaS admin can see
+     * exactly which catalog options a member's subscription includes.
+     * No-op for plain (non-diet) subscriptions since they never set option_price_snapshots.
+     */
+    protected function createMemberSubscriptionOptions(PaymentOnlineInvoice $invoice, MemberSubscription $memberSubscription): void
+    {
+        $snapshots = $invoice->response_code['diet_selections']['option_price_snapshots'] ?? null;
+        if (!$snapshots || !is_array($snapshots)) {
+            return;
+        }
+
+        foreach ($snapshots as $optionId => $priceSnapshot) {
+            MemberSubscriptionOption::create([
+                'branch_setting_id' => $this->mainSettings->id,
+                'member_subscription_id' => $memberSubscription->id,
+                'option_id' => (int) $optionId,
+                'price_snapshot' => (float) $priceSnapshot,
+            ]);
+        }
+    }
+
     protected function loginMemberAfterOnlinePayment(string $code, string $phone): void
     {
         //try {
@@ -1802,9 +1834,8 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $paymentOnlineInvoice->transaction_id = @$response['tran_ref'];
-        $responseArray                         = $response;
-        $responseArray['joining_date']         = $member['joining_date'];
-        $paymentOnlineInvoice->response_code   = $responseArray;
+        // Merge (not overwrite) — see the identical note in tabby_payment() above.
+        $paymentOnlineInvoice->response_code = array_merge((array) $paymentOnlineInvoice->response_code, $response);
         $paymentOnlineInvoice->save();
 
         return $response['redirect_url'];
@@ -1989,6 +2020,7 @@ class SubscriptionFrontController extends GenericFrontController
             $joiningDate = Carbon::parse($paymentInvoice->response_code['joining_date'] ?? now());
 
             $memberSubscription = MemberSubscription::create([
+                'branch_setting_id'      => $this->mainSettings->id,
                 'subscription_id'        => $paymentInvoice->subscription_id,
                 'member_id'              => $member->id,
                 'workouts'               => $paymentInvoice->subscription->workouts,
@@ -2006,6 +2038,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'payment_type'           => $this->resolvePaymentType($paymentInvoice),
                 'activities'             => $paymentInvoice->response_code['diet_selections'] ?? null,
             ]);
+            $this->createMemberSubscriptionOptions($paymentInvoice, $memberSubscription);
 
             $paymentInvoice->status                 = Constants::SUCCESS;
             $paymentInvoice->member_subscription_id = $memberSubscription->id;

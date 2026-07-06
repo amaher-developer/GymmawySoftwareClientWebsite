@@ -538,6 +538,7 @@ class DietPlanFrontController extends SubscriptionFrontController
     protected function buildDietSelectionsSummary(array $step1, array $step2): array
     {
         $selectionGroups = [];
+        $optionPriceSnapshots = [];
         foreach ($step1['selections'] ?? [] as $groupId => $optionIds) {
             $group = SubscriptionOptionGroup::find($groupId);
             if (!$group) continue;
@@ -546,6 +547,9 @@ class DietPlanFrontController extends SubscriptionFrontController
                 'label' => $group->name_ar,
                 'value' => implode('، ', $opts->pluck('name_ar')->toArray()),
             ];
+            foreach ($opts as $opt) {
+                $optionPriceSnapshots[$opt->id] = (float) $opt->price_modifier;
+            }
         }
 
         $mealGroups = [];
@@ -585,6 +589,7 @@ class DietPlanFrontController extends SubscriptionFrontController
             'delivery_area'    => $step1['area'] ?? null,
             'delivery_address' => $step1['address'] ?? null,
             'location_url'     => $locationUrl,
+            'option_price_snapshots' => $optionPriceSnapshots,
         ];
     }
 

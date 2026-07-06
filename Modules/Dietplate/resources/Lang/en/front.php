@@ -158,7 +158,6 @@ return [
     'location_error'              => 'Could not get your location, please enter the address manually',
     'location_unsupported'        => 'Your browser does not support geolocation',
     'start_date'                  => 'Start Date',
-    'discount_code_note'          => 'Discount code will be added later on the payment page',
     'notes'                       => 'Notes',
     'any_special_notes'           => 'Any special notes...',
     'price_summary'               => 'Price Summary',

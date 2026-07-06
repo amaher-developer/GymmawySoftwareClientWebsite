@@ -465,12 +465,6 @@
                             style="resize:vertical;">{{ old('notes') }}</textarea>
                     </div>
 
-                    <!-- Discount note -->
-                    <div class="diet-card" style="background:#fff8e1;border:2px solid #ffc107;">
-                        <i class="fa fa-tag" style="color:#ffc107;margin-{{ $isRtl ? 'left':'right' }}:8px;"></i>
-                        <span style="font-size:13px;color:#666;">{{ trans('front.discount_code_note') }}</span>
-                    </div>
-
                 </div><!-- /col-lg-8 -->
 
                 <!-- Sidebar: Price Summary -->

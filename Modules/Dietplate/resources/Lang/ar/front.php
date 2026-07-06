@@ -157,7 +157,6 @@ return [
     'location_error'              => 'تعذر تحديد موقعك، يمكنك إدخال العنوان يدويًا',
     'location_unsupported'        => 'متصفحك لا يدعم تحديد الموقع',
     'start_date'                  => 'تاريخ البدء',
-    'discount_code_note'          => 'كود الخصم يتم إضافته لاحقاً في صفحة الدفع',
     'notes'                       => 'ملاحظات',
     'any_special_notes'           => 'أي ملاحظات خاصة...',
     'price_summary'               => 'ملخص الأسعار',
