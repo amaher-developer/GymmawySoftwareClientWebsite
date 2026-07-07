@@ -613,7 +613,7 @@
                 @php
                     $aboutImage = null;
                     if (isset($images) && count($images) > 0) {
-                        $aboutImage = env('APP_URL_MASTER').'uploads/settings/gyms/'.$images[0];
+                        $aboutImage = env('APP_URL_MASTER').'uploads/settings/gyms/'.array_values($images)[0];
                     } elseif (!empty($mainSettings['logo'])) {
                         $aboutImage = $mainSettings['logo'];
                     }
