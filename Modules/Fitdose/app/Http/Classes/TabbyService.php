@@ -18,7 +18,7 @@ class TabbyService
     {
         $config = $settings->payments['tabby'] ?? [];
 
-        $this->base_url = rtrim($config['base_url'] ?? env('TABBY_BASE_URL', 'https://api.tabby.ai'), '/') . '/';
+        $this->base_url = rtrim($config['base_url'] ?? env('TABBY_BASE_URL', 'https://api.tabby.ai/api'), '/') . '/';
         $this->pk_test = $config['public_key'] ?? env('TABBY_PK');
         $this->sk_test = $config['secret_key'] ?? env('TABBY_SK');
         $this->merchant_code = $config['merchant_code'] ?? env('TABBY_MERCHANT_CODE');
