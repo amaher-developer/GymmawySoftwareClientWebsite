@@ -35,6 +35,11 @@ class TabbyService
         if($this->is_test)
             $http = $http->withoutVerifying();
         $response = $http->post('checkout',$body);
+        Log::info('TABBY CREATE SESSION', [
+            'status' => $response->status(),
+            'request' => $body,
+            'response' => $response->json(),
+        ]);
         return $response->object();
     }
 
