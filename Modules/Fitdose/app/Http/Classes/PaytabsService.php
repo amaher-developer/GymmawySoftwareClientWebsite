@@ -13,15 +13,23 @@ class PaytabsService
     public $baseUrl;
     public $currency;
     public $country;
+    public $city;
+    public $address;
+    public $isTest;
 
-    public function __construct()
+    public function __construct($settings = null)
     {
-        $this->profileId  = env('PAYTABS_PROFILE_ID');
-        $this->serverKey  = env('PAYTABS_SERVER_KEY', 'S6J9TLHLKM-JMKZHRDBD6-NBKNZJDHWN');
-        $this->clientKey  = env('PAYTABS_CLIENT_KEY', 'C6K2KM-VQN26N-K9HRD2-7DKPN9');
-        $this->baseUrl    = rtrim(env('PAYTABS_BASE_URL', 'https://secure.paytabs.sa'), '/') . '/';
-        $this->currency   = env('PAYTABS_CURRENCY', 'SAR');
-        $this->country    = env('PAYTABS_COUNTRY', 'SA');
+        $config = $settings->payments['paytabs'] ?? [];
+
+        $this->profileId  = $config['profile_id'] ?? env('PAYTABS_PROFILE_ID');
+        $this->serverKey  = $config['server_key'] ?? env('PAYTABS_SERVER_KEY', '');
+        $this->clientKey  = $config['client_key'] ?? env('PAYTABS_CLIENT_KEY', '');
+        $this->baseUrl    = rtrim($config['base_url'] ?? env('PAYTABS_BASE_URL', 'https://secure.paytabs.sa'), '/') . '/';
+        $this->currency   = $config['currency'] ?? env('PAYTABS_CURRENCY', 'SAR');
+        $this->country    = $config['country'] ?? env('PAYTABS_COUNTRY', 'SA');
+        $this->city       = $config['city'] ?? env('PAYTABS_CITY');
+        $this->address    = $config['address'] ?? env('PAYTABS_ADDRESS');
+        $this->isTest     = filter_var($config['is_test'] ?? env('PAYTABS_IS_TEST', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -57,7 +65,7 @@ class PaytabsService
             'Content-Type'  => 'application/json',
         ]);
         
-        if (@env('PAYTABS_IS_TEST'))
+        if ($this->isTest)
             $http = $http->withoutVerifying();
 
         $response = $http->post($this->baseUrl . 'payment/request', $body);
@@ -84,7 +92,7 @@ class PaytabsService
             'authorization' => $this->serverKey,
             'Content-Type'  => 'application/json',
         ]);
-        if (@env('PAYTABS_IS_TEST'))
+        if ($this->isTest)
             $http = $http->withoutVerifying();
 
         $response = $http->post($this->baseUrl . 'payment/query', $body);

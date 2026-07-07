@@ -208,6 +208,7 @@
 
         <h5 class="section-title">{{trans('front.choose_payment_methods')}}:</h5>
 
+        @if($mainSettings->hasPaymentGateway('tabby'))
         <div class="payment-option">
             <input type="radio" name="payment_method" value="2" id="tabby_m" {{ old('payment_method') == '2' ? 'checked' : '' }}>
             <div class="payment-details">
@@ -217,7 +218,9 @@
                 <div id="tabbyCard"></div>
             </div>
         </div>
+        @endif
 
+        @if($mainSettings->hasPaymentGateway('tamara'))
         <div class="payment-option">
             <input type="radio" name="payment_method" value="4" id="tamara_m" {{ old('payment_method') == '4' ? 'checked' : '' }}>
             <div class="payment-details">
@@ -229,7 +232,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($mainSettings->hasPaymentGateway('paytabs'))
         <div class="payment-option">
             <input type="radio" name="payment_method" value="5" id="paytabs_m" {{ old('payment_method') == '5' ? 'checked' : '' }}>
             <div class="payment-details">
@@ -249,12 +254,14 @@
                 </p>
                 <span class="policy-msg">{{trans('front.paytabs_policy_msg')}}</span>
             </div>
-        </div> 
+        </div>
+        @endif
 
         <button type="submit" class="btn-pay">{{trans('front.pay_now')}}</button>
     </form>
     <div style="padding-bottom: 60px;"></div>
 
+    @if($mainSettings->hasPaymentGateway('tamara'))
     <script>
         window.tamaraWidgetConfig = {
             lang: '{{ app()->getLocale() }}',
@@ -263,20 +270,23 @@
         };
     </script>
     <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
+    @endif
+    @if($mainSettings->hasPaymentGateway('tabby'))
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
             selector: '#tabbyCard',
-            currency: '{{ env("TABBY_CURRENCY") }}',
+            currency: '{{ $mainSettings->payments['tabby']['currency'] ?? env('TABBY_CURRENCY') }}',
             lang: '{{ app()->getLocale() }}',
             price: {{ $priceWithVat }},
             size: 'wide',
             theme: 'black',
             header: false,
-            publicKey: '{{ env("TABBY_PK") }}',
-            merchantCode: '{{ env("TABBY_MERCHANT_CODE") }}'
+            publicKey: '{{ $mainSettings->payments['tabby']['public_key'] ?? env('TABBY_PK') }}',
+            merchantCode: '{{ $mainSettings->payments['tabby']['merchant_code'] ?? env('TABBY_MERCHANT_CODE') }}'
         });
     </script>
+    @endif
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
     <script>

@@ -301,6 +301,7 @@
                         <div class="fd-card">
                             <h5 class="fd-card-title">{{trans('front.choose_payment_methods')}}</h5>
 
+                            @if($mainSettings->hasPaymentGateway('tabby'))
                             <div class="fd-payment-option">
                                 <div class="fd-payment-option-head">
                                     <input type="radio" id="tabby" name="payment_method" value="2">
@@ -312,7 +313,9 @@
                                 </div>
                                 <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
                             </div>
+                            @endif
 
+                            @if($mainSettings->hasPaymentGateway('tamara'))
                             <div class="fd-payment-option">
                                 <div class="fd-payment-option-head">
                                     <input type="radio" id="tamara" name="payment_method" value="4">
@@ -326,7 +329,9 @@
                                     <tamara-widget type="tamara-summary" amount="{{$priceWithVat}}" inline-type="2"></tamara-widget>
                                 </div>
                             </div>
+                            @endif
 
+                            @if($mainSettings->hasPaymentGateway('paytabs'))
                             <div class="fd-payment-option">
                                 <div class="fd-payment-option-head">
                                     <input type="radio" id="paytabs" name="payment_method" value="5">
@@ -341,6 +346,7 @@
                                     <span class="fd-payment-policy">{{trans('front.paytabs_policy_msg')}}</span>
                                 </div>
                             </div>
+                            @endif
                         </div>
 
                         <input class="fd-submit-btn" type="submit" value="{{trans('front.pay_now')}}">
@@ -367,20 +373,23 @@
 
 @endsection
 @section('script')
+    @if($mainSettings->hasPaymentGateway('tabby'))
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
             selector: '#tabbyCard', // empty div for TabbyCard.
-            currency: '{{env("TABBY_CURRENCY")}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
+            currency: '{{$mainSettings->payments['tabby']['currency'] ?? env('TABBY_CURRENCY')}}', // required, currency of your product. AED|SAR|KWD|BHD|QAR only supported, with no spaces or lowercase.
             lang: '{{app()->getLocale()}}', // language of snippet and popups.
             price: {{$priceWithVat}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
             size: 'wide', // required, can be also 'wide', depending on the width.
             theme: 'black', // required, can be also 'default'.
             header: false, // if a Payment method name present already.
-            publicKey: '{{env("TABBY_PK")}}', // required, your Tabby public key.
-            merchantCode: '{{env("TABBY_MERCHANT_CODE")}}' // required, your Tabby merchant code.
+            publicKey: '{{$mainSettings->payments['tabby']['public_key'] ?? env('TABBY_PK')}}', // required, your Tabby public key.
+            merchantCode: '{{$mainSettings->payments['tabby']['merchant_code'] ?? env('TABBY_MERCHANT_CODE')}}' // required, your Tabby merchant code.
         });
     </script>
+    @endif
+    @if($mainSettings->hasPaymentGateway('tamara'))
     <script>
         window.tamaraWidgetConfig = {
             lang: '{{app()->getLocale()}}',
@@ -389,6 +398,7 @@
         };
     </script>
     <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
+    @endif
 
     <script>
         (function () {

@@ -11,11 +11,18 @@ class TabbyService
     public $base_url;
     public $pk_test;
     public $sk_test;
-    public function __construct()
+    public $merchant_code;
+    public $is_test;
+
+    public function __construct($settings = null)
     {
-        $this->base_url = @env('TABBY_BASE_URL');
-        $this->pk_test = @env('TABBY_PK');
-        $this->sk_test = @env('TABBY_SK');
+        $config = $settings->payments['tabby'] ?? [];
+
+        $this->base_url = rtrim($config['base_url'] ?? env('TABBY_BASE_URL', 'https://api.tabby.ai'), '/') . '/';
+        $this->pk_test = $config['public_key'] ?? env('TABBY_PK');
+        $this->sk_test = $config['secret_key'] ?? env('TABBY_SK');
+        $this->merchant_code = $config['merchant_code'] ?? env('TABBY_MERCHANT_CODE');
+        $this->is_test = filter_var($config['is_test'] ?? env('TABBY_IS_TEST', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     public function createSession($data)
@@ -25,7 +32,7 @@ class TabbyService
 
         $body = $this->getConfig($data);
         $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
-        if(@env('TABBY_IS_TEST'))
+        if($this->is_test)
             $http = $http->withoutVerifying();
         $response = $http->post('checkout',$body);
         return $response->object();
@@ -73,7 +80,7 @@ class TabbyService
     public function getSession($payment_id)
     {
         $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
-        if(@env('TABBY_IS_TEST'))
+        if($this->is_test)
             $http = $http->withoutVerifying();
         $url = 'checkout/'.$payment_id;
         $response = $http->get($url);
@@ -82,7 +89,7 @@ class TabbyService
 
     public function getPayment($payment_id){
         $http = Http::withToken($this->sk_test)->baseUrl($this->base_url.'v2/');
-        if(@env('TABBY_IS_TEST'))
+        if($this->is_test)
             $http = $http->withoutVerifying();
         $url = 'payments/'.$payment_id;
         $response = $http->get($url);
@@ -92,9 +99,9 @@ class TabbyService
     }
 
     public function createWebHooks(){
-        $body = ['url' => route('api.tabby-notify'), 'is_test' => @env('TABBY_IS_TEST', false)];
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => @env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
-        if(@env('TABBY_IS_TEST'))
+        $body = ['url' => route('api.tabby-notify'), 'is_test' => $this->is_test];
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => $this->merchant_code])->baseUrl($this->base_url.'v1/');
+        if($this->is_test)
             $http = $http->withoutVerifying();
         $response = $http->post('webhooks',$body);
         return $response->object();
@@ -103,8 +110,8 @@ class TabbyService
     public function getWebHooks(){
 //        $create = $this->createWebHooks();
 //        if(@$create->id) {
-        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => env('TABBY_MERCHANT_CODE', 'مركز اللياقة الرائدة للرياضة النسائيةsau')])->baseUrl($this->base_url.'v1/');
-        if(@env('TABBY_IS_TEST'))
+        $http = Http::withToken($this->sk_test)->withHeaders(['X-Merchant-Code' => $this->merchant_code])->baseUrl($this->base_url.'v1/');
+        if($this->is_test)
             $http = $http->withoutVerifying();
         $url = 'webhooks' ;
         $response = $http->get($url);
@@ -118,7 +125,7 @@ class TabbyService
         $http = Http::withToken($this->sk_test)
             ->baseUrl($this->base_url . 'v2/');
 
-        if (env('TABBY_IS_TEST')) {
+        if ($this->is_test) {
             $http = $http->withoutVerifying();
         }
 
@@ -164,7 +171,7 @@ class TabbyService
                 "order_history" => $data['order_history'] ?? [],
             ],
             "lang" => app()->getLocale(),
-            "merchant_code" => @env('TABBY_MERCHANT_CODE'),
+            "merchant_code" => $this->merchant_code,
             "merchant_urls" => [
                 "success" => $data['success-url'],
                 "cancel" => @$data['cancel-url'],

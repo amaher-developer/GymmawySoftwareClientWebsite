@@ -11,7 +11,7 @@ class Setting extends GenericModel
     protected $guarded = ['id'];
     protected $appends = ['name','address', 'logo', 'logo_white', 'logo_thumb', 'about', 'terms', 'meta_description', 'meta_keywords'];
     public static $uploads_path = 'uploads/settings/';
-    protected $casts = ['images' => 'json', 'cover_images' => 'json', 'vat_details' => 'json', 'reservation_details' => 'json', 'wa_details' => 'json'];
+    protected $casts = ['images' => 'json', 'cover_images' => 'json', 'vat_details' => 'json', 'reservation_details' => 'json', 'wa_details' => 'json', 'payments' => 'json'];
 
     protected $dispatchesEvents = ['updated' => SettingUpdated::class];
 
@@ -127,6 +127,18 @@ class Setting extends GenericModel
     public function updateSettingWithCache()
     {
         return Cache::put('settings', $this, 60 * 24 * 30);
+    }
+
+    public function hasPaymentGateway(string $gateway): bool
+    {
+        $config = $this->payments[$gateway] ?? [];
+
+        return match ($gateway) {
+            'tabby' => !empty($config['public_key']) && !empty($config['secret_key']),
+            'tamara' => !empty($config['token']) && !empty($config['api_url']),
+            'paytabs' => !empty($config['profile_id']) && !empty($config['server_key']) && !empty($config['client_key']),
+            default => false,
+        };
     }
 
 }

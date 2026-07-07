@@ -9,18 +9,24 @@ class TamaraService
 {
     public $base_url;
     public $api_token;
+    public $notification_token;
+    public $is_test;
 
-    public function __construct()
+    public function __construct($settings = null)
     {
-        $this->base_url = rtrim(@env('TAMARA_API_URL', 'https://api.tamara.co'), '/') . '/';
-        $this->api_token = @env('TAMARA_API_TOKEN');
+        $config = $settings->payments['tamara'] ?? [];
+
+        $this->base_url = rtrim($config['api_url'] ?? env('TAMARA_API_URL', 'https://api.tamara.co'), '/') . '/';
+        $this->api_token = $config['token'] ?? env('TAMARA_API_TOKEN');
+        $this->notification_token = $config['notification_token'] ?? env('TAMARA_NOTIFICATION_TOKEN');
+        $this->is_test = filter_var($config['is_test'] ?? env('TAMARA_IS_TEST', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     public function createCheckout($data)
     {
         $body = $this->getConfig($data);
         $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
-        if (@env('TAMARA_IS_TEST'))
+        if ($this->is_test)
             $http = $http->withoutVerifying();
         $response = $http->post('checkout', $body);
         Log::info('TAMARA CREATE CHECKOUT', $response->json() ?? []);
@@ -30,7 +36,7 @@ class TamaraService
     public function getOrder($orderId)
     {
         $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
-        if (@env('TAMARA_IS_TEST'))
+        if ($this->is_test)
             $http = $http->withoutVerifying();
         $url = 'merchants/orders/' . $orderId;
         $response = $http->get($url);
@@ -42,7 +48,7 @@ class TamaraService
     public function authoriseOrder($orderId)
     {
         $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
-        if (@env('TAMARA_IS_TEST'))
+        if ($this->is_test)
             $http = $http->withoutVerifying();
         $response = $http->post("orders/{$orderId}/authorise");
 
@@ -54,7 +60,7 @@ class TamaraService
     {
         $currency = @env('TAMARA_CURRENCY', 'SAR');
         $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
-        if (@env('TAMARA_IS_TEST'))
+        if ($this->is_test)
             $http = $http->withoutVerifying();
 
         $captureItems = [];
@@ -99,7 +105,7 @@ class TamaraService
     {
         $currency = @env('TAMARA_CURRENCY', 'SAR');
         $http = Http::withToken($this->api_token)->baseUrl($this->base_url);
-        if (@env('TAMARA_IS_TEST'))
+        if ($this->is_test)
             $http = $http->withoutVerifying();
 
         $response = $http->post("payments/simplified-refund/{$orderId}", [

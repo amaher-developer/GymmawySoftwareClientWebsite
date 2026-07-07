@@ -369,6 +369,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
         $purchased_at = Carbon::now()->toISOString();
         $unique_id = uniqid();
+        $tabbyConfig = $this->mainSettings->payments['tabby'] ?? [];
 
         $paymentOnlineInvoice = PaymentOnlineInvoice::create([
             'payment_id' => $unique_id,
@@ -433,8 +434,8 @@ class SubscriptionFrontController extends GenericFrontController
                         'name' => $sub->member->name ?? $member['name'],
                     ],
                     'shipping_address' => [
-                        'city' => env('TABBY_CITY', ''),
-                        'address' => env('TABBY_ADDRESS', ''),
+                        'city' => $tabbyConfig['city'] ?? env('TABBY_CITY', ''),
+                        'address' => $tabbyConfig['address'] ?? env('TABBY_ADDRESS', ''),
                         'zip' => env('TABBY_ZIP', ''),
                         'country' => env('TABBY_COUNTRY', 'SA'),
                     ],
@@ -445,15 +446,15 @@ class SubscriptionFrontController extends GenericFrontController
 
         $order_data = [
             'amount'=> $totalAmount,
-            'currency' => @env('TABBY_CURRENCY', 'SAR'),
+            'currency' => $tabbyConfig['currency'] ?? env('TABBY_CURRENCY', 'SAR'),
             'description'=> @$subscription['content'],
             'full_name'=> $member['name'],
             'buyer_phone'=> $member['phone'],
             'buyer_email' => $member['email'] ?? '',
             'buyer_dob' => $member['dob'] ? Carbon::parse($member['dob'])->format('Y-m-d') : null,
             'status' => Constants::NEW, //"new" "processing" "complete" "refunded" "canceled" "unknown"
-            'address'=> env('TABBY_ADDRESS', ''),
-            'city' => env('TABBY_CITY', ''),
+            'address'=> $tabbyConfig['address'] ?? env('TABBY_ADDRESS', ''),
+            'city' => $tabbyConfig['city'] ?? env('TABBY_CITY', ''),
             'zip'=> env('TABBY_ZIP', ''),
             'country' => env('TABBY_COUNTRY', 'SA'),
             'order_id'=> (string) $paymentOnlineInvoice->id,
@@ -468,7 +469,7 @@ class SubscriptionFrontController extends GenericFrontController
             'order_history' => $orderHistory,
         ];
         // step 1: create session
-        $payment = new TabbyService();
+        $payment = new TabbyService($this->mainSettings);
         $payment = $payment->createSession($order_data);
         $status = @$payment->status;
 
@@ -590,7 +591,7 @@ class SubscriptionFrontController extends GenericFrontController
                 return response()->json(['status' => 'already_processed'], 200);
             }
 
-            $tabbyService = new TabbyService();
+            $tabbyService = new TabbyService($this->mainSettings);
             $capture = null;
 
             // 3️⃣ Retrieve payment to verify status
@@ -774,7 +775,7 @@ class SubscriptionFrontController extends GenericFrontController
         $joiningDate = $paymentInvoice->response_code['joining_date']
             ?? Carbon::now()->toDateString();
 
-        $tabbyService = new TabbyService();
+        $tabbyService = new TabbyService($this->mainSettings);
 
         // 3️⃣ Get payment status from Tabby (with retry for CREATED→AUTHORIZED timing gap)
         $payment = null;
@@ -1015,7 +1016,7 @@ class SubscriptionFrontController extends GenericFrontController
             'items' => $items->toArray(),
         ];
 
-        $payment = new TamaraService();
+        $payment = new TamaraService($this->mainSettings);
         $response = $payment->createCheckout($order_data);
 
         if (!@$response->checkout_url) {
@@ -1075,7 +1076,7 @@ class SubscriptionFrontController extends GenericFrontController
             return redirect()->route($subscriptionRoute, ['id' => $paymentInvoice->subscription_id]);
         }
 
-        $tamaraService = new TamaraService();
+        $tamaraService = new TamaraService($this->mainSettings);
         $tamaraOrderId = $paymentInvoice->transaction_id;
 
         // Step 1: Authorise the order (required by Tamara after approval)
@@ -1170,7 +1171,7 @@ class SubscriptionFrontController extends GenericFrontController
         Log::info('Tamara webhook received', $request->all());
 
         // Verify Tamara JWT token (HS256) using Notification Key
-        $notificationKey = env('TAMARA_NOTIFICATION_TOKEN');
+        $notificationKey = $this->mainSettings->payments['tamara']['notification_token'] ?? env('TAMARA_NOTIFICATION_TOKEN');
         if ($notificationKey) {
             $tamaraToken = $request->query('tamaraToken')
                 ?? str_replace('Bearer ', '', $request->header('Authorization', ''));
@@ -1250,7 +1251,7 @@ class SubscriptionFrontController extends GenericFrontController
                 return response()->json(['status' => 'already_processed'], 200);
             }
 
-            $tamaraService = new TamaraService();
+            $tamaraService = new TamaraService($this->mainSettings);
 
             // Step 1: Authorise order — confirms receipt of approved notification
             $authorise = $tamaraService->authoriseOrder($orderId);
@@ -1410,7 +1411,7 @@ class SubscriptionFrontController extends GenericFrontController
         $amount = $request->input('amount', $paymentInvoice->amount);
         $comment = $request->input('comment', '');
 
-        $tamaraService = new TamaraService();
+        $tamaraService = new TamaraService($this->mainSettings);
         $refund = $tamaraService->refundOrder($paymentInvoice->transaction_id, $amount, $comment);
 
         if ($refund && in_array(@$refund->status, ['fully_refunded', 'partially_refunded'])) {
@@ -1687,7 +1688,7 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabbyRegisterWebhook()
     {
-        $tabbyService = new TabbyService();
+        $tabbyService = new TabbyService($this->mainSettings);
         $result = $tabbyService->createWebHooks();
 
         return response()->json([
@@ -1698,7 +1699,7 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabbyCheckWebhooks()
     {
-        $tabbyService = new TabbyService();
+        $tabbyService = new TabbyService($this->mainSettings);
         $result = $tabbyService->getWebHooks();
 
         return response()->json([
@@ -1744,7 +1745,7 @@ class SubscriptionFrontController extends GenericFrontController
             ? route('subscription-mobile', ['id' => $subscription['id']])
             : route('subscription', ['id' => $subscription['id']]);
 
-        $paytabsService = new PaytabsService();
+        $paytabsService = new PaytabsService($this->mainSettings);
         $response = $paytabsService->createPaymentPage([
             'cart_id'      => $unique_id,
             'description'  => $subscription['name'],
@@ -1754,8 +1755,8 @@ class SubscriptionFrontController extends GenericFrontController
             'name'         => $member['name'],
             'email'        => $member['email'] ?? '',
             'phone'        => $member['phone'],
-            'address'      => env('PAYTABS_ADDRESS', 'Riyadh'),
-            'city'         => env('PAYTABS_CITY', 'Riyadh'),
+            'address'      => $paytabsService->address ?? 'Riyadh',
+            'city'         => $paytabsService->city ?? 'Riyadh',
         ]);
 
         if (empty($response['redirect_url'])) {
@@ -1802,7 +1803,7 @@ class SubscriptionFrontController extends GenericFrontController
         $joiningDate = $paymentInvoice->response_code['joining_date'] ?? Carbon::now()->toDateString();
 
         // Re-query Paytabs for authoritative status
-        $paytabsService = new PaytabsService();
+        $paytabsService = new PaytabsService($this->mainSettings);
         $payment        = $paytabsService->verifyPayment($tranRef);
         $responseStatus = $paytabsService->getResponseStatus($payment);
 
@@ -1857,7 +1858,7 @@ class SubscriptionFrontController extends GenericFrontController
     {
         Log::info('Paytabs IPN received', $request->all());
 
-        $paytabsService = new PaytabsService();
+        $paytabsService = new PaytabsService($this->mainSettings);
 
         // Validate signature when present (Paytabs form-encoded IPN)
         if ($request->has('signature') && !$paytabsService->isValidSignature($request->all())) {
