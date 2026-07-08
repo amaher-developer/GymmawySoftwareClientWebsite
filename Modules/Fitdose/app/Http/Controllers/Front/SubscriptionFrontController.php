@@ -293,8 +293,9 @@ class SubscriptionFrontController extends GenericFrontController
                 $type_of_payment = Constants::RenewMember;
                 if(!@$this->current_user->id){
                     // must generate code and make user id nullable
-                    $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
+                    $branchSettingId = $payment_invoice->subscription->branch_setting_id ?? null;
+                    $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code')+1), 14, 0, STR_PAD_LEFT);
+                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob'], 'branch_setting_id' => $branchSettingId]);
                     $type_of_payment = Constants::CreateMember;
                 }
 
@@ -633,7 +634,8 @@ class SubscriptionFrontController extends GenericFrontController
             }
 
             if (!$member) {
-                $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $paymentInvoice->subscription->branch_setting_id ?? null;
+                $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -641,6 +643,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
@@ -1304,7 +1307,8 @@ class SubscriptionFrontController extends GenericFrontController
             }
 
             if (!$member) {
-                $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $paymentInvoice->subscription->branch_setting_id ?? null;
+                $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -1312,6 +1316,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
@@ -1509,7 +1514,7 @@ class SubscriptionFrontController extends GenericFrontController
             $generatedCode = null;
 
             if (!$member) {
-                $generatedCode = str_pad(((int)Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $generatedCode = str_pad(((int)Member::withTrashed()->where('branch_setting_id', $subscription->branch_setting_id ?? null)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code' => $generatedCode,
                     'name' => $invoice->name,
@@ -1517,6 +1522,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone' => $invoice->phone,
                     'address' => $invoice->address,
                     'dob' => $invoice->dob,
+                    'branch_setting_id' => $subscription->branch_setting_id ?? null,
                 ]);
                 $type = Constants::CreateMember;
             }
@@ -1955,7 +1961,8 @@ class SubscriptionFrontController extends GenericFrontController
                 $member = Member::where('phone', $paymentInvoice->phone)->first();
             }
             if (!$member) {
-                $maxId  = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $paymentInvoice->subscription->branch_setting_id ?? null;
+                $maxId  = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -1963,6 +1970,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
