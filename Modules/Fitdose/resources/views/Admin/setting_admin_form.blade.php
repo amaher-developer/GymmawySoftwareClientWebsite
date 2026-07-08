@@ -26,6 +26,7 @@
                     <li><a href="#contacts" id="contacts_tab_button" data-toggle="tab">Contacts</a></li>
                     <li><a href="#meta" data-toggle="tab">Meta Tags</a></li>
                     <li><a href="#pages" data-toggle="tab">Pages</a></li>
+                    <li><a href="#integrations" data-toggle="tab">Integrations</a></li>
                 </ul>
 
                 <div class="tab-content">
@@ -315,6 +316,28 @@
                                       data-bv-notempty-message="{{trans('fitdose::global.required')}}"
                                       name="terms_en"
                                       id="terms_en">{{old('terms_en') ?old('terms_en'):($mainSettings->terms_en ? $mainSettings->terms_en: '')}}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="integrations">
+                        <h1>Paytabs</h1>
+                        <div class="form-group">
+                            <label class="control-label">Merchant ID</label>
+                            <input type="text" class="form-control input-data" dir="ltr"
+                                   value="{{$mainSettings->payments['paytabs']['profile_id'] ?? ''}}"
+                                   name="paytabs_profile_id"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Server Key</label>
+                            <input type="text" class="form-control input-data" dir="ltr"
+                                   value="{{$mainSettings->payments['paytabs']['server_key'] ?? ''}}"
+                                   name="paytabs_server_key"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Client Key</label>
+                            <input type="text" class="form-control input-data" dir="ltr"
+                                   value="{{$mainSettings->payments['paytabs']['client_key'] ?? ''}}"
+                                   name="paytabs_client_key"/>
                         </div>
                     </div>
 

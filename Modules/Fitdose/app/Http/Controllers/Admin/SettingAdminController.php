@@ -20,7 +20,27 @@ class SettingAdminController extends GenericAdminController
     public function update(SettingRequest $request, Setting $setting)
     {
         $setting_inputs = $this->prepare_inputs($request->except(['_token']));
+
+        $paytabsConfig = [
+            'profile_id' => isset($setting_inputs['paytabs_profile_id']) ? trim($setting_inputs['paytabs_profile_id']) : null,
+            'server_key' => isset($setting_inputs['paytabs_server_key']) ? trim($setting_inputs['paytabs_server_key']) : null,
+            'client_key' => isset($setting_inputs['paytabs_client_key']) ? trim($setting_inputs['paytabs_client_key']) : null,
+        ];
+        unset($setting_inputs['paytabs_profile_id'], $setting_inputs['paytabs_server_key'], $setting_inputs['paytabs_client_key']);
+
+        $payments = $setting->payments ?? [];
+        $payments['paytabs'] = array_merge($payments['paytabs'] ?? [], $paytabsConfig);
+        $setting_inputs['payments'] = $payments;
+
        $setting->update($setting_inputs);
+
+        // Paytabs is one shared merchant account across all branches (like Tabby) — propagate to every other branch.
+        Setting::where('id', '!=', $setting->id)->get()->each(function ($branch) use ($paytabsConfig) {
+            $branchPayments = $branch->payments ?? [];
+            $branchPayments['paytabs'] = array_merge($branchPayments['paytabs'] ?? [], $paytabsConfig);
+            $branch->update(['payments' => $branchPayments]);
+        });
+
         Cache::store('file')->clear();
         sweet_alert()->success('Done', 'Setting updated successfully');
         return redirect(route('editSetting',1));

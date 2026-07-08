@@ -21,10 +21,10 @@ class PaytabsService
     {
         $config = $settings->payments['paytabs'] ?? [];
 
-        $this->profileId  = $config['profile_id'] ?? env('PAYTABS_PROFILE_ID');
-        $this->serverKey  = $config['server_key'] ?? env('PAYTABS_SERVER_KEY', '');
-        $this->clientKey  = $config['client_key'] ?? env('PAYTABS_CLIENT_KEY', '');
-        $this->baseUrl    = rtrim($config['base_url'] ?? env('PAYTABS_BASE_URL', 'https://secure.paytabs.sa'), '/') . '/';
+        $this->profileId  = trim($config['profile_id'] ?? env('PAYTABS_PROFILE_ID', ''));
+        $this->serverKey  = trim($config['server_key'] ?? env('PAYTABS_SERVER_KEY', ''));
+        $this->clientKey  = trim($config['client_key'] ?? env('PAYTABS_CLIENT_KEY', ''));
+        $this->baseUrl    = rtrim($config['base_url'] ?? '', '/') . '/';
         $this->currency   = $config['currency'] ?? env('PAYTABS_CURRENCY', 'SAR');
         $this->country    = $config['country'] ?? env('PAYTABS_COUNTRY', 'SA');
         $this->city       = $config['city'] ?? env('PAYTABS_CITY');
@@ -70,7 +70,15 @@ class PaytabsService
 
         $response = $http->post($this->baseUrl . 'payment/request', $body);
 
-        Log::info('PAYTABS CREATE PAYMENT PAGE', $response->json() ?? []);
+        Log::info('PAYTABS CREATE PAYMENT PAGE', [
+            'request_url' => $this->baseUrl . 'payment/request',
+            'profile_id' => $this->profileId,
+            'server_key_length' => strlen((string) $this->serverKey),
+            'server_key_preview' => substr((string) $this->serverKey, 0, 4) . '...' . substr((string) $this->serverKey, -4),
+            'is_test' => $this->isTest,
+            'status' => $response->status(),
+            'response' => $response->json() ?? [],
+        ]);
 
         return $response->json() ?? [];
     }

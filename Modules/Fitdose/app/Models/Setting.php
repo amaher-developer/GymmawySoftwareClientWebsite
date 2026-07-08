@@ -4,6 +4,7 @@ namespace Modules\Fitdose\Models;
 
 
 use Illuminate\Support\Facades\Cache;
+use Modules\Fitdose\app\Events\SettingUpdated;
 
 class Setting extends GenericModel
 {
