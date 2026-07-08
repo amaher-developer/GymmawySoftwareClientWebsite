@@ -14,6 +14,7 @@ use Modules\Fitdose\Models\MemberSubscription;
 use Modules\Fitdose\Models\MoneyBox;
 use Modules\Fitdose\Models\PaymentOnlineInvoice;
 use Modules\Fitdose\Models\Subscription;
+use Modules\Fitdose\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1639,6 +1640,18 @@ class SubscriptionFrontController extends GenericFrontController
         ]);
     }
 
+    /**
+     * Gateway return/webhook callbacks carry no reliable branch context (no cookies on cross-site
+     * POST, none at all for server-to-server webhooks), so resolve the branch from the invoice's
+     * own subscription instead of trusting $this->mainSettings.
+     */
+    protected function resolveBranchSettingsForInvoice(PaymentOnlineInvoice $paymentInvoice): Setting
+    {
+        $branchId = $paymentInvoice->subscription->branch_setting_id ?? null;
+
+        return ($branchId ? Setting::find($branchId) : null) ?? $this->mainSettings;
+    }
+
     protected function loginMemberAfterOnlinePayment(string $code, string $phone): void
     {
         //try {
@@ -1802,8 +1815,10 @@ class SubscriptionFrontController extends GenericFrontController
         $tranRef    = $paymentInvoice->transaction_id;
         $joiningDate = $paymentInvoice->response_code['joining_date'] ?? Carbon::now()->toDateString();
 
-        // Re-query Paytabs for authoritative status
-        $paytabsService = new PaytabsService($this->mainSettings);
+        // Re-query Paytabs for authoritative status — resolve credentials from the invoice's own
+        // branch, not the visitor's cookie (Paytabs' return is a cross-site POST, so branch/session
+        // cookies with SameSite=Lax never arrive here).
+        $paytabsService = new PaytabsService($this->resolveBranchSettingsForInvoice($paymentInvoice));
         $payment        = $paytabsService->verifyPayment($tranRef);
         $responseStatus = $paytabsService->getResponseStatus($payment);
 
@@ -1858,14 +1873,6 @@ class SubscriptionFrontController extends GenericFrontController
     {
         Log::info('Paytabs IPN received', $request->all());
 
-        $paytabsService = new PaytabsService($this->mainSettings);
-
-        // Validate signature when present (Paytabs form-encoded IPN)
-        if ($request->has('signature') && !$paytabsService->isValidSignature($request->all())) {
-            Log::error('Paytabs IPN signature validation failed');
-            return response()->json(['status' => 'unauthorized'], 401);
-        }
-
         $tranRef = $request->input('tran_ref');
 
         if (!$tranRef) {
@@ -1880,6 +1887,15 @@ class SubscriptionFrontController extends GenericFrontController
         if (!$paymentInvoice) {
             Log::error('Paytabs IPN: Invoice not found', ['tran_ref' => $tranRef]);
             return response()->json(['status' => 'invoice_not_found'], 404);
+        }
+
+        // Webhooks carry no branch/session cookies at all — resolve credentials from the invoice's own branch.
+        $paytabsService = new PaytabsService($this->resolveBranchSettingsForInvoice($paymentInvoice));
+
+        // Validate signature when present (Paytabs form-encoded IPN)
+        if ($request->has('signature') && !$paytabsService->isValidSignature($request->all())) {
+            Log::error('Paytabs IPN signature validation failed');
+            return response()->json(['status' => 'unauthorized'], 401);
         }
 
         // Idempotency — already processed
