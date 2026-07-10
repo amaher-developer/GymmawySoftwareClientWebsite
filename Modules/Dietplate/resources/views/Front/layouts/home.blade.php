@@ -370,6 +370,30 @@
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    .coming-soon-msg {
+        padding: 60px 20px;
+        background: rgba(126,76,138,0.04);
+        border-radius: 16px;
+        border: 2px dashed rgba(126,76,138,0.2);
+    }
+    .coming-soon-icon {
+        font-size: 52px;
+        color: #7e4c8a;
+        opacity: 0.45;
+        display: block;
+        margin-bottom: 18px;
+    }
+    .coming-soon-msg h4 {
+        color: #7e4c8a;
+        font-weight: 700;
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+    .coming-soon-msg p {
+        color: #999;
+        font-size: 14px;
+        margin: 0;
+    }
 
     @media only screen and (max-width: 768px) {
         .featured-programs-sec {
@@ -949,11 +973,19 @@
                 <div id="subscription-panel-{{ $category->id }}"
                     class="subscription-tab-panel {{ $index === 0 ? 'active' : '' }}">
                     <div class="row">
-                        @foreach($category->subscriptions as $subscription)
+                        @forelse($category->subscriptions as $subscription)
                         <div class="col-lg-3 col-md-6 d-flex">
                             @include('Dietplate::Front.layouts.partials.subscription_card')
                         </div>
-                        @endforeach
+                        @empty
+                        <div class="col-12">
+                            <div class="coming-soon-msg text-center">
+                                <i class="fa fa-clock-o coming-soon-icon"></i>
+                                <h4>{{ $lang == 'ar' ? 'قريباً' : 'Coming Soon' }}</h4>
+                                <p>{{ $lang == 'ar' ? 'يتم تجهيز باقات هذه الفئة قريباً، ترقبوا!' : 'Plans for this category are being prepared. Stay tuned!' }}</p>
+                            </div>
+                        </div>
+                        @endforelse
                     </div>
                     <div class="text-center" style="margin-top:28px;">
                         <a href="{{ url($langPrefix . '/diet-plan/' . $category->id) }}"
