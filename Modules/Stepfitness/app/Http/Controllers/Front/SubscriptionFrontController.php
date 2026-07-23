@@ -512,7 +512,12 @@ class SubscriptionFrontController extends GenericFrontController
         // member/subscription while this webhook is processing the same invoice.
         // Works regardless of DB storage engine (InnoDB or MyISAM).
         $lockKey = 'tabby_finalize_' . $paymentInvoice->id;
-        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('Tabby webhook: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $paymentInvoice->id,
+            ]);
+            return response()->json(['status' => 'lock_timeout'], 503);
+        }
 
         DB::beginTransaction();
 
@@ -846,7 +851,7 @@ class SubscriptionFrontController extends GenericFrontController
         View::share('currentUser',$this->current_user);
 
         $title = trans('front.invoice');
-        return view('premier::Front.error', compact('title'));
+        return view('stepfitness::Front.error', compact('title'));
     }
     public function tabbyFailure(Request $request){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
@@ -869,7 +874,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $title = trans('front.invoice');
-        return view('premier::Front.tabby_error_failure', compact('title'));
+        return view('stepfitness::Front.tabby_error_failure', compact('title'));
     }
     public function tabbyCancel(Request $request){
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
@@ -889,7 +894,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $title = trans('front.invoice');
-        return view('premier::Front.tabby_error_cancel', compact('title'));
+        return view('stepfitness::Front.tabby_error_cancel', compact('title'));
     }
 
     // tamara
@@ -1167,7 +1172,12 @@ class SubscriptionFrontController extends GenericFrontController
         // Advisory lock — prevents a concurrent browser-redirect from creating a duplicate
         // member/subscription while this webhook is processing the same invoice.
         $lockKey = 'tamara_finalize_' . $paymentInvoice->id;
-        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('Tamara webhook: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $paymentInvoice->id,
+            ]);
+            return response()->json(['status' => 'lock_timeout'], 503);
+        }
 
         DB::beginTransaction();
 
@@ -1316,7 +1326,7 @@ class SubscriptionFrontController extends GenericFrontController
         View::share('currentUser',$this->current_user);
 
         $title = trans('front.invoice');
-        return view('premier::Front.tamara_error_failure', compact('title'));
+        return view('stepfitness::Front.tamara_error_failure', compact('title'));
     }
 
     public function tamaraCancel(){
@@ -1324,7 +1334,7 @@ class SubscriptionFrontController extends GenericFrontController
         View::share('currentUser',$this->current_user);
 
         $title = trans('front.invoice');
-        return view('premier::Front.tamara_error_cancel', compact('title'));
+        return view('stepfitness::Front.tamara_error_cancel', compact('title'));
     }
 
     public function tamaraRefund(Request $request, $invoiceId)
@@ -1409,7 +1419,12 @@ class SubscriptionFrontController extends GenericFrontController
         // Acquire the same advisory lock used by tabbyNotify — guarantees that only one
         // of (webhook / browser-redirect) can enter the finalization section at a time.
         $lockKey = 'tabby_finalize_' . $invoice->id;
-        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('Checkout finalize: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $invoice->id,
+            ]);
+            return null;
+        }
 
         try {
         $result = DB::transaction(function () use ($invoice, $joiningDate, $sessionMember, $subscription) {
@@ -1501,6 +1516,17 @@ class SubscriptionFrontController extends GenericFrontController
         } finally {
             DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
+    }
+
+    /**
+     * Acquire a MySQL advisory lock, waiting up to $timeout seconds.
+     * Returns false (instead of silently proceeding unprotected) if the lock
+     * could not be obtained — callers must treat a false result as "do not proceed".
+     */
+    protected function acquireAdvisoryLock(string $lockKey, int $timeout = 30): bool
+    {
+        $result = DB::selectOne("SELECT GET_LOCK(?, ?) as locked", [$lockKey, $timeout]);
+        return $result && (int) $result->locked === 1;
     }
 
     protected function createMoneyBoxEntry(PaymentOnlineInvoice $invoice, Member $member, int $type): void
@@ -1783,7 +1809,12 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Advisory lock — prevents concurrent browser-redirect and IPN from creating duplicates
         $lockKey = 'paytabs_finalize_' . $paymentInvoice->id;
-        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('Paytabs IPN: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $paymentInvoice->id,
+            ]);
+            return response()->json(['status' => 'lock_timeout'], 503);
+        }
 
         DB::beginTransaction();
 
@@ -1893,7 +1924,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $title = trans('front.invoice');
-        return view('premier::Front.paytabs_error_cancel', compact('title'));
+        return view('stepfitness::Front.paytabs_error_cancel', compact('title'));
     }
 
     public function paytabsFailure(Request $request)
@@ -1917,7 +1948,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         $title = trans('front.invoice');
-        return view('premier::Front.paytabs_error_failure', compact('title'));
+        return view('stepfitness::Front.paytabs_error_failure', compact('title'));
     }
 
 
