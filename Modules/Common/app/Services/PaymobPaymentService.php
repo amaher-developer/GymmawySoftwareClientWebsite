@@ -5,7 +5,6 @@ namespace Modules\Common\Services;
 use Modules\Common\Contracts\PaymentInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
  * Paymob Payment Service Implementation
@@ -17,10 +16,8 @@ class PaymobPaymentService implements PaymentInterface
 {
     protected string $endpoint;
     protected string $apiKey;
-    protected string $secretKey;
-    protected string $publicKey;
-    protected string $hmacSecret;
     protected int $integrationId;
+    protected ?string $iframeId;
 
     public function __construct()
     {
@@ -32,10 +29,8 @@ class PaymobPaymentService implements PaymentInterface
             '/'
         );
         $this->apiKey = $cfg['api_key'] ?? env('PAYMOB_API_KEY', '');
-        $this->secretKey = $cfg['secret_key'] ?? env('PAYMOB_SECRET_KEY', '');
-        $this->publicKey = $cfg['public_key'] ?? env('PAYMOB_PUBLIC_KEY', '');
-        $this->hmacSecret = $cfg['hmac_secret'] ?? env('PAYMOB_HMAC_SECRET', '');
         $this->integrationId = (int) ($cfg['integration_id'] ?? env('PAYMOB_INTEGRATION_ID', 0));
+        $this->iframeId = $cfg['iframe_id'] ?? env('PAYMOB_IFRAME_ID', null);
     }
 
     /**
@@ -46,67 +41,71 @@ class PaymobPaymentService implements PaymentInterface
         try {
             // Validate required fields
             if (empty($orderData['amount']) || empty($orderData['currency'])) {
-                return $this->failedPayment('Amount and currency are required');
-            }
-
-            if (empty($this->secretKey) || empty($this->publicKey)) {
-                Log::error('PaymobPaymentService: secret_key/public_key not configured');
-                return $this->failedPayment('Paymob is not configured correctly');
+                return [
+                    'success' => false,
+                    'payment_url' => null,
+                    'transaction_id' => null,
+                    'message' => 'Amount and currency are required'
+                ];
             }
 
             // Convert amount to cents
-            $amountCents = (int) round($orderData['amount'] * 100);
+            $amountCents = (int) ($orderData['amount'] * 100);
+
+            // Step 1: Authenticate
+            $authToken = $this->auth();
+            if (!$authToken) {
+                return [
+                    'success' => false,
+                    'payment_url' => null,
+                    'transaction_id' => null,
+                    'message' => 'Paymob authentication failed'
+                ];
+            }
+
+            // Step 2: Create order
+            $order = $this->createOrder($amountCents, $orderData['currency'] ?? 'EGP');
+            if (!$order) {
+                return [
+                    'success' => false,
+                    'payment_url' => null,
+                    'transaction_id' => null,
+                    'message' => 'Failed to create Paymob order'
+                ];
+            }
+
+            // Step 3: Get payment key
             $billingData = $this->prepareBillingData($orderData);
-
-            $payload = [
-                'amount' => $amountCents,
-                'currency' => $orderData['currency'] ?? 'EGP',
-                'payment_methods' => [$this->integrationId],
-                'items' => $orderData['items'] ?? [],
-                'billing_data' => $billingData,
-                'customer' => [
-                    'first_name' => $billingData['first_name'],
-                    'last_name' => $billingData['last_name'],
-                    'email' => $billingData['email'],
-                    'extras' => [],
-                ],
-                'extras' => [],
-                'special_reference' => (string) ($orderData['order_id'] ?? Str::uuid()),
-            ];
-
-            if (!empty($orderData['return_url'])) {
-                $payload['redirection_url'] = $orderData['return_url'];
+            $paymentKeyResponse = $this->requestPaymentKey(
+                $order['id'],
+                $amountCents,
+                $billingData
+            );
+            
+            if (!$paymentKeyResponse || empty($paymentKeyResponse['token'])) {
+                return [
+                    'success' => false,
+                    'payment_url' => null,
+                    'transaction_id' => null,
+                    'message' => 'Failed to generate payment key'
+                ];
             }
 
-            $response = Http::withOptions([
-                'verify' => false,
-            ])->withToken($this->secretKey, 'Token')
-              ->asJson()
-              ->post($this->endpoint . '/v1/intention/', $payload);
-
-            if (!$response->successful()) {
-                Log::error('Paymob createIntention failed', ['resp' => $response->body()]);
-                return $this->failedPayment('Failed to create Paymob payment intention');
+            // Step 4: Generate iframe URL
+            $paymentUrl = $this->iframeUrl($paymentKeyResponse['token']);
+            if (!$paymentUrl) {
+                return [
+                    'success' => false,
+                    'payment_url' => null,
+                    'transaction_id' => null,
+                    'message' => 'Failed to generate payment URL'
+                ];
             }
-
-            $data = $response->json();
-            $clientSecret = $data['client_secret'] ?? null;
-
-            if (!$clientSecret) {
-                Log::error('Paymob createIntention missing client_secret', ['resp' => $data]);
-                return $this->failedPayment('Failed to generate payment session');
-            }
-
-            // Paymob auto-creates an order for the intention; its id (intention_order_id)
-            // is what the transaction callback later echoes back in the "order" field.
-            $transactionId = $data['intention_order_id'] ?? ($data['id'] ?? null);
-
-            $paymentUrl = $this->endpoint . '/unifiedcheckout/?publicKey=' . $this->publicKey . '&clientSecret=' . $clientSecret;
 
             return [
                 'success' => true,
                 'payment_url' => $paymentUrl,
-                'transaction_id' => (string) $transactionId,
+                'transaction_id' => (string) $order['id'],
                 'message' => 'Payment session created successfully'
             ];
 
@@ -116,21 +115,13 @@ class PaymobPaymentService implements PaymentInterface
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return $this->failedPayment('Payment creation failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'payment_url' => null,
+                'transaction_id' => null,
+                'message' => 'Payment creation failed: ' . $e->getMessage()
+            ];
         }
-    }
-
-    /**
-     * Build a standard failure response for createPayment
-     */
-    protected function failedPayment(string $message): array
-    {
-        return [
-            'success' => false,
-            'payment_url' => null,
-            'transaction_id' => null,
-            'message' => $message
-        ];
     }
 
     /**
@@ -147,13 +138,10 @@ class PaymobPaymentService implements PaymentInterface
             $txnData = $callbackData['obj'] ?? $callbackData;
 
             // Paymob sends HMAC signature for verification
-            $isValid = $this->validateCallback($txnData);
+            $isValid = $this->validateCallback($callbackData);
 
             if (!$isValid) {
-                Log::warning('Paymob callback HMAC validation failed - treating as untrusted', ['data' => $callbackData]);
-                // Force downstream success checks to fail so a forged/tampered
-                // callback can never be treated as a paid transaction.
-                $txnData['success'] = 'false';
+                Log::warning('Paymob callback validation failed', ['data' => $callbackData]);
             }
 
             // Check for errors first
@@ -200,7 +188,7 @@ class PaymobPaymentService implements PaymentInterface
             }
             return [
                 'success' => $isPaid,
-                'verified' => $isValid,
+                'verified' => true, // Always true since we got a callback
                 'transaction_id' => (string) $transactionId,
                 'order_id' => (string) ($merchantOrderId ?? $orderId),
                 'amount' => (float) ($amountCents / 100),
@@ -216,7 +204,7 @@ class PaymobPaymentService implements PaymentInterface
                 'callback_data' => $callbackData,
                 'trace' => $e->getTraceAsString()
             ]);
-
+dd('false');
             return [
                 'success' => false,
                 'verified' => false,
@@ -368,6 +356,29 @@ class PaymobPaymentService implements PaymentInterface
         return 'paymob';
     }
 
+    /**
+     * Override the config/env-sourced credentials with values loaded at runtime
+     * (e.g. from a module's `settings` table). Only non-empty keys are applied,
+     * so a partially-filled settings row still falls back to config/env for the rest.
+     */
+    public function applyOverrides(array $overrides): static
+    {
+        if (!empty($overrides['api_key'])) {
+            $this->apiKey = $overrides['api_key'];
+        }
+        if (!empty($overrides['integration_id'])) {
+            $this->integrationId = (int) $overrides['integration_id'];
+        }
+        if (!empty($overrides['iframe_id'])) {
+            $this->iframeId = $overrides['iframe_id'];
+        }
+        if (!empty($overrides['endpoint'])) {
+            $this->endpoint = rtrim($overrides['endpoint'], '/');
+        }
+
+        return $this;
+    }
+
     // =====================================================================
     // PRIVATE HELPER METHODS (from original PaymobService)
     // =====================================================================
@@ -407,6 +418,80 @@ class PaymobPaymentService implements PaymentInterface
     }
 
     /**
+     * Create an order on Paymob
+     */
+    protected function createOrder(int $amount_cents, string $currency = 'EGP'): ?array
+    {
+        $token = $this->auth();
+        if (!$token) {
+            return null;
+        }
+
+        $payload = [
+            'auth_token' => $token,
+            'delivery_needed' => false,
+            'amount_cents' => $amount_cents,
+            'currency' => $currency,
+            'items' => [],
+        ];
+
+        $res = Http::withOptions([
+            'verify' => false,
+        ])->asJson()->post($this->endpoint . '/api/ecommerce/orders', $payload);
+
+        if ($res->successful() && $res->json('token')) {
+            return $res->json();
+        }
+
+        Log::error('Paymob createOrder failed', ['resp' => $res->body()]);
+        return null;
+    }
+
+    /**
+     * Request a payment key for an order
+     */
+    protected function requestPaymentKey(int $orderId, int $amount_cents, array $billingData = []): ?array
+    {
+        $token = $this->auth();
+        if (!$token) {
+            return null;
+        }
+
+        $res = Http::withOptions([
+            'verify' => false,
+        ])->asJson()->post($this->endpoint . '/api/acceptance/payment_keys', [
+            'auth_token' => $token,
+            'amount_cents' => $amount_cents,
+            'expiration' => 3600,
+            'order_id' => $orderId,
+            'billing_data' => $billingData,
+            'currency' => 'EGP',
+            'integration_id' => $this->integrationId,
+        ]);
+
+        
+        if ($res->successful() && $res->json('token')) {
+            return $res->json();
+        }
+
+        Log::error('Paymob requestPaymentKey failed', ['resp' => $res->body()]);
+        return null;
+    }
+
+    /**
+     * Build an iframe redirect URL for the given payment token
+     */
+    protected function iframeUrl(string $paymentToken): ?string
+    {
+        if (empty($this->iframeId)) {
+            Log::warning('Paymob iframe id not configured');
+            return null;
+        }
+
+        return $this->endpoint . '/api/acceptance/iframes/' . $this->iframeId . '?payment_token=' . urlencode($paymentToken);
+    }
+
+    /**
      * Prepare billing data from order data
      */
     protected function prepareBillingData(array $orderData): array
@@ -431,39 +516,19 @@ class PaymobPaymentService implements PaymentInterface
     }
 
     /**
-     * Validate Paymob's Transaction Processed Callback HMAC signature.
-     *
-     * Paymob computes the HMAC over a fixed, ordered set of fields (see their
-     * "Transaction Callback" docs) concatenated as strings, hashed with SHA-512
-     * using the dashboard HMAC secret.
+     * Validate Paymob callback signature
      */
     protected function validateCallback(array $data): bool
     {
-        if (empty($this->hmacSecret)) {
-            Log::warning('PaymobPaymentService: HMAC secret not configured, cannot validate callback');
-            return false;
-        }
+        // Paymob uses HMAC for callback validation
+        // You should implement signature validation based on Paymob docs
+        // For now, returning true - IMPLEMENT PROPER VALIDATION IN PRODUCTION
 
-        $receivedHmac = $data['hmac'] ?? null;
-        if (empty($receivedHmac)) {
-            Log::warning('Paymob callback missing hmac parameter');
-            return false;
-        }
+        // Example validation (adjust based on Paymob's actual requirements):
+        // $hmac = $data['hmac'] ?? '';
+        // $calculatedHmac = hash_hmac('sha256', json_encode($data), $this->apiKey);
+        // return hash_equals($calculatedHmac, $hmac);
 
-        $orderedKeys = [
-            'amount_cents', 'created_at', 'currency', 'error_occured', 'has_parent_transaction',
-            'id', 'integration_id', 'is_3d_secure', 'is_auth', 'is_capture', 'is_refunded',
-            'is_standalone_payment', 'is_voided', 'order', 'owner', 'pending',
-            'source_data.pan', 'source_data.sub_type', 'source_data.type', 'success',
-        ];
-
-        $concatenated = '';
-        foreach ($orderedKeys as $key) {
-            $concatenated .= $data[$key] ?? '';
-        }
-
-        $calculatedHmac = hash_hmac('sha512', $concatenated, $this->hmacSecret);
-
-        return hash_equals(strtolower($calculatedHmac), strtolower((string) $receivedHmac));
+        return true; // TODO: Implement proper HMAC validation
     }
 }

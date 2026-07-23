@@ -17,7 +17,9 @@ use App\Modules\Cakorinas\app\Models\ReservationMember;
 use App\Modules\Cakorinas\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Modules\Common\Services\GymmawyNotificationService;
@@ -210,7 +212,7 @@ class SubscriptionFrontController extends GenericFrontController
         ];
         
         // Use PaymentServiceFactory to get Paymob service
-        $paymentService = PaymentServiceFactory::make('Cakorinas');
+        $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings);
         $result = $paymentService->createPayment($orderData);
 
         if (!$result['success']) {
@@ -246,7 +248,7 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         if($payment_invoice){
-            $paymentService = PaymentServiceFactory::make('Cakorinas');
+            $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings);
             $verificationResult = $paymentService->verifyPayment($request->all());
 
             if(@$verificationResult['raw_data'] && (@$verificationResult['raw_data']['success'] == "true")){
@@ -478,7 +480,7 @@ class SubscriptionFrontController extends GenericFrontController
             'return_url' => route('paymob-verify-payment', ['payment_id' => $unique_id]),
         ];
         // Use PaymentServiceFactory to get Paymob service
-        $paymentService = PaymentServiceFactory::make('Cakorinas');
+        $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings);
         $result = $paymentService->createPayment($orderData);
 
         if (!$result['success']) {
@@ -528,7 +530,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         if($payment_invoice){
             // Use PaymentServiceFactory to get Paymob service
-            $paymentService = PaymentServiceFactory::make('Cakorinas');
+            $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings);
 
             // Verify payment with Paymob - pass all request data
             $verificationResult = $paymentService->verifyPayment($request->all());
@@ -631,6 +633,290 @@ class SubscriptionFrontController extends GenericFrontController
         }
 
         return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+    }
+
+    /**
+     * Paymob Intention API ("Flash" / Unified Checkout) — new integration path.
+     * Does not replace paymob_payment()/paymob_payment_verify() above.
+     */
+    public function paymob_intention_payment($subscription = [], $member = [])
+    {
+        $unique_id = uniqid();
+
+        $paymentOnlineInvoice = PaymentOnlineInvoice::create([
+            'payment_id' => $unique_id,
+            'member_id' => @$this->current_user->id,
+            'status' => @Constants::PEND,
+            'subscription_id' => @$member['subscription_id'],
+            'name' => $member['name'],
+            'email' => $member['email'],
+            'phone' => $member['phone'],
+            'dob' => $member['dob'],
+            'address' => $member['address'],
+            'gender' => $member['gender'],
+            'amount' => $member['amount'],
+            'vat' => $member['vat'],
+            'vat_percentage' => $member['vat_percentage'],
+            'payment_method' => $member['payment_method'],
+            'start_date' => @$member['start_date'],
+        ]);
+
+        $orderData = [
+            'amount' => @$subscription['price'],
+            'currency' => 'EGP',
+            'order_id' => (string) $paymentOnlineInvoice->id,
+            'customer' => [
+                'name' => $member['name'],
+                'email' => $member['email'] ?? 'guest@example.com',
+                'phone' => $member['phone'],
+            ],
+            'items' => [
+                [
+                    'name' => $subscription['name'],
+                    'description' => @$subscription['content'],
+                    'amount' => (int) (@$subscription['price'] * 100),
+                    'quantity' => 1,
+                ]
+            ],
+            'notification_url' => route('api.paymob-intention-notify'),
+            'return_url' => route('paymob-intention-verify-payment', ['payment_id' => $unique_id]),
+        ];
+
+        $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings, 'paymob_intention');
+        $result = $paymentService->createPayment($orderData);
+
+        if (!$result['success']) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return route('subscription-payment', ['id' => $subscription['id']]);
+        }
+
+        $paymentOnlineInvoice->transaction_id = $result['transaction_id'];
+        $paymentOnlineInvoice->save();
+
+        return $result['payment_url'];
+    }
+
+    /**
+     * Browser return handler for Paymob Intention Unified Checkout.
+     */
+    public function paymob_intention_payment_verify(Request $request)
+    {
+        $unique_id = $request->input('payment_id');
+        $transaction_id = $request->input('id');
+        $order_id = $request->input('order');
+
+        $payment_invoice = null;
+        if ($unique_id) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('payment_id', $unique_id)->first();
+        }
+        if (!$payment_invoice && $transaction_id) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $transaction_id)->first();
+        }
+        if (!$payment_invoice && $order_id) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $order_id)->first();
+        }
+
+        if (!$payment_invoice) {
+            return \redirect()->route('error-payment');
+        }
+
+        if ($payment_invoice->status === Constants::SUCCESS) {
+            return \redirect()->route('invoice', ['id' => @$payment_invoice->member_subscription_id]);
+        }
+
+        $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings, 'paymob_intention');
+        $verificationResult = $paymentService->verifyPayment($request->all());
+
+        if (!$verificationResult['success']) {
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = $verificationResult;
+            $payment_invoice->save();
+            return \redirect()->route('error-payment', ['payment_id' => $unique_id]);
+        }
+
+        $sessionMember = @request()->session()->get('user');
+        $member_subscription = $this->finalizePaymobIntentionInvoice($payment_invoice, $verificationResult, $sessionMember);
+
+        if (!$member_subscription) {
+            return \redirect()->route('error-payment', ['payment_id' => $unique_id]);
+        }
+
+        return \redirect()->route('invoice', ['id' => $member_subscription->id]);
+    }
+
+    /**
+     * Server-to-server webhook handler for Paymob Intention notification_url.
+     */
+    public function paymobIntentionNotify(Request $request)
+    {
+        $payload = $request->all();
+        $txnData = $payload['obj'] ?? $payload;
+
+        $transaction_id = $txnData['id'] ?? null;
+        $order = $txnData['order'] ?? null;
+        $orderId = is_array($order) ? ($order['id'] ?? null) : $order;
+        $specialReference = is_array($order) ? ($order['merchant_order_id'] ?? null) : ($payload['special_reference'] ?? null);
+
+        $payment_invoice = null;
+        if ($transaction_id) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $transaction_id)->first();
+        }
+        if (!$payment_invoice && $orderId) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('transaction_id', $orderId)->first();
+        }
+        if (!$payment_invoice && $specialReference) {
+            $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                $q->withTrashed();
+            }])->where('id', $specialReference)->first();
+        }
+
+        if (!$payment_invoice) {
+            Log::warning('Paymob Intention webhook: no matching invoice', ['payload' => $payload]);
+            return response()->json(['status' => 'ignored'], 200);
+        }
+
+        if ($payment_invoice->status === Constants::SUCCESS) {
+            return response()->json(['status' => 'already_processed'], 200);
+        }
+
+        $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings, 'paymob_intention');
+        $verificationResult = $paymentService->verifyPayment($payload);
+
+        if (!$verificationResult['success']) {
+            $payment_invoice->status = Constants::FAILED;
+            $payment_invoice->response_code = $verificationResult;
+            $payment_invoice->save();
+            return response()->json(['status' => 'payment_failed'], 200);
+        }
+
+        $member_subscription = $this->finalizePaymobIntentionInvoice($payment_invoice, $verificationResult);
+
+        if (!$member_subscription) {
+            return response()->json(['status' => 'error'], 500);
+        }
+
+        return response()->json(['status' => 'success'], 200);
+    }
+
+    /**
+     * Idempotently creates the member/subscription/money-box records for a paid
+     * Paymob Intention invoice. Guarded by an advisory lock so that the browser
+     * return (paymob_intention_payment_verify) and the webhook
+     * (paymobIntentionNotify) can never both create duplicate records when they
+     * race each other.
+     */
+    protected function finalizePaymobIntentionInvoice(PaymentOnlineInvoice $payment_invoice, array $verificationResult, $sessionMember = null): ?MemberSubscription
+    {
+        $lockKey = 'paymob_intention_finalize_' . $payment_invoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
+        try {
+            return DB::transaction(function () use ($payment_invoice, $verificationResult, $sessionMember) {
+                $invoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
+                    $q->withTrashed();
+                }])->where('id', $payment_invoice->id)->lockForUpdate()->first();
+
+                if ($invoice->member_subscription_id) {
+                    return MemberSubscription::find($invoice->member_subscription_id);
+                }
+
+                $member = ($sessionMember && @$sessionMember->id) ? $sessionMember : null;
+
+                if (!$member && $invoice->member_id) {
+                    $member = Member::find($invoice->member_id);
+                }
+
+                if (!$member && $invoice->phone) {
+                    $member = Member::where('phone', $invoice->phone)->first();
+                }
+
+                $type_of_payment = Constants::RenewMember;
+                $generatedCode = null;
+
+                if (!$member) {
+                    $generatedCode = str_pad(((int) Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                    $member = Member::create([
+                        'code' => $generatedCode,
+                        'name' => $invoice->name,
+                        'gender' => $invoice->gender,
+                        'phone' => $invoice->phone,
+                        'address' => $invoice->address,
+                        'dob' => $invoice->dob,
+                    ]);
+                    $type_of_payment = Constants::CreateMember;
+                }
+
+                $start_date = $invoice->start_date ? Carbon::parse($invoice->start_date) : Carbon::now();
+                $member_subscription = MemberSubscription::create([
+                    'subscription_id' => $invoice->subscription_id,
+                    'member_id' => $member->id,
+                    'workouts' => @$invoice->subscription->workouts,
+                    'amount_paid' => $invoice->amount,
+                    'vat' => $invoice->vat,
+                    'vat_percentage' => $invoice->vat_percentage,
+                    'joining_date' => $start_date->toDateTimeString(),
+                    'expire_date' => $start_date->copy()->addDays(@$invoice->subscription->period),
+                    'status' => Constants::Active,
+                    'freeze_limit' => @$invoice->subscription->freeze_limit,
+                    'number_times_freeze' => @$invoice->subscription->number_times_freeze,
+                    'amount_before_discount' => @$invoice->subscription->price,
+                    'payment_type' => Constants::ONLINE_PAYMENT,
+                ]);
+
+                $invoice->status = Constants::SUCCESS;
+                $invoice->response_code = $verificationResult;
+                $invoice->member_subscription_id = $member_subscription->id;
+                $invoice->save();
+
+                $amount_box = MoneyBox::orderBy('id', 'desc')->first();
+                $amount_after = self::amountAfter(@$amount_box->amount, @$amount_box->amount_before, (int) @$amount_box->operation);
+                $notes = trans('sw.member_moneybox_add_msg', [
+                    'subscription' => @$invoice->subscription->name,
+                    'member' => $member->name,
+                    'amount_paid' => $invoice->amount,
+                    'amount_remaining' => 0,
+                ]);
+
+                if ($invoice->vat_percentage) {
+                    $notes .= ' - ' . trans('sw.vat_added');
+                }
+
+                MoneyBox::create([
+                    'operation' => Constants::Add,
+                    'amount' => $invoice->amount,
+                    'vat' => $invoice->vat,
+                    'amount_before' => $amount_after,
+                    'notes' => $notes,
+                    'member_id' => $member->id,
+                    'type' => $type_of_payment,
+                    'payment_type' => Constants::ONLINE_PAYMENT,
+                    'member_subscription_id' => $invoice->subscription_id,
+                    'online_subscription_id' => $invoice->id,
+                ]);
+
+                if ($generatedCode && $member->phone) {
+                    $auth = new FrontAuthFrontController();
+                    $user = $auth->getSubscriptionInfo($generatedCode, $member->phone);
+                    request()->session()->put('user', $user->member);
+                }
+
+                GymmawyNotificationService::notifyPayment();
+
+                return $member_subscription;
+            });
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
+        }
     }
 
     public function error_payment(){

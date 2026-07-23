@@ -33,4 +33,21 @@ return [
 
     // Default currency
     'currency' => env('PAYMOB_CURRENCY', 'EGP'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Paymob Intention API ("Flash" / Unified Checkout) — additive settings
+    |--------------------------------------------------------------------------
+    |
+    | Used only by PaymobIntentionService. Does not affect the legacy
+    | order/payment-key flow above (PaymobPaymentService / PaymobService).
+    |
+    */
+
+    // Comma-separated integration IDs/slugs offered on the Unified Checkout page.
+    // Falls back to `integration_id` above when left empty.
+    'intention_payment_methods' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('PAYMOB_INTENTION_PAYMENT_METHODS', ''))
+    ))),
 ];

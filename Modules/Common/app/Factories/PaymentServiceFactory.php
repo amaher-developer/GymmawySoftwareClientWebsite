@@ -4,6 +4,7 @@ namespace Modules\Common\Factories;
 
 use Modules\Common\Contracts\PaymentInterface;
 use Modules\Common\Services\PaymobPaymentService;
+use Modules\Common\Services\PaymobIntentionService;
 use Modules\Common\Services\TabbyPaymentService;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +35,8 @@ class PaymentServiceFactory
      */
     protected const PROVIDER_CLASS_MAP = [
         'paymob' => PaymobPaymentService::class,
+        // New Paymob "Flash" / Intention API integration (opt-in via makeProvider('paymob_intention')).
+        'paymob_intention' => PaymobIntentionService::class,
         'tabby' => TabbyPaymentService::class,
     ];
 
@@ -91,6 +94,39 @@ class PaymentServiceFactory
         }
 
         return app($providerClass);
+    }
+
+    /**
+     * Create a payment service and, when available, override its config/env
+     * credentials with values stored in the module's `settings` table
+     * (Setting::first()->payments[$provider]), matching the `payments` JSON
+     * blob convention already used by Fitdose (see Modules/Fitdose/app/Models/Setting.php
+     * and its gateway services). Falls back silently to config/env when the
+     * settings row/column/key is empty or the resolved service has no
+     * applyOverrides() method — existing behavior is unchanged either way.
+     *
+     * @param string $moduleName Module name (e.g. 'Cakorinas')
+     * @param object|null $settings The module's Setting model instance (e.g. $this->mainSettings)
+     * @param string|null $providerOverride Bypass module detection and use this provider directly
+     */
+    public static function makeWithSettings(string $moduleName, $settings = null, ?string $providerOverride = null): PaymentInterface
+    {
+        $service = $providerOverride ? self::makeProvider($providerOverride) : self::make($moduleName);
+
+        if ($settings && method_exists($service, 'applyOverrides')) {
+            $provider = $providerOverride ?? self::getProviderForModule($moduleName);
+            $payments = (array) ($settings->payments ?? []);
+
+            // Paymob Intention shares the same merchant account as legacy Paymob,
+            // so fall back to the shared 'paymob' key when there's no dedicated one.
+            $dbConfig = $payments[$provider] ?? (str_starts_with($provider, 'paymob') ? ($payments['paymob'] ?? []) : []);
+
+            if (is_array($dbConfig) && array_filter($dbConfig)) {
+                $service->applyOverrides($dbConfig);
+            }
+        }
+
+        return $service;
     }
 
     /**

@@ -36,6 +36,7 @@ class Constants {
     const PAYMOB = 3;
     const TAMARA = 4;
     const PAYTABS_STANDARD = 5;
+    const PAYMOB_INTENTION = 6;
 
     const CreateMember = 0;
     const RenewMember = 1;

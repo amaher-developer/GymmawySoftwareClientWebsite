@@ -193,6 +193,10 @@ class SubscriptionPaymentFrontController extends GenericFrontController
                 // Use Paymob payment
                 $payment_url = $subscriptionController->paymob_payment($subscription->toArray(), $member_data);
                 return redirect($payment_url);
+            } elseif(@(int)$request->payment_method == Constants::PAYMOB_INTENTION){
+                // Use Paymob Intention API ("Flash" / Unified Checkout) payment
+                $payment_url = $subscriptionController->paymob_intention_payment($subscription->toArray(), $member_data);
+                return redirect($payment_url);
             } else {
                 \Session::flash('error', trans('front.error_in_data'));
                 return redirect()->back();
@@ -258,7 +262,7 @@ class SubscriptionPaymentFrontController extends GenericFrontController
 
         if($payment_invoice){
             // Use PaymentServiceFactory to get Paymob service
-            $paymentService = PaymentServiceFactory::make('Cakorinas');
+            $paymentService = PaymentServiceFactory::makeWithSettings('Cakorinas', $this->mainSettings);
 
             // Verify payment with Paymob - pass all request data
             $verificationResult = $paymentService->verifyPayment($request->all());

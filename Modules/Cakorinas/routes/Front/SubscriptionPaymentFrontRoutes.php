@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionPaymentFrontController;
+use App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController;
 
 Route::name('subscription-payment')->get('/subscription-payment/{id}', [SubscriptionPaymentFrontController::class, 'show']);
 Route::name('invoice-payment')->get('/invoice-payment/{id}', [SubscriptionPaymentFrontController::class, 'invoice']);
@@ -13,6 +14,9 @@ Route::name('invoice-return')->any('/invoice-return-payment', [SubscriptionPayme
 // Paymob payment routes
 Route::name('paymob-verify-payment')->any('/paymob/verify-payment', [SubscriptionPaymentFrontController::class, 'paymobVerifyPayment']);
 Route::name('error-payment')->get('/error-payment', [SubscriptionPaymentFrontController::class, 'error_payment']);
+
+// Paymob Intention API ("Flash" / Unified Checkout) — new integration, browser-return handler
+Route::name('paymob-intention-verify-payment')->any('/paymob-intention/verify-payment', [SubscriptionFrontController::class, 'paymob_intention_payment_verify']);
 
 
 

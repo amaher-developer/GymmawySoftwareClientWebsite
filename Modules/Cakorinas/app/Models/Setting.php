@@ -11,7 +11,7 @@ class Setting extends GenericModel
     protected $guarded = ['id'];
     protected $appends = ['name','address', 'logo', 'logo_white', 'logo_thumb', 'about', 'terms', 'meta_description', 'meta_keywords'];
     public static $uploads_path = 'uploads/settings/';
-    protected $casts = ['images' => 'json', 'cover_images' => 'json', 'vat_details' => 'json', 'reservation_details' => 'json', 'wa_details' => 'json'];
+    protected $casts = ['images' => 'json', 'cover_images' => 'json', 'vat_details' => 'json', 'reservation_details' => 'json', 'wa_details' => 'json', 'payments' => 'json'];
 
     protected $dispatchesEvents = ['updated' => SettingUpdated::class];
 
