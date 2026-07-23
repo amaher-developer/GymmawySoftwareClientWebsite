@@ -34,6 +34,6 @@ class SubscriptionCategory extends GenericModel
 
     public function subscriptions()
     {
-        return $this->hasMany(Subscription::class, 'category_id');
+        return $this->hasMany(Subscription::class, 'subscription_category_id');
     }
 }

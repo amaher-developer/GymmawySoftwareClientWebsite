@@ -954,7 +954,7 @@
                     <span class="subscription-tab-name">{{ $category->name }}</span>
                 </button>
                 @endforeach
-                @if($hasUncategorized)
+                {{-- @if($hasUncategorized)
                 <button type="button"
                     class="subscription-tab-item"
                     data-target="#subscription-panel-other">
@@ -963,7 +963,7 @@
                     </span>
                     <span class="subscription-tab-name">{{trans('front.other_subscriptions')}}</span>
                 </button>
-                @endif
+                @endif --}}
             </div>
             @endif
 
@@ -998,7 +998,7 @@
                 </div>
                 @endforeach
 
-                @if($hasUncategorized)
+                {{-- @if($hasUncategorized)
                 <div id="subscription-panel-other"
                     class="subscription-tab-panel {{ !$hasCats ? 'active' : '' }}">
                     <div class="row">
@@ -1009,7 +1009,7 @@
                         @endforeach
                     </div>
                 </div>
-                @endif
+                @endif --}}
             </div>
 
         </div>

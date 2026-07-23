@@ -55,7 +55,15 @@ class MainFrontController extends GenericFrontController
             }])
             ->orderBy('id', 'desc')
             ->get();
-        $uncategorizedSubscriptions = $subscriptions->whereNull('category_id')->values();
+        // Cap displayed plans per category — sliced in PHP rather than ->limit() in the
+        // eager-load closure, since limit() on a hasMany with() applies across all parent
+        // categories combined (not per-category) and would under-fill some categories.
+        $subscriptionCategories->each(function ($category) {
+            $category->setRelation('subscriptions', $category->subscriptions->take(8));
+        });
+        // Same 8-plan cap applied to the "Other" tab, which displays uncategorized
+        // subscriptions the same way as a regular category panel.
+        $uncategorizedSubscriptions = $subscriptions->whereNull('category_id')->take(8)->values();
         $activities = Activity::where('is_web', true)->orderBy('id', 'desc')->get();
         //$pt_classes = PTClass::where('is_web', true)->orderBy('id', 'desc')->get();
         $stores = Store::where('is_web', true)->limit(5)->orderBy('id', 'desc')->get();
