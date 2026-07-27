@@ -164,9 +164,16 @@ class SubscriptionFrontController extends GenericFrontController
 
             $member_data['subscription_id'] = @$request->subscription_id;
             $member_data['payment_method'] = @$request->payment_method;
-            $member_data['amount'] = @$request->amount;
-            $member_data['vat_percentage'] = @$request->vat_percentage;
-            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
+            $member_data['amount'] = (float)(@$request->amount ?? 0);
+            $member_data['vat_percentage'] = (float)(@$request->vat_percentage ?? 0);
+            // amount is VAT-inclusive (sent as such from the checkout form) — derive the VAT portion.
+            $vatPct = (float)(@$request->vat_percentage ?? 0);
+            if ($vatPct > 0) {
+                $basePrice = (float)(@$request->amount ?? 0) / (1 + $vatPct / 100);
+                $member_data['vat'] = round((float)(@$request->amount ?? 0) - $basePrice, 2);
+            } else {
+                $member_data['vat'] = 0;
+            }
 
             if(@$request->payment_method == Constants::MADA){
                 // paytabs
@@ -413,7 +420,7 @@ class SubscriptionFrontController extends GenericFrontController
         $payment = $payment->createSession($order_data);
         $status = @$payment->status;
 
-        $errorRoute = route('subscription-payment', ['id' => $subscription['id']]);
+        $errorRoute = route('subscription', ['id' => $subscription['id']]);
 
         if($status == Constants::REJECTED){
             \Session::flash('error', trans('front.'.@$payment->configuration->products->installments->rejection_reason));
@@ -709,7 +716,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription-payment', [
+            return redirect()->route('subscription', [
                 'id' => $paymentInvoice->subscription_id
             ]);
         }
@@ -731,7 +738,7 @@ class SubscriptionFrontController extends GenericFrontController
                 'invoice_id' => $invoiceId,
             ]);
             \Session::flash('info', trans('front.payment_processing'));
-            return redirect()->route('subscription-payment', [
+            return redirect()->route('subscription', [
                 'id' => $paymentInvoice->subscription_id
             ]);
         }
@@ -758,7 +765,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $paymentInvoice->save();
 
                 \Session::flash('error', trans('front.error_in_data'));
-                return redirect()->route('subscription-payment', [
+                return redirect()->route('subscription', [
                     'id' => $paymentInvoice->subscription_id
                 ]);
             }
@@ -772,7 +779,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription-payment', [
+            return redirect()->route('subscription', [
                 'id' => $paymentInvoice->subscription_id
             ]);
         }
@@ -820,7 +827,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $invoice->save();
 
                 \Session::flash('error', trans('front.tabby_error_failure_body_msg'));
-                return redirect()->route('subscription-payment', ['id' => $invoice->subscription_id]);
+                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
             }
         }
 
@@ -834,7 +841,7 @@ class SubscriptionFrontController extends GenericFrontController
             $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
             if ($invoice) {
                 \Session::flash('error', trans('front.tabby_error_cancel_body_msg'));
-                return redirect()->route('subscription-payment', ['id' => $invoice->subscription_id]);
+                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
             }
         }
 
@@ -901,7 +908,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         if (!@$response->checkout_url) {
             \Session::flash('error', trans('front.error_in_data'));
-            return route('subscription-payment', ['id' => $subscription['id']]);
+            return route('subscription', ['id' => $subscription['id']]);
         }
 
         $paymentOnlineInvoice->transaction_id = @$response->order_id;
@@ -946,7 +953,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription-payment', ['id' => $paymentInvoice->subscription_id]);
+            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
         }
 
         $tamaraService = new TamaraService();
@@ -988,7 +995,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $paymentInvoice->save();
 
                 \Session::flash('error', trans('front.error_in_data'));
-                return redirect()->route('subscription-payment', [
+                return redirect()->route('subscription', [
                     'id' => $paymentInvoice->subscription_id
                 ]);
             }
@@ -1002,7 +1009,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription-payment', [
+            return redirect()->route('subscription', [
                 'id' => $paymentInvoice->subscription_id
             ]);
         }
@@ -1574,7 +1581,7 @@ class SubscriptionFrontController extends GenericFrontController
             'response_code'   => ['joining_date' => @$member['joining_date']],
         ]);
 
-        $errorRoute = route('subscription-payment', ['id' => $subscription['id']]);
+        $errorRoute = route('subscription', ['id' => $subscription['id']]);
 
         $paytabsService = new PaytabsService();
         $response = $paytabsService->createPaymentPage([
@@ -1649,7 +1656,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription-payment', ['id' => $paymentInvoice->subscription_id]);
+            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
         }
 
         $paymentInvoice->status = Constants::SUCCESS;
@@ -1844,7 +1851,7 @@ class SubscriptionFrontController extends GenericFrontController
             $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
             if ($invoice) {
                 \Session::flash('error', trans('front.paytabs_error_cancel_body_msg'));
-                return redirect()->route('subscription-payment', ['id' => $invoice->subscription_id]);
+                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
             }
         }
 
@@ -1862,7 +1869,7 @@ class SubscriptionFrontController extends GenericFrontController
                 $invoice->save();
 
                 \Session::flash('error', trans('front.paytabs_error_failure_body_msg'));
-                return redirect()->route('subscription-payment', ['id' => $invoice->subscription_id]);
+                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
             }
         }
 
