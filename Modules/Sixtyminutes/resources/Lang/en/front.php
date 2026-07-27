@@ -55,6 +55,7 @@ return [
     'gymmawy' => 'gymmawy',
     'subscribe' => 'Subscribe',
     'choose_payment_methods' => 'Choose payment methods',
+    'no_payment_methods_available' => 'No payment methods are currently available. Please contact us to complete your subscription.',
     'pay_now' => 'Pay Now',
     'other_subscriptions' => 'Subscriptions',
     'tabby_installment_msg' => 'Pay subscription using Tabby installments',

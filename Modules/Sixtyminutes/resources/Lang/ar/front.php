@@ -56,6 +56,7 @@ return [
     'gymmawy' => 'جيماوي',
     'subscribe' => 'اشترك',
     'choose_payment_methods' => 'اختر طريقة الدفع',
+    'no_payment_methods_available' => 'لا توجد طرق دفع متاحة حاليًا. يرجى التواصل معنا لإتمام اشتراكك.',
     'pay_now' => 'ادفع الان',
     'other_subscriptions' => 'الاشتراكات',
     'tabby_installment_msg' => 'قسط الاشتراك باستخدام تابي',

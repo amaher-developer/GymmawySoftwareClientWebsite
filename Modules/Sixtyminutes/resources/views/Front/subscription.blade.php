@@ -164,9 +164,21 @@
                                 </div>
                                 <br/><br>
                             @endif
+                            @php
+                                // A gateway is only offered if its credentials are actually configured —
+                                // matches Premier's approach of hard-hiding gateways it can't process (Mada
+                                // there is permanently commented out because the old Paytabs package isn't
+                                // installed at all), extended here to a live check for the newer gateways.
+                                $tabbyAvailable = !empty(env('TABBY_PK')) && !empty(env('TABBY_SK'));
+                                $tamaraAvailable = !empty(env('TAMARA_API_TOKEN')) && !empty(env('TAMARA_PUBLIC_KEY'));
+                                $paytabsAvailable = !empty(env('PAYTABS_PROFILE_ID'));
+                                $anyGatewayAvailable = $tabbyAvailable || $tamaraAvailable || $paytabsAvailable;
+                            @endphp
                             <h5>{{trans('front.choose_payment_methods')}}:</h5>
 
-                            <!-- MADA/PayTab Payment Option -->
+                            {{-- MADA/old Paytabs — kept hidden like Premier: the Nafezly Paytabs package it
+                                 depends on isn't installed in this repo, so this gateway can never actually work. --}}
+                            {{--
                             <div class="highlight-text">
                                 <div class="row">
                                     <div class="col-md-1">
@@ -178,18 +190,20 @@
                                         <p><label for="mada">{{trans('front.mada_payment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/visa_logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/visa_logo.svg')}}">
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/mada-logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/mada-logo.svg')}}">
 
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/american_express_logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/american_express_logo.svg')}}">
                                         </p>
                                     </div>
                                 </div>
                             </div>
+                            --}}
 
+                            @if($tabbyAvailable)
                             <!-- Tabby Payment Option -->
                             <div class="highlight-text">
                                 <div class="row">
@@ -202,14 +216,16 @@
                                         <p><label for="tabby">{{trans('front.tabby_installment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/tabby-logo.webp')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/tabby-logo.webp')}}">
                                             <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span>
                                         </p>
                                         <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
+                            @if($tamaraAvailable)
                             <!-- Tamara Payment Option -->
                             <div class="highlight-text">
                                 <div class="row">
@@ -231,7 +247,9 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
+                            @if($paytabsAvailable)
                             <!-- Paytabs Standard Payment Option -->
                             <div class="highlight-text">
                                 <div class="row">
@@ -243,26 +261,33 @@
                                         <p><label for="paytabs">{{trans('front.paytabs_payment_msg')}}</label></p>
                                         <p>
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/assets/images/paytabs-logo.svg')}}"
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/paytabs-logo.svg')}}"
                                                  onerror="this.style.display='none'">
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/visa_logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/visa_logo.svg')}}">
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/assets/images/mastercard-logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/mastercard-logo.svg')}}"
+                                                 onerror="this.style.display='none'">
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/mada-logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/mada-logo.svg')}}">
                                             <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
-                                                 src="{{asset('resources/assets/images/apple-pay-logo.svg')}}">
+                                                 src="{{asset('resources/' . $template_version . '/assets/images/apple-pay-logo.svg')}}"
+                                                 onerror="this.style.display='none'">
                                         </p>
                                         <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
+                            @if($anyGatewayAvailable)
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
                                         type="submit" value="{{trans('front.pay_now')}}" />
                             </div>
+                            @else
+                                <div class="alert alert-danger">{{trans('front.no_payment_methods_available')}}</div>
+                            @endif
                             </form>
                             @endif
                         </div>
@@ -296,7 +321,10 @@
         $priceBeforeVat = (float) $record['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = (float) round($priceBeforeVat + $vatAmount, 2);
+        $tabbyAvailable = !empty(env('TABBY_PK')) && !empty(env('TABBY_SK'));
+        $tamaraAvailable = !empty(env('TAMARA_API_TOKEN')) && !empty(env('TAMARA_PUBLIC_KEY'));
     @endphp
+    @if($tabbyAvailable)
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
     <script>
         new TabbyCard({
@@ -311,6 +339,8 @@
             merchantCode: '{{env("TABBY_MERCHANT_CODE")}}' // required, your Tabby merchant code.
         });
     </script>
+    @endif
+    @if($tamaraAvailable)
     <script>
         window.tamaraWidgetConfig = {
             lang: '{{app()->getLocale()}}',
@@ -319,4 +349,5 @@
         };
     </script>
     <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
+    @endif
 @endsection
