@@ -169,8 +169,8 @@
                                 // matches Premier's approach of hard-hiding gateways it can't process (Mada
                                 // there is permanently commented out because the old Paytabs package isn't
                                 // installed at all), extended here to a live check for the newer gateways.
-                                $tabbyAvailable = !empty(env('TABBY_PK')) && !empty(env('TABBY_SK'));
-                                $tamaraAvailable = !empty(env('TAMARA_API_TOKEN')) && !empty(env('TAMARA_PUBLIC_KEY'));
+                                $tabbyAvailable = !empty(env('TABBY_SK'));
+                                $tamaraAvailable = !empty(env('TAMARA_API_TOKEN'));
                                 $paytabsAvailable = !empty(env('PAYTABS_PROFILE_ID'));
                                 $anyGatewayAvailable = $tabbyAvailable || $tamaraAvailable || $paytabsAvailable;
                             @endphp
@@ -321,8 +321,8 @@
         $priceBeforeVat = (float) $record['price'];
         $vatAmount = ($vatPercentage / 100) * $priceBeforeVat;
         $priceWithVat = (float) round($priceBeforeVat + $vatAmount, 2);
-        $tabbyAvailable = !empty(env('TABBY_PK')) && !empty(env('TABBY_SK'));
-        $tamaraAvailable = !empty(env('TAMARA_API_TOKEN')) && !empty(env('TAMARA_PUBLIC_KEY'));
+        $tabbyAvailable = !empty(env('TABBY_SK'));
+        $tamaraAvailable = !empty(env('TAMARA_API_TOKEN'));
     @endphp
     @if($tabbyAvailable)
     <script src="https://checkout.tabby.ai/tabby-card.js"></script>
