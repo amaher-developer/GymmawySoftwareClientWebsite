@@ -196,6 +196,55 @@
                                 </div>
                             </div>
 
+                            <!-- Tamara Payment Option -->
+                            <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input tamara" id="tamara" type="radio"
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::TAMARA}}">
+                                    </div>
+
+                                    <div class="col-md-11">
+                                        <p><label for="tamara">{{trans('front.tamara_installment_msg')}}</label></p>
+                                        <p>
+                                            <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
+                                                 src="https://cdn.tamara.co/assets/png/tamara-logo-badge-{{ app()->getLocale() == 'ar' ? 'ar' : 'en' }}.png">
+                                            <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tamara_policy_msg')}}</span>
+                                        </p>
+                                        <div class="row col-md-12 col-xs-12" style="padding-top: 10px;">
+                                            <tamara-widget type="tamara-summary" amount="{{$record['price']}}" inline-type="2"></tamara-widget>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paytabs Standard Payment Option -->
+                            <div class="highlight-text">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <input class="form-control radio-input paytabs" id="paytabs" type="radio"
+                                               name="payment_method" value="{{\App\Http\Classes\Constants::PAYTABS_STANDARD}}">
+                                    </div>
+                                    <div class="col-md-11">
+                                        <p><label for="paytabs">{{trans('front.paytabs_payment_msg')}}</label></p>
+                                        <p>
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/paytabs-logo.svg')}}"
+                                                 onerror="this.style.display='none'">
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/visa_logo.svg')}}">
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/mastercard-logo.svg')}}">
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/' . $template_version . '/assets/front/img/mada-logo.svg')}}">
+                                            <img style="width: 120px;padding: 10px;margin-top: 20px;border: solid grey 1px;border-radius: 5px"
+                                                 src="{{asset('resources/assets/images/apple-pay-logo.svg')}}">
+                                        </p>
+                                        <p><span style="font-size: 12px;vertical-align: bottom;">{{trans('front.paytabs_policy_msg')}}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
                                         type="submit" value="{{trans('front.pay_now')}}" />
@@ -236,9 +285,17 @@
             price: {{$record['price']}}, // required, total price or the cart. 2 decimals max for AED|SAR|QAR and 3 decimals max for KWD|BHD.
             size: 'wide', // required, can be also 'wide', depending on the width.
             theme: 'black', // required, can be also 'default'.
-            header: false // if a Payment method name present already.
+            header: false, // if a Payment method name present already.
+            publicKey: '{{env("TABBY_PK")}}', // required, your Tabby public key.
+            merchantCode: '{{env("TABBY_MERCHANT_CODE")}}' // required, your Tabby merchant code.
         });
     </script>
     <script>
+        window.tamaraWidgetConfig = {
+            lang: '{{app()->getLocale()}}',
+            country: '{{env("TAMARA_COUNTRY_CODE", "SA")}}',
+            publicKey: '{{env("TAMARA_PUBLIC_KEY")}}'
+        };
     </script>
+    <script defer src="https://cdn.tamara.co/widget-v2/tamara-widget.js"></script>
 @endsection

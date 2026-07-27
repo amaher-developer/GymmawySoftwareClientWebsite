@@ -161,6 +161,12 @@ class SubscriptionPaymentFrontController extends GenericFrontController
             } else if(@$request->payment_method == Constants::TABBY){
                 // tabby
                 $payment_url = $subscriptionController->tabby_payment($subscription->toArray(), $member_data);
+            } else if(@$request->payment_method == Constants::TAMARA){
+                // tamara
+                $payment_url = $subscriptionController->tamara_payment($subscription->toArray(), $member_data);
+            } else if(@$request->payment_method == Constants::PAYTABS_STANDARD){
+                // paytabs standard
+                $payment_url = $subscriptionController->paytabs_standard_payment($subscription->toArray(), $member_data);
             } else {
                 \Session::flash('error', trans('front.error_in_data'));
                 return redirect()->back();
