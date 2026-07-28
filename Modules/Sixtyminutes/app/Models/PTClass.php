@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Models;
+namespace Modules\Sixtyminutes\Models;
 
 
-use App\Modules\Sixtyminutes\app\Events\SettingUpdated;
+use Modules\Sixtyminutes\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class PTClass extends GenericModel
@@ -27,11 +27,11 @@ class PTClass extends GenericModel
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return @env('APP_URL_MASTER').self::$uploads_path.$image;
+            return asset(self::$uploads_path.$image);
 
         return asset('placeholder_black.png');
     }
-    
+
 
 
 }

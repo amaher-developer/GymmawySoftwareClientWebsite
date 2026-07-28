@@ -1,29 +1,39 @@
 <?php
-
+use Modules\Sixtyminutes\app\Http\Controllers\Admin\GenericAdminController;
+use Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController;
+use Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/payments/verify/{payment?}',[\App\Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
-Route::post('/payments/verify/{payment?}',[\App\Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController::class,'payment_verify'])->name('verify-payment');
-Route::get('/payments/tabby-verify/{payment?}',[\App\Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController::class,'tabby_payment_verify'])->name('tabby-verify-payment');
-Route::get('/payments/error/{payment?}',[\App\Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController::class,'error_payment'])->name('error-payment');
+Route::get('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
+Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
+Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::class, 'tabby_payment_verify'])->name('tabby-verify-payment');
+Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::class, 'tamara_payment_verify'])->name('tamara-verify-payment');
+//Route::get('/payments/paytabs-verify/{payment?}', [SubscriptionFrontController::class, 'paytabs_payment_verify'])->name('paytabs-verify-payment');
 
-Route::get('/go', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'smartLink'])->name('smart-link');
+Route::match(['get', 'post'], 'payments/paytabs-verify', [SubscriptionFrontController::class, 'paytabs_payment_verify'])
+    ->name('paytabs-verify-payment');
+// tamara-notify moved to Api/main.php to avoid CSRF blocking webhook POSTs
+Route::post('/payments/tamara-refund/{invoice}', [SubscriptionFrontController::class, 'tamaraRefund'])->name('tamara-refund')->middleware(['permission:super']);
+Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
 
-Route::name('test')->get('test', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'test']);
+Route::get('/go', [MainFrontController::class, 'smartLink'])->name('smart-link');
 
-Route::get('operate', [\App\Modules\Sixtyminutes\app\Http\Controllers\Admin\DashboardAdminController::class, 'showHome'])
+Route::name('test')->get('test', [MainFrontController::class, 'test']);
+
+Route::get('operate', [DashboardAdminController::class, 'showHome'])
     ->middleware(['permission:super|dashboard-show']);
 
-Route::name('noJs')->get('noJs', [\App\Modules\Sixtyminutes\app\Http\Controllers\Admin\DashboardAdminController::class, 'noJs']);
+Route::name('noJs')->get('noJs', [DashboardAdminController::class, 'noJs']);
 
-Route::name('backupDB')->get('operate/db-backup', [\App\Modules\Sixtyminutes\app\Http\Controllers\Admin\DashboardAdminController::class, 'backupDb'])->middleware(['permission:super|dashboard']);
+Route::name('backupDB')->get('operate/db-backup', [DashboardAdminController::class, 'backupDb'])->middleware(['permission:super|dashboard']);
 
-Route::name('uploadImageForCKEditorAjax')->post('upload-ckeditor-ajax', [\App\Modules\Sixtyminutes\app\Http\Controllers\Admin\GenericAdminController::class, 'uploadImageForCKEditorAjax']) ->middleware(['auth']);
+Route::name('uploadImageForCKEditorAjax')->post('upload-ckeditor-ajax', [GenericAdminController::class, 'uploadImageForCKEditorAjax'])->middleware(['auth']);
 
 Route::name('siteOff')
-    ->get('site-off', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'site_off'])->middleware(['auth:sw', 'auth']);
+    ->get('site-off', [MainFrontController::class, 'site_off'])->middleware(['auth:sw', 'auth']);
 Route::name('siteOn')
-    ->get('site-on', [\App\Modules\Sixtyminutes\app\Http\Controllers\Front\MainFrontController::class, 'site_on'])->middleware(['auth:sw', 'auth']);
+    ->get('site-on', [MainFrontController::class, 'site_on'])->middleware(['auth:sw', 'auth']);
 
 //$router->get(config('l5-swagger.routes.api'), [
 //    'as' => 'l5-swagger.api',
@@ -52,9 +62,13 @@ Route::name('siteOn')
 
 //Route::name('rss')->get('/rss', 'Front\MainFrontController@rss');
 
-Route::group(['middleware' => 'front','prefix' => (request()->segment(1) == 'ar' || request()->segment(1) == 'en') ? request()->segment(1) : ''], function () {
+Route::group(array('middleware' => 'front','prefix' => (request()->segment(1) == 'ar' || request()->segment(1) == 'en') ? request()->segment(1) : ''), function () {
     foreach (File::allFiles(__DIR__ . '/Front') as $route) {
         require_once $route->getPathname();
     }
 });
 //Route::name('home')->get('/', 'Front\MainFrontController@index');
+
+foreach (File::allFiles(__DIR__ . '/Admin') as $route) {
+require_once $route->getPathname();
+}

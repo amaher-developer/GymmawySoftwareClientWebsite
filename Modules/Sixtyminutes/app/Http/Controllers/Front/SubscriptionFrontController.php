@@ -1,130 +1,134 @@
 <?php
-
-namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
+namespace Modules\Sixtyminutes\app\Http\Controllers\Front;
 
 use App\Http\Classes\Constants;
-use App\Modules\Access\Http\Controllers\Front\AuthFrontController;
-use App\Modules\Sixtyminutes\app\Http\Classes\TabbyService;
-use App\Modules\Sixtyminutes\app\Http\Classes\TamaraService;
-use App\Modules\Sixtyminutes\app\Http\Classes\PaytabsService;
-use Modules\Sixtyminutes\Requests\SubscriptionRequest;
-use App\Modules\Sixtyminutes\app\Models\Member;
+use Modules\Sixtyminutes\app\Http\Controllers\Front\AuthFrontController;
+use Modules\Sixtyminutes\app\Http\Controllers\Front\GenericFrontController;
+use Modules\Sixtyminutes\app\Http\Classes\TabbyService;
+use Modules\Sixtyminutes\app\Http\Classes\TamaraService;
+use Modules\Sixtyminutes\app\Http\Classes\PaytabsService;
+use Modules\Sixtyminutes\app\Http\Requests\SubscriptionRequest;
+use Modules\Sixtyminutes\Models\Member;
 
-use App\Modules\Sixtyminutes\app\Models\MemberSubscription;
-use App\Modules\Sixtyminutes\app\Models\MoneyBox;
-use App\Modules\Sixtyminutes\app\Models\PaymentOnlineInvoice;
-use App\Modules\Sixtyminutes\app\Models\PTClass;
-use App\Modules\Sixtyminutes\app\Models\ReservationMember;
-use App\Modules\Sixtyminutes\app\Models\Subscription;
+use Modules\Sixtyminutes\Models\MemberSubscription;
+use Modules\Sixtyminutes\Models\MoneyBox;
+use Modules\Sixtyminutes\Models\PaymentOnlineInvoice;
+use Modules\Sixtyminutes\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Illuminate\Support\Facades\View;
 use Modules\Common\Services\GymmawyNotificationService;
+
+
 class SubscriptionFrontController extends GenericFrontController
 {
-    public function success()
+    public function __construct()
     {
-
-        return view('payment-success');
+        parent::__construct();
     }
-    public function failed()
-    {
 
-        return view('payment-failed');
-    }
 
     public function show($id)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
 //        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
         $record = Subscription::where('id', $id)->first();
+
+        if (!$record || !$record->is_web) {
+            \Session::flash('error', trans('front.error_in_data'));
+            return redirect()->route('home');
+        }
+
         $subscriptions = @Subscription::where('is_web', true)->get();
         $title = $record['name'];
         return view('sixtyminutes::Front.subscription', compact('title', 'record', 'subscriptions'));
     }
 
-    public function showPTClass($id)
+    public function showMobile($id)
     {
-//        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
-        $record = PTClass::where('id', $id)->first();
-        $pt_classes = @PTClass::where('id', '!=', $id)->where('is_web', true)->get();
-        $title = $record['title'];
-        return view('sixtyminutes::Front.pt_class', compact('title', 'record','pt_classes'));
-    }
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
 
-    public function showTest($id)
-    {
-//        $record = (array)$this->getSubscription($id, @$this->mainSettings['subscription']);
+        if (!$this->current_user) {
+            $token = request('token') ?: request()->bearerToken();
+            if ($token) {
+                $token = str_replace('Bearer ', '', $token);
+                $pushToken = DB::table('sw_gym_push_tokens')->where('token', $token)->first();
+                if ($pushToken && $pushToken->member_id) {
+                    $this->current_user = Member::find($pushToken->member_id);
+                }
+            }
+        }
+
+        View::share('currentUser', $this->current_user);
+
         $record = Subscription::where('id', $id)->first();
-        $subscriptions = @Subscription::where('is_web', true)->get();
+
+        if (!$record || !$record->is_mobile) {
+            return abort(404);
+        }
+
         $title = $record['name'];
-        return view('sixtyminutes::Front.subscription_test', compact('title', 'record', 'subscriptions'));
+        return view('sixtyminutes::Front.subscription_mobile', compact('title', 'record'));
     }
 
     public function invoice($invoice_id)
     {
-        $record = (array)$this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
-        $invoice = $record['invoice'];
-        $qr_img_invoice = @$record['invoice']->qr_code;
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
+        $invoice = $this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
         $title = trans('front.invoice');
-        if($record['success'] == false)
+
+        if(!$invoice) {
             return redirect()->route('home');
+        }
+
+        $qr_img_invoice = @$invoice->qr_code;
         return view('sixtyminutes::Front.invoice', compact('title', 'invoice', 'qr_img_invoice'));
     }
 
-    public function getInvoiceDetails($invoice_id, $member_id){
-        $ch = curl_init();
-        $certificate_location = "";
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $certificate_location);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $certificate_location);
-        $options = array(
-            CURLOPT_URL            => @env('APP_URL_MASTER')."api/member-subscription-invoice-info",
-            CURLOPT_HTTPHEADER     => array(
-                'Content-Type: application/json'
-            ),
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode(array(
-                'lang' => $this->lang,
-                'invoice_id' => $invoice_id,
-                'member_id' => $member_id,
-            )),
-            CURLOPT_RETURNTRANSFER => true
-        );
-
-        curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $result = json_decode($response);
-        return (@$result);
-    }
-    public function reservationSubmit(SubscriptionRequest $request)
+    public function invoiceMobile($invoice_id)
     {
-        // :this process before payment
-        // check on member info.
-        // check on member ships
-        // check on all complete data
-        // redirect to payment gateway
-        $member_data = [];
-        $subscription_id = $request->subscription_id;
-        $subscription = Subscription::where('id', $subscription_id)->first();
-        if($subscription) {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
 
-            $member_data['name'] = @$request->name;
-            $member_data['phone'] = @$request->phone;
-            $member_data['subscription_id'] = @$request->subscription_id;
-            $member_data['type'] = 0;
-//            $member_data['amount'] = @$request->amount;
-//            $member_data['vat_percentage'] = @$request->vat_percentage;
-//            $member_data['vat'] = (@$request->vat_percentage / @$request->amount) * 100 ;
-            ReservationMember::create($member_data);
-            GymmawyNotificationService::notifyReservation();
+        $invoice = $this->getInvoiceDetails((int)$invoice_id, @$this->current_user->id);
+        $title = trans('front.invoice');
 
+        if (!$invoice) {
+            return abort(404);
         }
-        return redirect()->back()->with('message', trans('front.success_msg'));
+
+        $qr_img_invoice = @$invoice->qr_code;
+        return view('sixtyminutes::Front.invoice_mobile', compact('title', 'invoice', 'qr_img_invoice'));
     }
+
+    public function getInvoiceDetails($invoice_id, $member_id){
+        $invoice =  MemberSubscription::with(['subscription', 'member'])->where(['id' => $invoice_id])->first();
+        return $invoice;
+    }
+
     public function invoiceSubmit(SubscriptionRequest $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
+        if (!$this->current_user) {
+            $token = $request->input('token') ?: $request->bearerToken();
+            if ($token) {
+                $token = str_replace('Bearer ', '', $token);
+                $pushToken = DB::table('sw_gym_push_tokens')->where('token', $token)->first();
+                if ($pushToken && $pushToken->member_id) {
+                    $this->current_user = Member::find($pushToken->member_id);
+                }
+            }
+        }
+
+        View::share('currentUser',$this->current_user);
         // :this process before payment
         // check on member info.
         // check on member ships
@@ -140,7 +144,6 @@ class SubscriptionFrontController extends GenericFrontController
                     \Session::flash('error', trans('front.error_member_exist'));
                     return redirect()->back();
                 }
-
                 $member_data['name'] = @$request->name;
                 $member_data['phone'] = @$request->phone;
                 $member_data['email'] = @$request->email;
@@ -148,12 +151,17 @@ class SubscriptionFrontController extends GenericFrontController
                 $member_data['dob'] = @Carbon::parse($request->dob);
                 $member_data['gender'] = @$request->gender;
             }else{
-                $member_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->orderBy('id', 'desc')->first();
-                if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
-                    \Session::flash('error', trans('front.error_member_subscription_active'));
+//                $member_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->orderBy('id', 'desc')->first();
+//                if (@$member_subscription && (Carbon::parse($member_subscription->expire_date)->toDateString() > Carbon::now()->toDateString() )) {
+//                    \Session::flash('error', trans('front.error_member_subscription_active'));
+//                    return redirect()->back();
+//                }
+                $check_subscription = MemberSubscription::where('member_id', @$this->current_user->id)->where('joining_date', '<=',@$request->joining_date)
+                    ->where('expire_date', '>=', @$request->joining_date)->first();
+                if (@$check_subscription) {
+                    \Session::flash('error', trans('front.error_member_subscription_joining_date'));
                     return redirect()->back();
                 }
-
                 $member_data['name'] = @$this->current_user->name;
                 $member_data['phone'] = @$this->current_user->phone;
                 $member_data['email'] = @$this->current_user->email;
@@ -161,12 +169,13 @@ class SubscriptionFrontController extends GenericFrontController
                 $member_data['dob'] = @$this->current_user->dob;
                 $member_data['gender'] = @$this->current_user->gender;
             }
-
             $member_data['subscription_id'] = @$request->subscription_id;
+            $member_data['joining_date'] = @$request->joining_date;
             $member_data['payment_method'] = @$request->payment_method;
+            $member_data['payment_channel'] = @$request->payment_channel;
             $member_data['amount'] = (float)(@$request->amount ?? 0);
             $member_data['vat_percentage'] = (float)(@$request->vat_percentage ?? 0);
-            // amount is VAT-inclusive (sent as such from the checkout form) — derive the VAT portion.
+            // Calculate VAT on the base price (amount is already VAT-inclusive from the form)
             $vatPct = (float)(@$request->vat_percentage ?? 0);
             if ($vatPct > 0) {
                 $basePrice = (float)(@$request->amount ?? 0) / (1 + $vatPct / 100);
@@ -187,9 +196,6 @@ class SubscriptionFrontController extends GenericFrontController
             }else if(@$request->payment_method == Constants::PAYTABS_STANDARD){
                 // paytabs standard
                 $payment_url = $this->paytabs_standard_payment($subscription->toArray(), $member_data);
-            }else{
-                \Session::flash('error', trans('front.error_in_data'));
-                return redirect()->back();
             }
             return redirect($payment_url);
         }
@@ -201,7 +207,7 @@ class SubscriptionFrontController extends GenericFrontController
     public function paytabs_payment($subscription = [], $member = []){
 
         $payment = new PaytabsPayment();
-        $payment = $payment->pay(@$subscription['price'],
+        $payment = $payment->pay(round($member['amount'], 2),
             2,
             @$member['name'],
             "",
@@ -224,7 +230,10 @@ class SubscriptionFrontController extends GenericFrontController
             'amount' => $member['amount'],
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
-            'payment_method' => $member['payment_method'],
+            'payment_method' => 7, // PAYTABS_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
+            'payment_gateway' => Constants::MADA,
+            'response_code' => ['joining_date' => $member['joining_date']],
         ]);
 
         return $payment['redirect_url'];
@@ -258,7 +267,7 @@ class SubscriptionFrontController extends GenericFrontController
                 if($member){
                     $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
                         'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
 
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
@@ -273,17 +282,23 @@ class SubscriptionFrontController extends GenericFrontController
                             'amount_remaining' => 0,
                         ]);
 
+                    $discountVal = $this->calculateDiscountValue($payment_invoice->subscription);
+                    if ($discountVal > 0) {
+                        $notes = $notes.' - '.trans('sw.discount_msg', ['value' => $discountVal]);
+                    }
+
                     if(@$payment_invoice->vat_percentage){
                         $notes = $notes.' - '.trans('sw.vat_added');
                     }
 
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
+                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => $this->resolvePaymentType($payment_invoice), 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
 
                     if(!@$this->current_user->id){
                         $auth = new AuthFrontController();
                         $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
                         request()->session()->put('user', $user->member);
                     }
+                    $this->sendSubscriptionNotification(@$member_subscription->id, @$payment_invoice['phone'], $type_of_payment);
                     GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
@@ -300,6 +315,7 @@ class SubscriptionFrontController extends GenericFrontController
 
     // tabby
     public function tabby_payment($subscription = [], $member = []){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
 
         // Use the discounted+VAT amount already calculated in invoiceSubmit
         $totalAmount    = round($member['amount'], 2);
@@ -336,9 +352,12 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => 4, // TABBY_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TABBY,
-            'response_code' => ['joining_date' => @$member['joining_date']],
+            'response_code' => ['joining_date' => $member['joining_date']],
         ]);
+
+
 
         // add first product
         $items = collect([]); // array to save your products
@@ -420,7 +439,9 @@ class SubscriptionFrontController extends GenericFrontController
         $payment = $payment->createSession($order_data);
         $status = @$payment->status;
 
-        $errorRoute = route('subscription', ['id' => $subscription['id']]);
+        $errorRoute = @$member['payment_channel'] == 3
+            ? route('subscription-mobile', ['id' => $subscription['id']])
+            : route('subscription', ['id' => $subscription['id']]);
 
         if($status == Constants::REJECTED){
             \Session::flash('error', trans('front.'.@$payment->configuration->products->installments->rejection_reason));
@@ -437,7 +458,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         $paymentOnlineInvoice->transaction_id = @$payment->payment->id;
         $payment = @(array)$payment;
-        $payment['joining_date'] = @$member['joining_date'];
+        $payment['joining_date'] = $member['joining_date'];
         $paymentOnlineInvoice->response_code = $payment;
         $paymentOnlineInvoice->save();
 
@@ -447,6 +468,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabbyNotify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        
         Log::info('Tabby webhook received', $request->all());
 
         $tabbyPaymentId = $request->id ?? null;
@@ -629,11 +652,45 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             // 7️⃣ MoneyBox
-            $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
+            $amountBox = MoneyBox::latest()->first();
+            $amountAfter = SubscriptionFrontController::amountAfter(
+                $amountBox->amount,
+                $amountBox->amount_before,
+                (int) $amountBox->operation
+            );
+
+            $notes = trans('sw.member_moneybox_add_msg', [
+                'subscription' => $paymentInvoice->subscription->name,
+                'member'       => $member->name,
+                'amount_paid'  => $paymentInvoice->amount,
+                'amount_remaining' => 0,
+            ]);
+
+            $discountVal = $this->calculateDiscountValue($paymentInvoice->subscription);
+            if ($discountVal > 0) {
+                $notes .= ' - ' . trans('sw.discount_msg', ['value' => $discountVal]);
+            }
+
+            if ($paymentInvoice->vat_percentage) {
+                $notes .= ' - ' . trans('sw.vat_added');
+            }
+
+            MoneyBox::create([
+                'operation' => Constants::Add,
+                'amount' => $paymentInvoice->amount,
+                'vat' => $paymentInvoice->vat,
+                'amount_before' => $amountAfter,
+                'notes' => $notes,
+                'member_id' => $member->id,
+                'type' => $typeOfPayment,
+                'payment_type' => $this->resolvePaymentType($paymentInvoice),
+                'member_subscription_id' => $memberSubscription->id,
+                'online_subscription_id' => $paymentInvoice->id,
+            ]);
 
             DB::commit();
 
-            GymmawyNotificationService::notifyPayment();
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             return response()->json(['status' => 'success'], 200);
 
@@ -654,6 +711,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tabby_payment_verify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        
         $invoiceId = $request->invoice_id;      // internal id
         $tabbyPaymentId = $request->payment_id; // Tabby payment.id
 
@@ -669,7 +728,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', ['id' => $paymentInvoice->member_subscription_id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         // 2️⃣ Validate Tabby payment id consistency
@@ -801,7 +861,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', ['id' => $memberSubscription->id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         // fallback (rare)
@@ -813,11 +874,20 @@ class SubscriptionFrontController extends GenericFrontController
         ]);
     }
 
+
+
+
     public function error_payment(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $title = trans('front.invoice');
         return view('sixtyminutes::Front.error', compact('title'));
     }
     public function tabbyFailure(Request $request){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         // Look up the invoice to redirect back to checkout
         $invoiceId = $request->invoice_id ?? $request->route('payment');
         if ($invoiceId) {
@@ -827,7 +897,10 @@ class SubscriptionFrontController extends GenericFrontController
                 $invoice->save();
 
                 \Session::flash('error', trans('front.tabby_error_failure_body_msg'));
-                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
             }
         }
 
@@ -835,13 +908,19 @@ class SubscriptionFrontController extends GenericFrontController
         return view('sixtyminutes::Front.tabby_error_failure', compact('title'));
     }
     public function tabbyCancel(Request $request){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         // Look up the invoice to redirect back to checkout
         $invoiceId = $request->invoice_id ?? $request->route('payment');
         if ($invoiceId) {
             $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
             if ($invoice) {
                 \Session::flash('error', trans('front.tabby_error_cancel_body_msg'));
-                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
             }
         }
 
@@ -852,6 +931,8 @@ class SubscriptionFrontController extends GenericFrontController
     // tamara
     public function tamara_payment($subscription = [], $member = [])
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
         // Use the discounted+VAT amount already calculated in invoiceSubmit
         $totalAmount    = round($member['amount'], 2);
         $priceBeforeVat = round($totalAmount - $member['vat'], 2);
@@ -872,8 +953,9 @@ class SubscriptionFrontController extends GenericFrontController
             'vat' => $member['vat'],
             'vat_percentage' => $member['vat_percentage'],
             'payment_method' => 6, // TAMARA_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::TAMARA,
-            'response_code' => ['joining_date' => @$member['joining_date']],
+            'response_code' => ['joining_date' => $member['joining_date']],
         ]);
 
         $items = collect([]);
@@ -908,12 +990,14 @@ class SubscriptionFrontController extends GenericFrontController
 
         if (!@$response->checkout_url) {
             \Session::flash('error', trans('front.error_in_data'));
-            return route('subscription', ['id' => $subscription['id']]);
+            return @$member['payment_channel'] == 3
+                ? route('subscription-mobile', ['id' => $subscription['id']])
+                : route('subscription', ['id' => $subscription['id']]);
         }
 
         $paymentOnlineInvoice->transaction_id = @$response->order_id;
         $responseArray = @(array)$response;
-        $responseArray['joining_date'] = @$member['joining_date'];
+        $responseArray['joining_date'] = $member['joining_date'];
         $paymentOnlineInvoice->response_code = $responseArray;
         $paymentOnlineInvoice->save();
 
@@ -922,6 +1006,8 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function tamara_payment_verify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
         $invoiceId = $request->invoice_id;
         $paymentStatus = $request->paymentStatus;
         $orderId = $request->orderId;
@@ -937,7 +1023,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', ['id' => $paymentInvoice->member_subscription_id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         $joiningDate = $paymentInvoice->response_code['joining_date']
@@ -953,7 +1040,8 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
+            $subscriptionRoute = $paymentInvoice->payment_channel == 3 ? 'subscription-mobile' : 'subscription';
+            return redirect()->route($subscriptionRoute, ['id' => $paymentInvoice->subscription_id]);
         }
 
         $tamaraService = new TamaraService();
@@ -1033,7 +1121,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', ['id' => $memberSubscription->id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         // Fallback
@@ -1239,7 +1328,7 @@ class SubscriptionFrontController extends GenericFrontController
 
             DB::commit();
 
-            GymmawyNotificationService::notifyPayment();
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             Log::info('Tamara webhook processed successfully', [
                 'tamara_order_id' => $orderId,
@@ -1265,11 +1354,17 @@ class SubscriptionFrontController extends GenericFrontController
     }
 
     public function tamaraFailure(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $title = trans('front.invoice');
         return view('sixtyminutes::Front.tamara_error_failure', compact('title'));
     }
 
     public function tamaraCancel(){
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser',$this->current_user);
+
         $title = trans('front.invoice');
         return view('sixtyminutes::Front.tamara_error_cancel', compact('title'));
     }
@@ -1349,7 +1444,7 @@ class SubscriptionFrontController extends GenericFrontController
         $subscription = $invoice->subscription ?? Subscription::withTrashed()->find($invoice->subscription_id);
 
         if (!$subscription) {
-            Log::error('Subscription missing on checkout finalize', ['invoice_id' => $invoice->id]);
+            Log::error('Subscription missing on Tabby finalize', ['invoice_id' => $invoice->id]);
             return null;
         }
 
@@ -1366,7 +1461,8 @@ class SubscriptionFrontController extends GenericFrontController
         try {
         $result = DB::transaction(function () use ($invoice, $joiningDate, $sessionMember, $subscription) {
             // Re-read with exclusive row lock — prevents duplicate processing when both
-            // the webhook and the browser redirect run simultaneously with a stale invoice object.
+            // the webhook (tabbyNotify) and the browser redirect (tabby_payment_verify)
+            // run simultaneously with a stale invoice object.
             $invoice = PaymentOnlineInvoice::where('id', $invoice->id)->lockForUpdate()->first();
 
             // Re-check inside the lock with fresh data.
@@ -1445,10 +1541,31 @@ class SubscriptionFrontController extends GenericFrontController
         if (empty($result['early']) && @$result['generatedCode'] && @$result['member']->phone) {
             $this->loginMemberAfterOnlinePayment($result['generatedCode'], $result['member']->phone);
         }
+        if (empty($result['early']) && @$result['memberSubscription']->id && @$result['member']->phone) {
+            $this->sendSubscriptionNotification($result['memberSubscription']->id, $result['member']->phone, $result['type']);
+        }
         GymmawyNotificationService::notifyPayment();
         return $result['memberSubscription'];
         } finally {
             DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
+        }
+    }
+
+    protected function sendSubscriptionNotification(int $memberSubscriptionId, string $phone, int $type): void
+    {
+        try {
+            $event = $type === Constants::CreateMember ? 'new_member' : 'renew_member';
+            Http::timeout(10)->post('https://60minutes.gymmawy.com/api/send-subscription-notification', [
+                'lang'                   => 'ar',
+                'member_subscription_id' => $memberSubscriptionId,
+                'event'                  => $event,
+                'phone'                  => $phone,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Subscription notification failed', [
+                'member_subscription_id' => $memberSubscriptionId,
+                'error'                  => $e->getMessage(),
+            ]);
         }
     }
 
@@ -1511,11 +1628,15 @@ class SubscriptionFrontController extends GenericFrontController
 
     protected function loginMemberAfterOnlinePayment(string $code, string $phone): void
     {
-        $auth = new AuthFrontController();
-        $user = $auth->getSubscriptionInfo($code, $phone);
-        if (isset($user->member)) {
-            request()->session()->put('user', $user->member);
-        }
+        //try {
+            $auth = new AuthFrontController();
+            $user = $auth->getSubscriptionInfo($code, $phone);
+            if (isset($user->member)) {
+                request()->session()->put('user', $user->member);
+            }
+        //} catch (\Throwable $throwable) {
+            //Log::warning('Auto login after Tabby payment failed', ['error' => $throwable->getMessage()]);
+        //}
     }
 
     protected function calculateDiscountValue($subscription): float
@@ -1551,12 +1672,37 @@ class SubscriptionFrontController extends GenericFrontController
         return $amount;
     }
 
+
+    public function tabbyRegisterWebhook()
+    {
+        $tabbyService = new TabbyService();
+        $result = $tabbyService->createWebHooks();
+
+        return response()->json([
+            'message' => 'Webhook registration attempt completed',
+            'result' => $result,
+        ]);
+    }
+
+    public function tabbyCheckWebhooks()
+    {
+        $tabbyService = new TabbyService();
+        $result = $tabbyService->getWebHooks();
+
+        return response()->json([
+            'message' => 'Current registered webhooks',
+            'result' => $result,
+        ]);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // PAYTABS STANDARD
     // ─────────────────────────────────────────────────────────────────────────
 
     public function paytabs_standard_payment($subscription = [], $member = [])
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
         $vatPercentage  = @$this->mainSettings['vat_details']['vat_percentage'] ?? 0;
         $priceBeforeVat = $subscription['price'];
         $vatAmount      = ($vatPercentage / 100) * $priceBeforeVat;
@@ -1577,11 +1723,14 @@ class SubscriptionFrontController extends GenericFrontController
             'vat'             => $member['vat'],
             'vat_percentage'  => $member['vat_percentage'],
             'payment_method'  => 8, // PAYTABS_STANDARD_TRANSACTION
+            'payment_channel' => $member['payment_channel'],
             'payment_gateway' => Constants::PAYTABS_STANDARD,
-            'response_code'   => ['joining_date' => @$member['joining_date']],
+            'response_code'   => ['joining_date' => $member['joining_date']],
         ]);
 
-        $errorRoute = route('subscription', ['id' => $subscription['id']]);
+        $errorRoute = @$member['payment_channel'] == 3
+            ? route('subscription-mobile', ['id' => $subscription['id']])
+            : route('subscription', ['id' => $subscription['id']]);
 
         $paytabsService = new PaytabsService();
         $response = $paytabsService->createPaymentPage([
@@ -1605,7 +1754,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         $paymentOnlineInvoice->transaction_id = @$response['tran_ref'];
         $responseArray                         = $response;
-        $responseArray['joining_date']         = @$member['joining_date'];
+        $responseArray['joining_date']         = $member['joining_date'];
         $paymentOnlineInvoice->response_code   = $responseArray;
         $paymentOnlineInvoice->save();
 
@@ -1617,6 +1766,8 @@ class SubscriptionFrontController extends GenericFrontController
      */
     public function paytabs_payment_verify(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+
         $invoiceId = $request->invoice_id;
 
         $paymentInvoice = PaymentOnlineInvoice::with(['subscription' => function ($q) {
@@ -1630,7 +1781,8 @@ class SubscriptionFrontController extends GenericFrontController
 
         // Already processed by concurrent IPN
         if ($paymentInvoice->member_subscription_id) {
-            return redirect()->route('invoice', ['id' => $paymentInvoice->member_subscription_id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $paymentInvoice->member_subscription_id]);
         }
 
         $tranRef    = $paymentInvoice->transaction_id;
@@ -1656,7 +1808,8 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             \Session::flash('error', trans('front.error_in_data'));
-            return redirect()->route('subscription', ['id' => $paymentInvoice->subscription_id]);
+            $subscriptionRoute = $paymentInvoice->payment_channel == 3 ? 'subscription-mobile' : 'subscription';
+            return redirect()->route($subscriptionRoute, ['id' => $paymentInvoice->subscription_id]);
         }
 
         $paymentInvoice->status = Constants::SUCCESS;
@@ -1674,7 +1827,8 @@ class SubscriptionFrontController extends GenericFrontController
         );
 
         if ($memberSubscription) {
-            return redirect()->route('invoice', ['id' => $memberSubscription->id]);
+            $invoiceRoute = $paymentInvoice->payment_channel == 3 ? 'invoice-mobile' : 'invoice';
+            return redirect()->route($invoiceRoute, ['id' => $memberSubscription->id]);
         }
 
         $paymentInvoice->status = Constants::FAILED;
@@ -1820,7 +1974,7 @@ class SubscriptionFrontController extends GenericFrontController
 
             DB::commit();
 
-            GymmawyNotificationService::notifyPayment();
+            $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
 
             Log::info('Paytabs IPN processed successfully', [
                 'tran_ref'               => $tranRef,
@@ -1846,12 +2000,18 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function paytabsCancel(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
         $invoiceId = $request->invoice_id ?? $request->route('payment');
         if ($invoiceId) {
             $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
             if ($invoice) {
                 \Session::flash('error', trans('front.paytabs_error_cancel_body_msg'));
-                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
             }
         }
 
@@ -1861,6 +2021,9 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function paytabsFailure(Request $request)
     {
+        $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
+        View::share('currentUser', $this->current_user);
+
         $invoiceId = $request->invoice_id ?? $request->route('payment');
         if ($invoiceId) {
             $invoice = PaymentOnlineInvoice::where('payment_id', $invoiceId)->first();
@@ -1869,12 +2032,16 @@ class SubscriptionFrontController extends GenericFrontController
                 $invoice->save();
 
                 \Session::flash('error', trans('front.paytabs_error_failure_body_msg'));
-                return redirect()->route('subscription', ['id' => $invoice->subscription_id]);
+                $redirectRoute = @$invoice->payment_channel == 3
+                    ? route('subscription-mobile', ['id' => $invoice->subscription_id])
+                    : route('subscription', ['id' => $invoice->subscription_id]);
+                return redirect($redirectRoute);
             }
         }
 
         $title = trans('front.invoice');
         return view('sixtyminutes::Front.paytabs_error_failure', compact('title'));
     }
+
 
 }

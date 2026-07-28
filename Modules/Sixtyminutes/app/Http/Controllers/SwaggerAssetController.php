@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Controllers;
+namespace Modules\Sixtyminutes\app\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Response;

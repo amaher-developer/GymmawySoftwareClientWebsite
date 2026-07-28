@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Models;
+namespace Modules\Sixtyminutes\Models;
 
 
 use Carbon\Carbon;

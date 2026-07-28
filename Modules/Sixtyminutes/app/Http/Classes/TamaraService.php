@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Classes;
+namespace Modules\Sixtyminutes\app\Http\Classes;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
+namespace Modules\Sixtyminutes\app\Http\Controllers\Front;
 
-use App\Modules\Sixtyminutes\app\Http\Controllers\Front\GenericFrontController;
-use App\Modules\Sixtyminutes\app\Models\Member;
-use App\Modules\Sixtyminutes\app\Models\MemberSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
+use Modules\Sixtyminutes\Models\Member;
+use Modules\Sixtyminutes\Models\MemberSubscription;
 
 class AuthFrontController extends GenericFrontController
 {
@@ -50,25 +49,26 @@ class AuthFrontController extends GenericFrontController
      */
     public function login(Request $request)
     {
-        $this->validate($request, [
-            'phone' => 'required',
-            'code' => 'required'
-        ]);
-
+        $user = '';
+        $this->validate($request, ['phone' => 'required', 'code' => 'required']);
         $credentials = $request->only(['phone', 'code']);
-        $user = $this->getSubscriptionInfo($credentials['code'], $credentials['phone']);
+        if ($credentials['code'] && $credentials['phone']) {
+            $user = $this->getSubscriptionInfo($credentials['code'], $credentials['phone']);
 
-        if (!$user || !@$user->member) {
+            if (request()->hasSession()) {
+                request()->session()->put('user', @$user->member);
+            }
+        }
+        if (!@$user->member) {
             \Session::flash('error', trans('auth.failed'));
-            return redirect()->back()->withInput($request->only('phone'));
+            return redirect()->back();
         }
-
-        // Store user in session
-        if (request()->hasSession()) {
-            request()->session()->put('user', $user->member);
+        if (@$user->member) {
+            return redirect()->route('showProfile');
+        } else {
+            \Session::flash('error', trans('auth.failed'));
+            return redirect()->back();
         }
-
-        return redirect()->route('showProfile');
     }
 
     /**
@@ -90,9 +90,6 @@ class AuthFrontController extends GenericFrontController
             return null;
         }
 
-        // Set language on member model for proper localization
-        $member->lang = $this->lang;
-
         // Get the latest active subscription for this member
         $memberSubscription = MemberSubscription::with(['subscription'])
             ->where('member_id', $member->id)
@@ -111,6 +108,7 @@ class AuthFrontController extends GenericFrontController
 
         // Combine member data with subscription info
         $memberData = $member->toArray();
+
         if ($memberSubscription && $subscription) {
             // Add subscription-related fields to member data
             // Subscription model has a name accessor that uses the lang attribute
@@ -120,6 +118,7 @@ class AuthFrontController extends GenericFrontController
             $memberData['amount_paid'] = $memberSubscription->amount_paid ?? 0;
             $memberData['amount_remaining'] = $memberSubscription->amount_remaining ?? 0;
             $memberData['attendees_count'] = $memberSubscription->attendees_count ?? 0;
+            $memberData['subscription_status'] = $memberSubscription->status ?? null;
         } else {
             // Set default values if no subscription found
             $memberData['subscription_name'] = null;
@@ -128,12 +127,13 @@ class AuthFrontController extends GenericFrontController
             $memberData['amount_paid'] = 0;
             $memberData['amount_remaining'] = 0;
             $memberData['attendees_count'] = 0;
+            $memberData['subscription_status'] = null;
         }
 
         // Return in the same format as the API (object with member property)
         $result = new \stdClass();
         $result->member = (object) $memberData;
-        
+
         return $result;
     }
 
@@ -167,11 +167,11 @@ class AuthFrontController extends GenericFrontController
                 $this->current_user = null;
             }
         }
-        
+
         if (!$this->current_user) {
             return redirect()->route('login');
         }
-        
+
         return view('sixtyminutes::Front.show_profile');
     }
 
@@ -197,7 +197,7 @@ class AuthFrontController extends GenericFrontController
         // If you need to update Auth user, use User model instead
         if (!empty($this->current_user)) {
             $updated_user = $this->current_user;
-            
+
             // Update user data from request
             if ($request->has('name')) {
                 $updated_user['name'] = $request->input('name');
@@ -208,7 +208,7 @@ class AuthFrontController extends GenericFrontController
             if ($request->has('phone')) {
                 $updated_user['phone'] = $request->input('phone');
             }
-            
+
             // Update session
             if (request()->hasSession()) {
                 request()->session()->put('user', $updated_user);
@@ -220,4 +220,3 @@ class AuthFrontController extends GenericFrontController
         }
     }
 }
-

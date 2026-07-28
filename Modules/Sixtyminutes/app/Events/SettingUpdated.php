@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Events;
+namespace Modules\Sixtyminutes\app\Events;
 
-use App\Modules\Sixtyminutes\app\Models\Setting;
+use Modules\Sixtyminutes\Models\Setting;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;

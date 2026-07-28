@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Models;
+namespace Modules\Sixtyminutes\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,7 +23,7 @@ class GenericModel extends Model
         } elseif (request()->is('operate/*')) {
             $this->lang = app()->getLocale('lang') ? app()->getLocale('lang') : env('DEFAULT_LANG');
         } else {
-            $lang = session('lang');
+            $lang = app()->getLocale('lang');
             $this->lang = isset($lang) ? $lang : 'en';
         }
 

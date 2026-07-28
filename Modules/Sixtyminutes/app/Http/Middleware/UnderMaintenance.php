@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Middleware;
+namespace Modules\Sixtyminutes\Http\Middleware;
 
 use App\Exceptions\ApplicationClosed;
-use App\Modules\Sixtyminutes\Models\Setting;
+use Modules\Sixtyminutes\Models\City;
+use Modules\Sixtyminutes\Models\District;
+use Modules\Sixtyminutes\Models\Setting;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;

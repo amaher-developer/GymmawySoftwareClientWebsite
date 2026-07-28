@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Middleware;
+namespace Modules\Sixtyminutes\Http\Middleware;
 
-use App\Modules\Access\Models\User;
+use Modules\Sixtyminutes\Access\Models\User;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;

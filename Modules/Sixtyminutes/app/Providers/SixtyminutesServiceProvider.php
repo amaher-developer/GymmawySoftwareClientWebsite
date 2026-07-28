@@ -14,6 +14,7 @@ class SixtyminutesServiceProvider extends ServiceProvider
     use PathNamespace;
 
     protected string $name = 'Sixtyminutes';
+
     protected string $nameLower = 'sixtyminutes';
 
     /**

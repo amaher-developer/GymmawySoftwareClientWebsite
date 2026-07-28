@@ -1,25 +1,31 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
+namespace Modules\Sixtyminutes\app\Http\Controllers\Front;
 
-use App\Modules\Access\Models\User;
-
-use App\Modules\Sixtyminutes\app\Http\Requests\ContactRequest;
-use App\Modules\Sixtyminutes\app\Models\Activity;
-use App\Modules\Sixtyminutes\app\Models\Banner;
-use App\Modules\Sixtyminutes\app\Models\PTClass;
-use App\Modules\Sixtyminutes\app\Models\PTSubscription;
-use App\Modules\Sixtyminutes\app\Models\Setting;
-
-use App\Modules\Sixtyminutes\app\Models\Store;
-use App\Modules\Sixtyminutes\app\Models\Subscription;
+use Modules\Access\Models\User;
+use Modules\Sixtyminutes\app\Http\Controllers\Front\GenericFrontController;
+use Modules\Sixtyminutes\app\Http\Requests\ContactRequest;
+use Modules\Sixtyminutes\Models\Activity;
+use Modules\Sixtyminutes\Models\City;
+use Modules\Sixtyminutes\Models\Contact;
+use Modules\Sixtyminutes\Models\District;
+use Modules\Sixtyminutes\Models\Feedback;
+use Modules\Sixtyminutes\Models\PTSubscription;
+use Modules\Sixtyminutes\Models\Setting;
+use Modules\Sixtyminutes\Models\Banner;
+use Modules\Sixtyminutes\Models\Store;
+use Modules\Sixtyminutes\Models\Subscription;
+use Modules\Sixtyminutes\Models\PTClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\View;
+use Milon\Barcode\DNS1D;
+use Milon\Barcode\DNS2D;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Thujohn\Rss\Rss;
 
 
 class MainFrontController extends GenericFrontController

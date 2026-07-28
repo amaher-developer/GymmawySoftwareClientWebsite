@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Classes;
+namespace Modules\Sixtyminutes\app\Http\Classes;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -56,7 +56,7 @@ class PaytabsService
             'authorization' => $this->serverKey,
             'Content-Type'  => 'application/json',
         ]);
-
+        
         if (@env('PAYTABS_IS_TEST'))
             $http = $http->withoutVerifying();
 

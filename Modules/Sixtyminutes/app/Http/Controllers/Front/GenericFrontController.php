@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Http\Controllers\Front;
+namespace Modules\Sixtyminutes\app\Http\Controllers\Front;
 
 use App\Http\Requests;
-use App\Modules\Sixtyminutes\app\Http\Controllers\GenericController;
-use App\Modules\Sixtyminutes\app\Models\Setting;
+use Modules\Sixtyminutes\app\Http\Controllers\GenericController;
+use Modules\Sixtyminutes\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 
@@ -66,7 +66,6 @@ class GenericFrontController extends GenericController
         View::share('mainSettings', $this->mainSettings);
         View::share('lang', $this->lang);
         View::share('template_version', env('TEMPLATE_NUM', ''));
-
 //        $this->user = @Auth::user();
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
         View::share('currentUser',$this->current_user);

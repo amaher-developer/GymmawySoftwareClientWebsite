@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Repositories;
+namespace Modules\Sixtyminutes\app\Repositories;
 
 use Illuminate\Support\Facades\Cache;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Modules\Sixtyminutes\app\Models\Setting;
+use Modules\Sixtyminutes\Models\Setting;
 
 
-class SettingRepository extends GenericRepository
+class SettingRepository extends SixtyminutesRepository
 {
 
     /**

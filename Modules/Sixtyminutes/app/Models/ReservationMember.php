@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Models;
+namespace Modules\Sixtyminutes\Models;
 
 
-use App\Modules\Sixtyminutes\app\Events\SettingUpdated;
+use Modules\Sixtyminutes\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class ReservationMember extends GenericModel

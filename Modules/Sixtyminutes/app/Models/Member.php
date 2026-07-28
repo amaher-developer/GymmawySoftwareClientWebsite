@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Modules\Sixtyminutes\app\Models;
+namespace Modules\Sixtyminutes\Models;
 
 
-use App\Modules\Sixtyminutes\app\Events\SettingUpdated;
+use Modules\Sixtyminutes\app\Events\SettingUpdated;
 use Illuminate\Support\Facades\Cache;
 
 class Member extends GenericModel
@@ -20,11 +20,11 @@ class Member extends GenericModel
         return $this->getRawOriginal('image');
     }
 
-   public function getImageAttribute()
+    public function getImageAttribute()
     {
         $image = $this->getRawOriginal('image');
         if($image)
-            return @env('APP_URL_MASTER').self::$uploads_path.$image;
+            return asset(self::$uploads_path.$image);
 
         return asset('resources/assets/front/img/preview_icon.png');
     }

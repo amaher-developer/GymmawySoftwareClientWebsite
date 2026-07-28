@@ -163,6 +163,7 @@ return [
     'non_member_moneybox_edit_msg' => 'Daily client (:member), Edit subscription in this activities (:activities)',
     'non_member_moneybox_delete_msg' => 'Daily client (:member), Delete subscription in this activities (:activities)',
 
+    'discount_msg' => 'Discount: :value',
     'member_moneybox_add_msg' => 'Membership: Membership client (:member), Add subscription in (:subscription), paid (:amount_paid) out of total (:total_amount)',
     'member_moneybox_edit_msg' => 'Renew: Membership client (:member), Renew subscription in (:subscription), paid (:amount_paid) out of total (:total_amount)',
     'member_moneybox_remain_msg' => 'Pay: Membership client (:member), subscription in (:subscription), paid (:amount_paid), Remaining amount now (:amount_remaining)',
