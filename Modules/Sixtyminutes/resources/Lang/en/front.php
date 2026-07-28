@@ -58,6 +58,7 @@ return [
     'subscribe' => 'Subscribe',
     'payment_methods' => 'We Accept',
     'choose_payment_methods' => 'Choose payment method',
+    'no_payment_methods_available' => 'No payment methods are currently available. Please contact us to complete your subscription.',
     'pay_now' => 'Pay Now',
     'other_subscriptions' => 'Subscriptions',
     'mada_payment_msg' => 'Pay subscription using Visa, Mada or American Express',

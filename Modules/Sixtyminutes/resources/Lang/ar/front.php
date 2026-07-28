@@ -59,6 +59,7 @@ return [
     'subscribe' => 'اشترك',
     'payment_methods' => 'نقبل الدفع بـ',
     'choose_payment_methods' => 'اختر طريقة الدفع',
+    'no_payment_methods_available' => 'لا توجد طرق دفع متاحة حاليًا. يرجى التواصل معنا لإتمام اشتراكك.',
     'pay_now' => 'ادفع الان',
     'other_subscriptions' => 'الاشتراكات',
     'tabby_installment_msg' => 'ادفع لاحقًا عبر تابي',
