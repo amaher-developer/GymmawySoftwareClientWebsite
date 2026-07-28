@@ -14,6 +14,7 @@ use Modules\Sixtyminutes\Models\MemberSubscription;
 use Modules\Sixtyminutes\Models\MoneyBox;
 use Modules\Sixtyminutes\Models\PaymentOnlineInvoice;
 use Modules\Sixtyminutes\Models\Subscription;
+use Modules\Sixtyminutes\Models\PTClass;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
