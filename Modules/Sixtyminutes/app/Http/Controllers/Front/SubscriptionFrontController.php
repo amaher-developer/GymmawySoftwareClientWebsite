@@ -77,6 +77,14 @@ class SubscriptionFrontController extends GenericFrontController
         return view('sixtyminutes::Front.subscription_mobile', compact('title', 'record'));
     }
 
+    public function showPTClass($id)
+    {
+        $record = PTClass::where('id', $id)->first();
+        $pt_classes = @PTClass::where('id', '!=', $id)->where('is_web', true)->get();
+        $title = $record['title'];
+        return view('sixtyminutes::Front.pt_class', compact('title', 'record', 'pt_classes'));
+    }
+
     public function invoice($invoice_id)
     {
         $this->current_user = request()->hasSession() ? request()->session()->get('user') : null;
