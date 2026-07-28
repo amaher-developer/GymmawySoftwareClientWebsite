@@ -5,17 +5,9 @@ use Modules\Sixtyminutes\app\Http\Controllers\Front\SubscriptionFrontController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
-Route::post('/payments/verify/{payment?}', [SubscriptionFrontController::class, 'payment_verify'])->name('verify-payment');
-Route::get('/payments/tabby-verify/{payment?}', [SubscriptionFrontController::class, 'tabby_payment_verify'])->name('tabby-verify-payment');
-Route::get('/payments/tamara-verify/{payment?}', [SubscriptionFrontController::class, 'tamara_payment_verify'])->name('tamara-verify-payment');
-//Route::get('/payments/paytabs-verify/{payment?}', [SubscriptionFrontController::class, 'paytabs_payment_verify'])->name('paytabs-verify-payment');
-
-Route::match(['get', 'post'], 'payments/paytabs-verify', [SubscriptionFrontController::class, 'paytabs_payment_verify'])
-    ->name('paytabs-verify-payment');
-// tamara-notify moved to Api/main.php to avoid CSRF blocking webhook POSTs
-Route::post('/payments/tamara-refund/{invoice}', [SubscriptionFrontController::class, 'tamaraRefund'])->name('tamara-refund')->middleware(['permission:super']);
-Route::get('/payments/error/{payment?}', [SubscriptionFrontController::class, 'error_payment'])->name('error-payment');
+// Payment/subscription routes (verify-payment, error-payment, tabby/tamara/paytabs-verify-payment,
+// tamara-refund) live in routes/Front/SubscriptionFrontRoutes.php — that file is loaded inside the
+// locale-prefixed group below, which the return-URLs generated at checkout time depend on.
 
 Route::get('/go', [MainFrontController::class, 'smartLink'])->name('smart-link');
 
