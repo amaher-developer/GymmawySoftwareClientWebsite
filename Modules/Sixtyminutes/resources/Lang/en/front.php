@@ -14,6 +14,7 @@ return [
     'testimonials' => 'Testimonials',
     'powered_by' => 'Powered by',
     'subscriptions' => 'Subscriptions',
+    'pt' => 'Personal Training Classes',
     'period' => 'Training period',
     'session_num' => 'Sessions',
     'day' => 'day',

@@ -14,6 +14,7 @@ return [
     'testimonials' => 'شهادة الاعضاء',
     'powered_by' => 'مدعومة من',
     'subscriptions' => 'الاشتراكات',
+    'pt' => 'حصص التدريب الشخصي',
     'period' => 'مده التدريب',
     'session_num' => 'عدد الحصص',
     'day' => 'يوم',
