@@ -1187,7 +1187,7 @@
                 <div class="col-lg-5">
                     <div class="animated bounceInLeft slow about-video-wrap">
                         <video autoplay muted loop playsinline>
-                            <source src="https://cdn.dietcenter.com.sa/sekaweeeeeb.mp4" type="video/mp4">
+                            <source src="https://dietplate.fit/Modules/Dietplate/resources/assets/img/dietplate_gymmawy.mp4" type="video/mp4">
                         </video>
                     </div>
                 </div>
