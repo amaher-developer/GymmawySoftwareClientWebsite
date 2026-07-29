@@ -213,7 +213,6 @@
             <div class="payment-details">
                 <label for="tabby_m">{{trans('front.tabby_installment_msg')}}</label>
                 <img src="{{ asset('resources/assets/images/tabby-logo.webp') }}" alt="Tabby">
-                <span class="policy-msg">{{trans('front.tabby_policy_msg')}}</span>
                 <div id="tabbyCard"></div>
             </div>
         </div>

@@ -62,7 +62,7 @@ return [
     'no_payment_methods_available' => 'لا توجد طرق دفع متاحة حاليًا. يرجى التواصل معنا لإتمام اشتراكك.',
     'pay_now' => 'ادفع الان',
     'other_subscriptions' => 'الاشتراكات',
-    'tabby_installment_msg' => 'ادفع لاحقًا عبر تابي',
+    'tabby_installment_msg' => 'ادفع لاحقًا مع تابي',
     'mada_payment_msg' => 'ادفع الاشتراك باستخدام فيزا او مدي او امريكان اكسبرس',
     'male' => 'ذكر',
     'female' => 'انثي',

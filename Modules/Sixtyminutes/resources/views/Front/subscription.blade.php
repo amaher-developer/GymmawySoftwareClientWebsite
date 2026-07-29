@@ -261,7 +261,7 @@
                                         <p>
                                             <img style="height: 45px; width: auto; padding: 5px; margin-top: 20px; border: solid grey 1px; border-radius: 5px; object-fit: contain;"
                                                  src="{{asset('resources/assets/images/tabby-logo.webp')}}">
-                                        <span style="font-size: 12px;vertical-align: bottom;">{{trans('front.tabby_policy_msg')}}</span></p>
+                                        </p>
                                         <div id="tabbyCard" class="row col-md-12 col-xs-12"></div>
                                     </div>
                                 </div>
