@@ -47,7 +47,7 @@
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/bootstrap.min.css')}}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/style_Dietplate.css')}}" rel="stylesheet">
+    <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/style_dietplate.css')}}" rel="stylesheet">
 
     <!-- Responsive CSS -->
     <link href="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/css/responsive.css')}}" rel="stylesheet">
