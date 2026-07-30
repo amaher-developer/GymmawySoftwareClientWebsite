@@ -381,7 +381,7 @@
                 <span aria-hidden="true">&times;</span>
             </button>
             <div class="modal-body p-0">
-                <video id="welcomeVideoPlayer" width="100%" autoplay  playsinline style="display:block;">
+                <video id="welcomeVideoPlayer" width="100%" autoplay muted playsinline style="display:block;">
                     <source src="https://dietplate.fit/Modules/Dietplate/resources/assets/img/dietplate_gymmawy.mp4" type="video/mp4">
                 </video>
             </div>
