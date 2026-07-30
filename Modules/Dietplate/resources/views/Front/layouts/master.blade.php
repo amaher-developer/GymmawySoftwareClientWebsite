@@ -381,7 +381,7 @@
                 <span aria-hidden="true">&times;</span>
             </button>
             <div class="modal-body p-0">
-                <video id="welcomeVideoPlayer" width="100%" autoplay playsinline style="display:block;">
+                <video id="welcomeVideoPlayer" width="100%" autoplay muted playsinline style="display:block;">
                     <source src="https://dietplate.fit/Modules/Dietplate/resources/assets/img/dietplate_gymmawy.mp4" type="video/mp4">
                 </video>
             </div>
@@ -399,17 +399,7 @@
 
         $('#welcomeVideoModal').on('shown.bs.modal', function () {
             var player = document.getElementById('welcomeVideoPlayer');
-            if (!player) return;
-            // Browsers block unmuted autoplay without prior user interaction — try unmuted
-            // first, and only if that's actually rejected, fall back to muted so the video
-            // still plays (silently) instead of sitting frozen on the first frame.
-            var playPromise = player.play();
-            if (playPromise && typeof playPromise.catch === 'function') {
-                playPromise.catch(function () {
-                    player.muted = true;
-                    player.play();
-                });
-            }
+            if (player) { player.play(); }
         });
 
         $('#welcomeVideoModal').on('hidden.bs.modal', function () {
