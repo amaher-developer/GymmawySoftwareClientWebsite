@@ -15,6 +15,7 @@ use Modules\Dietplate\Models\MemberSubscriptionOption;
 use Modules\Dietplate\Models\MoneyBox;
 use Modules\Dietplate\Models\PaymentOnlineInvoice;
 use Modules\Dietplate\Models\Subscription;
+use Modules\Dietplate\Models\ReservationMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -184,6 +185,36 @@ class SubscriptionFrontController extends GenericFrontController
                 $member_data['vat'] = round((float)(@$request->amount ?? 0) - $basePrice, 2);
             } else {
                 $member_data['vat'] = 0;
+            }
+
+            // TEMPORARY: no live payment gateway approved yet — capture as a lead and notify
+            // the company instead of actually charging. Does NOT create Member/MemberSubscription/
+            // MoneyBox records. Remove this block (and the `if` it's wrapped in) once a real
+            // gateway goes live; paymentGatewayConfigured() will then let the normal dispatch below run.
+            if (!$this->paymentGatewayConfigured()) {
+                ReservationMember::create([
+                    'name'            => $member_data['name'],
+                    'phone'           => $member_data['phone'],
+                    'subscription_id' => $subscription_id,
+                    'type'            => 0,
+                ]);
+
+                $this->sendDietOrderAdminEmailFromData([
+                    'isPaid'           => false,
+                    'name'             => $member_data['name'],
+                    'phone'            => $member_data['phone'],
+                    'email'            => $member_data['email'],
+                    'address'          => $member_data['address'],
+                    'gender'           => $member_data['gender'] ?? null,
+                    'dob'              => $member_data['dob'] ?? null,
+                    'subscriptionName' => $subscription->name,
+                    'amount'           => $member_data['amount'],
+                    'currency'         => trans('front.pound_unit'),
+                ]);
+
+                GymmawyNotificationService::notifyReservation();
+
+                return redirect()->route('diet-plan.thanks');
             }
 
             if(@$request->payment_method == Constants::MADA){

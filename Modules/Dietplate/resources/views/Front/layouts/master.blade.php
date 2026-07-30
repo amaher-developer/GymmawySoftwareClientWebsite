@@ -184,9 +184,9 @@
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#about">{{trans('front.about')}}</a>
                                 </li>
-                                <li class="nav-item">
+                                <!--<li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#activities">{{trans('front.activities', [], $lang)}}</a>
-                                </li>
+                                </li>-->
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="{{asset($lang)}}#gallery">{{trans('front.gallery')}}</a>
                                 </li>
@@ -275,7 +275,7 @@
                     <div class="tag-group clearfix">
                         <a class="tag-btn " href="{{route('home')}}#page-top">{{trans('front.home')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#about">{{trans('front.about')}}</a>
-                        <a class="tag-btn " href="{{route('home')}}#activities">{{trans('front.activities')}}</a>
+                        <!--<a class="tag-btn " href="{{route('home')}}#activities">{{trans('front.activities')}}</a>-->
                         <a class="tag-btn " href="{{route('home')}}#gallery">{{trans('front.gallery')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#subscriptions">{{trans('front.subscriptions')}}</a>
                         <a class="tag-btn " href="{{route('home')}}#contact">{{trans('front.contact_us')}}</a>
@@ -372,6 +372,38 @@
 
 <!-- Custom Js -->
 <script type="text/javascript" src="{{asset('resources/' . env('TEMPLATE_NUM', '') . '/assets/js/main.js')}}"></script>
+
+<!-- Welcome video popup — shown once per browser on first visit -->
+<div class="modal fade" id="welcomeVideoModal" tabindex="-1" role="dialog" aria-labelledby="welcomeVideoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content" style="background: #000;">
+            <button type="button" class="close" data-dismiss="modal" aria-label="{{trans('global.close')}}" style="position:absolute; top:8px; {{ $lang == 'ar' ? 'left' : 'right' }}:15px; z-index:10; color:#fff; opacity:1; text-shadow:none;">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="modal-body p-0">
+                <video id="welcomeVideoPlayer" width="100%" controls playsinline style="display:block;">
+                    <source src="https://dietplate.fit/Modules/Dietplate/resources/assets/img/dietplate_gymmawy.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        try {
+            if (!window.localStorage.getItem('dp_welcome_video_shown')) {
+                $('#welcomeVideoModal').modal('show');
+                window.localStorage.setItem('dp_welcome_video_shown', '1');
+            }
+        } catch (e) {}
+
+        $('#welcomeVideoModal').on('hidden.bs.modal', function () {
+            var player = document.getElementById('welcomeVideoPlayer');
+            if (player) { player.pause(); }
+        });
+    });
+</script>
+
 @yield('script')
 
 </body>

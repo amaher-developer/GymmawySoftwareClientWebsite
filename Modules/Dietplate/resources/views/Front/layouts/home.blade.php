@@ -1706,11 +1706,22 @@ function recommendDietPackage(bmi, age, weightKg, heightCm) {
     var categoryId = bmi < 18.5 ? bmiBulkingCategoryId : (bmi < 25 ? bmiMaintenanceCategoryId : bmiCuttingCategoryId);
     var targetWorkouts = mealCount * 30;
 
-    var match = bmiDietSubscriptions.find(function (s) {
-        return s.category_id === categoryId && s.workouts === targetWorkouts;
-    });
+    // Prefer a subscription in the matched category with the closest workouts count to the
+    // target; fall back to the closest match across all subscriptions if that category has
+    // none. Previously this required an EXACT category+workouts match, which silently hid
+    // the recommendation whenever no subscription happened to have precisely that combination.
+    var pool = categoryId
+        ? bmiDietSubscriptions.filter(function (s) { return s.category_id === categoryId; })
+        : [];
+    if (!pool.length) pool = bmiDietSubscriptions;
 
-    if (!categoryId || !match) {
+    var match = pool.reduce(function (best, s) {
+        var diff = Math.abs(s.workouts - targetWorkouts);
+        return (!best || diff < best.diff) ? { sub: s, diff: diff } : best;
+    }, null);
+    match = match ? match.sub : null;
+
+    if (!match) {
         card.classList.remove('show');
         card.style.display = 'none';
         return;

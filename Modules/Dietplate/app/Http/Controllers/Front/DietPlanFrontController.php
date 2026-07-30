@@ -505,14 +505,6 @@ class DietPlanFrontController extends SubscriptionFrontController
     }
 
     /**
-     * True when at least one online payment gateway has credentials configured for this client.
-     */
-    protected function paymentGatewayConfigured(): bool
-    {
-        return (bool) (env('TABBY_SK') || env('TAMARA_API_TOKEN') || env('PAYTABS_PROFILE_ID'));
-    }
-
-    /**
      * Straight-line (Haversine) distance check against the branch location configured
      * in Settings, used as the server-side backstop for the map picker's zone check.
      */

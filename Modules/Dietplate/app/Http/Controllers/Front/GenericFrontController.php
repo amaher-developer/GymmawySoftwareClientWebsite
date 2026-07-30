@@ -132,4 +132,13 @@ class GenericFrontController extends GenericController
 
 
     }
+
+    /**
+     * True when at least one online payment gateway has credentials configured for this client.
+     * Shared by SubscriptionFrontController and DietPlanFrontController.
+     */
+    protected function paymentGatewayConfigured(): bool
+    {
+        return (bool) (env('TABBY_SK') || env('TAMARA_API_TOKEN') || env('PAYTABS_PROFILE_ID'));
+    }
 }
