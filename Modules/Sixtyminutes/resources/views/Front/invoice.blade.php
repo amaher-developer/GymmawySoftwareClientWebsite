@@ -267,6 +267,12 @@
 
             </table>
         </table>
+        @if(!empty($mainSettings->terms))
+        <div style="max-width:800px; margin: 20px auto; padding: 20px; background:#fffbf0; border:1px solid #f5d77e; border-radius:8px; font-size:14px; line-height:1.7; color:#555;">
+            <strong style="display:block; margin-bottom:8px; color:#b8860b;">&#128196; {{trans('front.terms')}}</strong>
+            <div>{!! $mainSettings->terms !!}</div>
+        </div>
+        @endif
     </div>
     </section>
 @endsection

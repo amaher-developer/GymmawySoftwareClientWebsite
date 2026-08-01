@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Modules\Common\Services\GymmawyNotificationService;
 
@@ -308,6 +309,7 @@ class SubscriptionFrontController extends GenericFrontController
                         request()->session()->put('user', $user->member);
                     }
                     $this->sendSubscriptionNotification(@$member_subscription->id, @$payment_invoice['phone'], $type_of_payment);
+                    $this->sendSubscriptionInvoiceEmail($payment_invoice, $member_subscription);
                     GymmawyNotificationService::notifyPayment();
                     return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
                 }
@@ -700,6 +702,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendSubscriptionInvoiceEmail($paymentInvoice, $memberSubscription);
 
             return response()->json(['status' => 'success'], 200);
 
@@ -1338,6 +1341,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendSubscriptionInvoiceEmail($paymentInvoice, $memberSubscription);
 
             Log::info('Tamara webhook processed successfully', [
                 'tamara_order_id' => $orderId,
@@ -1553,6 +1557,9 @@ class SubscriptionFrontController extends GenericFrontController
         if (empty($result['early']) && @$result['memberSubscription']->id && @$result['member']->phone) {
             $this->sendSubscriptionNotification($result['memberSubscription']->id, $result['member']->phone, $result['type']);
         }
+        if (empty($result['early']) && @$result['memberSubscription']->id) {
+            $this->sendSubscriptionInvoiceEmail($invoice, $result['memberSubscription']);
+        }
         GymmawyNotificationService::notifyPayment();
         return $result['memberSubscription'];
         } finally {
@@ -1681,6 +1688,61 @@ class SubscriptionFrontController extends GenericFrontController
         return $amount;
     }
 
+
+    protected function sendSubscriptionInvoiceEmail(PaymentOnlineInvoice $invoice, MemberSubscription $memberSubscription): void
+    {
+        $email = $invoice->email ?? null;
+        if (empty($email)) {
+            return;
+        }
+
+        try {
+            $settings   = $this->mainSettings;
+            $memberSubscription->loadMissing(['subscription', 'member']);
+
+            $gymName  = optional($settings)->name ?? config('app.name');
+            $gymLogo  = optional($settings)->logo
+                ? asset(optional($settings)->logo)
+                : null;
+
+            $data = [
+                'invoiceId'        => $memberSubscription->id,
+                'memberName'       => $invoice->name ?? optional($memberSubscription->member)->name ?? '',
+                'subscriptionName' => optional($invoice->subscription)->name ?? optional($memberSubscription->subscription)->name ?? '',
+                'joiningDate'      => $memberSubscription->joining_date
+                    ? Carbon::parse($memberSubscription->joining_date)->toDateString()
+                    : '',
+                'expireDate'       => $memberSubscription->expire_date
+                    ? Carbon::parse($memberSubscription->expire_date)->toDateString()
+                    : '',
+                'amount'           => (float) $memberSubscription->amount_paid,
+                'vat'              => (float) $memberSubscription->vat,
+                'vatPercentage'    => (float) $memberSubscription->vat_percentage,
+                'currency'         => trans('front.app_currency'),
+                'gymName'          => $gymName,
+                'gymLogo'          => $gymLogo,
+                'terms'            => optional($settings)->terms ?? '',
+                'createdAt'        => $memberSubscription->created_at
+                    ? Carbon::parse($memberSubscription->created_at)->format('Y-m-d')
+                    : Carbon::now()->toDateString(),
+            ];
+
+            $fromEmail = optional($settings)->noreply_email ?: config('mail.from.address');
+            $fromName  = $gymName;
+
+            Mail::send('emails.subscription_invoice', $data, function ($message) use ($email, $data, $fromEmail, $fromName) {
+                $message->to($email, $data['memberName'])
+                    ->from($fromEmail, $fromName)
+                    ->subject($data['gymName'] . ' - ' . trans('front.invoice') . ' #' . $data['invoiceId']);
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Subscription invoice email failed', [
+                'email'      => $email,
+                'invoice_id' => $invoice->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+    }
 
     public function tabbyRegisterWebhook()
     {
@@ -1984,6 +2046,7 @@ class SubscriptionFrontController extends GenericFrontController
             DB::commit();
 
             $this->sendSubscriptionNotification($memberSubscription->id, $member->phone, $typeOfPayment);
+            $this->sendSubscriptionInvoiceEmail($paymentInvoice, $memberSubscription);
 
             Log::info('Paytabs IPN processed successfully', [
                 'tran_ref'               => $tranRef,

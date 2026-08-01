@@ -159,6 +159,8 @@
                                                                placeholder="{{trans('front.name')}}" required="">
                                                         <input type="text" name="phone" class="form-control"
                                                                placeholder="{{trans('front.phone')}}" required="">
+                                                        <input type="email" name="email" class="form-control"
+                                                               placeholder="{{trans('front.email')}}" required="">
                                                         <div class="row text-center">
                                                             <div class="col-md-1"><input type="radio" name="gender" value="{{\App\Http\Classes\Constants::MALE}}"
                                                                                          class="form-control male"
@@ -179,6 +181,7 @@
                                                         </div>
                                                         <label style="font-size: 13px; color: #555; margin-bottom: 2px; display: block; padding: 0 10px;">{{trans('front.birthdate')}}</label>
                                                         <input type="date" name="dob" class="form-control"
+                                                               max="{{\Carbon\Carbon::now()->subYears(16)->format('Y-m-d')}}"
                                                                required="">
                                                         <input type="text" name="address" class="form-control"
                                                                placeholder="{{trans('front.address')}}" required="">
@@ -322,6 +325,13 @@
                             @endif
 
                             @if($anyGatewayAvailable)
+                            <div class="col-lg-12" style="margin-bottom: 15px;">
+                                <input type="checkbox" name="terms" id="terms" value="1" required style="width: 16px; height: 16px; vertical-align: middle;">
+                                <label for="terms" style="display: inline; font-weight: normal;">
+                                    {{trans('front.terms_agree_prefix')}}
+                                    <a href="{{route('terms')}}" target="_blank">{{trans('front.terms')}}</a>
+                                </label>
+                            </div>
                             <div class="col-lg-12 simple-btn-div">
                                 <input class="btn btn-default mb-4 simple-btn"
                                         type="submit" value="{{trans('front.pay_now')}}" />

@@ -38,17 +38,21 @@ class SubscriptionRequest extends FormRequest
 
         $today = \Carbon\Carbon::now()->format('Y-m-d');
         $maxDate = \Carbon\Carbon::now()->addMonths(1)->format('Y-m-d');
+        $maxDob = \Carbon\Carbon::now()->subYears(16)->format('Y-m-d');
 
         $data = [
             'subscription_id' => 'required',
             'payment_method' => 'required',
             'joining_date' => "required|date|after_or_equal:{$today}|before_or_equal:{$maxDate}",
+            'terms' => 'required|accepted',
         ];
         if(!$user){
             $data['name'] = 'required';
             $data['phone'] = 'required';
+            $data['email'] = 'required|email';
             $data['gender'] = 'required';
             $data['address'] = 'required';
+            $data['dob'] = "required|date|before_or_equal:{$maxDob}";
         }
         return $data;
     }
@@ -65,6 +69,12 @@ class SubscriptionRequest extends FormRequest
             'joining_date.date' => trans('front.joining_date_must_be_valid_date'),
             'joining_date.after_or_equal' => trans('front.joining_date_cannot_be_in_past'),
             'joining_date.before_or_equal' => trans('front.joining_date_cannot_exceed_one_month'),
+            'email.required' => trans('front.email_required'),
+            'email.email' => trans('front.email_must_be_valid'),
+            'dob.required' => trans('front.birthdate'),
+            'dob.before_or_equal' => trans('front.dob_must_be_16_or_older'),
+            'terms.required' => trans('front.terms_must_be_accepted'),
+            'terms.accepted' => trans('front.terms_must_be_accepted'),
         ];
     }
 }
