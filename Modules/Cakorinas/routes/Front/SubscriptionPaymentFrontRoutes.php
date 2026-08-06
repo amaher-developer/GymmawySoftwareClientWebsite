@@ -12,7 +12,7 @@ Route::name('invoice-return')->any('/invoice-return-payment', [SubscriptionPayme
 
 // Paymob payment routes
 Route::name('paymob-verify-payment')->any('/paymob/verify-payment', [SubscriptionPaymentFrontController::class, 'paymobVerifyPayment']);
-Route::name('error-payment')->get('/error-payment', [SubscriptionPaymentFrontController::class, 'error_payment']);
+Route::name('error-payment-legacy')->get('/error-payment', [SubscriptionPaymentFrontController::class, 'error_payment']);
 
 
 

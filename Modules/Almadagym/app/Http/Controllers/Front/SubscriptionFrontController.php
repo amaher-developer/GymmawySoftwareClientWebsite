@@ -11,12 +11,15 @@ use App\Modules\Almadagym\app\Models\Member;
 
 use App\Modules\Almadagym\app\Models\MemberSubscription;
 use App\Modules\Almadagym\app\Models\MoneyBox;
+use App\Modules\Almadagym\app\Models\MoneyBoxBalance;
 use App\Modules\Almadagym\app\Models\PaymentOnlineInvoice;
 use App\Modules\Almadagym\app\Models\PTClass;
 use App\Modules\Almadagym\app\Models\ReservationMember;
 use App\Modules\Almadagym\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Nafezly\Payments\Classes\PaytabsPayment;
 use Modules\Common\Services\GymmawyNotificationService;
 class SubscriptionFrontController extends GenericFrontController
@@ -213,19 +216,56 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function payment_verify(Request $request)
     {
-        $payment = new PaytabsPayment();
         $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
             $q->withTrashed();
         }])->where('payment_id', $request['payment_id'])->first();
 
-        if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            $payment = $payment->verify($request);
-            if($payment['success']) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
+        if (!$payment_invoice) {
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
+
+        // Already processed by a concurrent call (browser return vs. Paytabs server notification
+        // can both hit this same route independently for the same payment).
+        if ($payment_invoice->member_subscription_id) {
+            return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+        }
+
+        $payment = new PaytabsPayment();
+        $request['tran_ref'] = $payment_invoice->transaction_id;
+        $payment = $payment->verify($request);
+
+        if (!$payment['success']) {
+            $payment_invoice->status = Constants::FAILED;
             $payment_invoice->response_code = $payment['process_data'];
             $payment_invoice->save();
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
 
-            if($payment['success']){
+        $lockKey = 'mada_finalize_' . $payment_invoice->id;
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('MADA payment_verify: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $payment_invoice->id,
+            ]);
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
+
+        try {
+            $member_subscription = null;
+
+            DB::transaction(function () use ($payment, $payment_invoice, &$member_subscription) {
+                // Re-fetch with exclusive row lock and re-check inside the lock
+                $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+                    $q->withTrashed();
+                }])->where('id', $payment_invoice->id)->lockForUpdate()->first();
+
+                if ($payment_invoice->member_subscription_id) {
+                    return;
+                }
+
+                $payment_invoice->status = Constants::SUCCESS;
+                $payment_invoice->response_code = $payment['process_data'];
+                $payment_invoice->save();
+
                 // add member and subscription to database and active it
                 $member = @(array)$this->current_user;
                 $type_of_payment = Constants::RenewMember;
@@ -236,47 +276,43 @@ class SubscriptionFrontController extends GenericFrontController
                     $type_of_payment = Constants::CreateMember;
                 }
 
-                if($member){
-                    $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                        'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                    $payment_invoice->member_subscription_id = @$member_subscription->id;
-                    $payment_invoice->save();
-
-                    $amount_box = MoneyBox::first();
-                    $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg',
-                        [
-                            'subscription' => @$payment_invoice->subscription->name,
-                            'member' => @$member['name'],
-                            'amount_paid' => @$payment_invoice->amount,
-                            'amount_remaining' => 0,
-                        ]);
-
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
-
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
-
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
-                        request()->session()->put('user', $user->member);
-                    }
-                    GymmawyNotificationService::notifyPayment();
-                    return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
+                if(!$member){
+                    return;
                 }
+
+                $member = is_array($member) ? Member::find($member['id']) : $member;
+
+                $member_subscription = MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
+                    'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
+                    'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+
+                $payment_invoice->member_subscription_id = $member_subscription->id;
+                $payment_invoice->save();
+
+                $this->createMoneyBoxEntry($payment_invoice, $member, $type_of_payment);
+
+                if(!@$this->current_user->id){
+                    $auth = new AuthFrontController();
+                    $user = $auth->getSubscriptionInfo($member->code, $member->phone);
+                    request()->session()->put('user', $user->member);
+                }
+            });
+
+            if ($member_subscription) {
+                GymmawyNotificationService::notifyPayment();
+                return \redirect()->route('invoice', ['id' => $member_subscription->id]);
             }
+
+            // Either already processed by a concurrent request, or member resolution failed.
+            $payment_invoice->refresh();
+            if ($payment_invoice->member_subscription_id) {
+                return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+            }
+
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
-
-        // :this process after payment successfully
-        // send member info. to system
-        // send membership info. to system
-
-        // redirect to infocie
-        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
     // tabby
@@ -376,144 +412,136 @@ class SubscriptionFrontController extends GenericFrontController
             $q->withTrashed();
         }])->where('transaction_id', @$payment->id)->first();
 
-        $member = [];
-//        if($payment->status == Constants::AUTHORIZED){
-        if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
-
-            // add member and subscription to database and active it
-            if(@$payment_invoice['member_id']){
-                $member = Member::where('id', $payment_invoice['member_id'])->first();
-            }
-
-            $type_of_payment = Constants::RenewMember;
-            $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-
-            if(!@$member && !@$member['id']){
-                // must generate code and make user id nullable
-                $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
-                $member = $member->toArray();
-                $type_of_payment = Constants::CreateMember;
-            }
-
-
-            // step 4: capture payment
-            $capture = new TabbyService();
-            $capture = $capture->capturePayment(@$request->id, $payment_invoice['amount']);
-
-
-            if($member && ($capture->status == Constants::CLOSED)){
-
-                $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                    'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                    'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                $payment_invoice->member_subscription_id = @$member_subscription->id;
-                $payment_invoice->save();
-
-                $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                $notes = trans('sw.member_moneybox_add_msg',
-                    [
-                        'subscription' => @$payment_invoice['subscription']->name,
-                        'member' => @$member['name'],
-                        'amount_paid' => @$payment_invoice['amount'],
-                        'amount_remaining' => 0,
-                    ]);
-                if(@$payment_invoice['vat_percentage']){
-                    $notes = $notes.' - '.trans('sw.vat_added');
-                }
-
-                MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice['id']]);
-
-
-                mail('eng.a7med.ma7er@gmail.com', 'fitnessstep', 'test successfull member: '. $member['name']);
-                return true;
-            }
+        if (!$payment_invoice || $payment_invoice->member_subscription_id) {
+            return false;
         }
-        return false;
+
+        if (!in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])) {
+            return false;
+        }
+
+        return $this->finalizeTabbyPayment($payment_invoice, $request->id) !== null;
     }
 
     public function tabby_payment_verify(Request $request)
     {
-        $payment = new TabbyService();
         $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
             $q->withTrashed();
         }])->where('transaction_id', $request['payment_id'])->first();
 
-        if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            // step 2: payment verification
-            $payment = $payment->getPayment($request['payment_id']);
-            // step 3: webhook
-            $webhook = new TabbyService();
-            $webhook->getWebHooks($request['payment_id']);
+        if (!$payment_invoice) {
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
 
-//            if(@$payment->status == Constants::AUTHORIZED) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
-            $payment_invoice->response_code = (array)($payment);
-            $payment_invoice->save();
+        if ($payment_invoice->member_subscription_id) {
+            return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+        }
 
-//            if($payment->status == Constants::AUTHORIZED){
-                if(in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])){
-                // add member and subscription to database and active it
-                $member = @(array)$this->current_user;
+        $payment = new TabbyService();
+        // step 2: payment verification
+        $payment = $payment->getPayment($request['payment_id']);
+        // step 3: webhook
+        $webhook = new TabbyService();
+        $webhook->getWebHooks($request['payment_id']);
+
+        $payment_invoice->response_code = (array)($payment);
+        $payment_invoice->save();
+
+        if (!in_array($payment->status, [Constants::AUTHORIZED, Constants::CLOSED])) {
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
+
+        $member_subscription = $this->finalizeTabbyPayment($payment_invoice, $request['payment_id']);
+
+        if ($member_subscription) {
+            return \redirect()->route('invoice', ['id' => $member_subscription->id]);
+        }
+
+        $payment_invoice->refresh();
+        if ($payment_invoice->member_subscription_id) {
+            return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+        }
+
+        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+    }
+
+    /**
+     * Shared by tabbyNotify() (server webhook) and tabby_payment_verify() (browser return) —
+     * both can independently fire for the same Tabby payment, so capture + the member/
+     * subscription/money-box writes must happen at most once, guarded by an advisory lock
+     * plus a re-check of member_subscription_id inside a row lock.
+     */
+    protected function finalizeTabbyPayment(PaymentOnlineInvoice $payment_invoice, string $tabbyPaymentId): ?MemberSubscription
+    {
+        $lockKey = 'tabby_finalize_' . $payment_invoice->id;
+        if (!$this->acquireAdvisoryLock($lockKey)) {
+            Log::error('Tabby finalize: failed to acquire advisory lock, aborting to avoid duplicate processing', [
+                'invoice_id' => $payment_invoice->id,
+            ]);
+            return null;
+        }
+
+        try {
+            $member_subscription = null;
+
+            DB::transaction(function () use ($payment_invoice, $tabbyPaymentId, &$member_subscription) {
+                $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+                    $q->withTrashed();
+                }])->where('id', $payment_invoice->id)->lockForUpdate()->first();
+
+                if ($payment_invoice->member_subscription_id) {
+                    return;
+                }
+
+                $member = null;
+                if ($payment_invoice->member_id) {
+                    $member = Member::find($payment_invoice->member_id);
+                }
+
                 $type_of_payment = Constants::RenewMember;
-                if(!@$member->id){
-                    // must generate code and make user id nullable
+                if (!$member) {
                     $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
                     $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
-                    $member = $member->toArray();
                     $type_of_payment = Constants::CreateMember;
                 }
 
-
                 // step 4: capture payment
                 $capture = new TabbyService();
-                $capture = $capture->capturePayment($request['payment_id'], $payment_invoice['amount']);
+                $capture = $capture->capturePayment($tabbyPaymentId, $payment_invoice['amount']);
 
-                if($member && ($capture->status == Constants::CLOSED)){
-
-                    $payment_invoice->response_code  = (array)($capture);
-                    $payment_invoice->save();
-
-                    $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                        'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
-
-                    $payment_invoice->member_subscription_id = @$member_subscription->id;
-                    $payment_invoice->save();
-
-                    $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                    $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg',
-                        [
-                            'subscription' => @$payment_invoice->subscription->name,
-                            'member' => @$member['name'],
-                            'amount_paid' => @$payment_invoice->amount,
-                            'amount_remaining' => 0,
-                        ]);
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
-
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => Constants::ONLINE_PAYMENT, 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
-
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
-                        request()->session()->put('user', $user->member);
-                    }
-                    GymmawyNotificationService::notifyPayment();
-                    return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
+                if ($capture->status != Constants::CLOSED) {
+                    return;
                 }
+
+                $payment_invoice->response_code = (array)($capture);
+                $payment_invoice->save();
+
+                $member_subscription = MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
+                    'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
+                    'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'payment_type' => Constants::ONLINE_PAYMENT]);
+
+                $payment_invoice->member_subscription_id = $member_subscription->id;
+                $payment_invoice->save();
+
+                $this->createMoneyBoxEntry($payment_invoice, $member, $type_of_payment);
+
+                if (request()->hasSession() && !@$this->current_user->id) {
+                    $auth = new AuthFrontController();
+                    $user = $auth->getSubscriptionInfo($member->code, $member->phone);
+                    request()->session()->put('user', $user->member);
+                }
+
+                mail('eng.a7med.ma7er@gmail.com', 'fitnessstep', 'test successfull member: '. $member['name']);
+            });
+
+            if ($member_subscription) {
+                GymmawyNotificationService::notifyPayment();
             }
+
+            return $member_subscription;
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
-
-        // :this process after payment successfully
-        // send member info. to system
-        // send membership info. to system
-
-        // redirect to infocie
-        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
     public function error_payment(){
@@ -529,6 +557,76 @@ class SubscriptionFrontController extends GenericFrontController
         return view('almadagym::Front.tabby_error_cancel', compact('title'));
     }
 
+
+    /**
+     * Acquire a MySQL advisory lock, waiting up to $timeout seconds.
+     * Returns false (instead of silently proceeding unprotected) if the lock
+     * could not be obtained — callers must treat a false result as "do not proceed".
+     */
+    protected function acquireAdvisoryLock(string $lockKey, int $timeout = 30): bool
+    {
+        $result = DB::selectOne("SELECT GET_LOCK(?, ?) as locked", [$lockKey, $timeout]);
+        return $result && (int) $result->locked === 1;
+    }
+
+    protected function createMoneyBoxEntry(PaymentOnlineInvoice $invoice, $member, int $type): void
+    {
+        $branchSettingId = 1;
+
+        $notes = trans('sw.member_moneybox_add_msg', [
+            'subscription' => optional($invoice->subscription)->name,
+            'member' => is_array($member) ? ($member['name'] ?? null) : $member->name,
+            'amount_paid' => $invoice->amount,
+            'amount_remaining' => 0,
+        ]);
+
+        if ($invoice->vat_percentage) {
+            $notes .= ' - ' . trans('sw.vat_added');
+        }
+
+        // The Gymawy admin program keeps its own running total per branch in
+        // sw_gym_money_box_balances and uses THAT (not the last money-box row) to
+        // compute amount_before for the next transaction it creates. Reading/writing
+        // that same table here — under the same row lock — keeps online payments in
+        // the running-balance chain instead of being silently skipped by the very
+        // next admin-side transaction.
+        DB::transaction(function () use ($invoice, $member, $type, $branchSettingId, $notes) {
+            $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+
+            if (!$balance) {
+                $lastRow = MoneyBox::where('branch_setting_id', $branchSettingId)->orderBy('id', 'desc')->first();
+                $seedAmount = $lastRow
+                    ? self::amountAfter($lastRow->amount, $lastRow->amount_before, (int) $lastRow->operation)
+                    : 0;
+
+                try {
+                    MoneyBoxBalance::create(['branch_setting_id' => $branchSettingId, 'amount' => $seedAmount]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Another concurrent request already created it — fall through and lock it below.
+                }
+                $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+            }
+
+            $amountBefore = round((float) $balance->amount, 2);
+
+            MoneyBox::create([
+                'operation' => Constants::Add,
+                'amount' => $invoice->amount,
+                'vat' => $invoice->vat,
+                'amount_before' => $amountBefore,
+                'notes' => $notes,
+                'member_id' => is_array($member) ? $member['id'] : $member->id,
+                'type' => $type,
+                'payment_type' => Constants::ONLINE_PAYMENT,
+                'member_subscription_id' => $invoice->member_subscription_id,
+                'online_subscription_id' => $invoice->id,
+                'branch_setting_id' => $branchSettingId,
+            ]);
+
+            $balance->amount = round($amountBefore + (float) $invoice->amount, 2);
+            $balance->save();
+        });
+    }
 
     public static function amountAfter($amount, $amountBefore, $operation)
     {

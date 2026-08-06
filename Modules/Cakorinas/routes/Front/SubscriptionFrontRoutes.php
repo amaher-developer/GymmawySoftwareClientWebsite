@@ -12,7 +12,6 @@ Route::name('invoice')->post('/invoice/{id}', [\App\Modules\Cakorinas\app\Http\C
 Route::name('reservation')->post('/reservation/{id}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'reservationSubmit']);
 
 //Route::name('invoiceStore')->any('/invoice-store', 'Front\SubscriptionFrontController@invoiceStore');
-Route::name('invoiceReturn')->any('/invoice-return', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'invoiceReturn']);
 Route::name('tabby-error-cancel')->get('/tabby/error/cancel/{payment?}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'tabbyCancel']);
 Route::name('tabby-error-failure')->get('/tabby/error/failure/{payment?}', [\App\Modules\Cakorinas\app\Http\Controllers\Front\SubscriptionFrontController::class, 'tabbyFailure']);
 

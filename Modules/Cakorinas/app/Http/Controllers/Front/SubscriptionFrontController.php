@@ -11,12 +11,14 @@ use App\Modules\Cakorinas\app\Models\Member;
 
 use App\Modules\Cakorinas\app\Models\MemberSubscription;
 use App\Modules\Cakorinas\app\Models\MoneyBox;
+use App\Modules\Cakorinas\app\Models\MoneyBoxBalance;
 use App\Modules\Cakorinas\app\Models\PaymentOnlineInvoice;
 use App\Modules\Cakorinas\app\Models\PTClass;
 use App\Modules\Cakorinas\app\Models\ReservationMember;
 use App\Modules\Cakorinas\app\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Nafezly\Payments\Classes\PaytabsPayment;
@@ -230,7 +232,7 @@ class SubscriptionFrontController extends GenericFrontController
      * Step 4: Handle payment verification and create subscription
      */
     public function paymobVerify(Request $request)
-    {dd('ssssssss');
+    {
         $transaction_id = $request->input('id');
         $order_id = $request->input('order');
 
@@ -295,32 +297,57 @@ class SubscriptionFrontController extends GenericFrontController
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
 
-                    // Update money box
-                    $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                    $amount_after = SubscriptionFrontController::amountAfter(@$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg', [
-                        'subscription' => @$payment_invoice->subscription->name,
-                        'member' => @$member->name,
-                        'amount_paid' => @$payment_invoice->amount,
-                        'amount_remaining' => 0,
-                    ]);
+                    // Update money box — balance kept in sw_gym_money_box_balances (locked, per
+                    // branch) so the Gymawy admin program's own running total stays in sync with
+                    // online payments instead of computing amount_before from the last ledger row.
+                    $branchSettingId = 1; // Cakorinas is single-branch; matches sw_gym_money_boxes.branch_setting_id default.
+                    $paidAmount = (float) @$payment_invoice->amount;
 
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
+                    DB::transaction(function () use ($payment_invoice, $member, $type_of_payment, $branchSettingId, $paidAmount) {
+                        $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
 
-                    MoneyBox::create([
-                        'operation' => Constants::Add,
-                        'amount' => @$payment_invoice->amount,
-                        'vat' => @$payment_invoice['vat'],
-                        'amount_before' => $amount_after,
-                        'notes' => $notes,
-                        'member_id' => @$member->id,
-                        'type' => $type_of_payment,
-                        'payment_type' => Constants::ONLINE_PAYMENT,
-                        'member_subscription_id' => $payment_invoice['subscription_id'],
-                        'online_subscription_id' => @$payment_invoice->id
-                    ]);
+                        if (!$balance) {
+                            $lastRow = MoneyBox::where('branch_setting_id', $branchSettingId)->orderBy('id', 'desc')->first();
+                            $seedAmount = $lastRow
+                                ? self::amountAfter($lastRow->amount, $lastRow->amount_before, (int) $lastRow->operation)
+                                : 0;
+                            try {
+                                MoneyBoxBalance::create(['branch_setting_id' => $branchSettingId, 'amount' => $seedAmount]);
+                            } catch (\Illuminate\Database\QueryException $e) {
+                                // Another concurrent request already created it — fall through and lock it below.
+                            }
+                            $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+                        }
+
+                        $amount_after = round((float) $balance->amount, 2);
+                        $notes = trans('sw.member_moneybox_add_msg', [
+                            'subscription' => @$payment_invoice->subscription->name,
+                            'member' => @$member->name,
+                            'amount_paid' => @$payment_invoice->amount,
+                            'amount_remaining' => 0,
+                        ]);
+
+                        if(@$payment_invoice->vat_percentage){
+                            $notes = $notes.' - '.trans('sw.vat_added');
+                        }
+
+                        MoneyBox::create([
+                            'operation' => Constants::Add,
+                            'amount' => @$payment_invoice->amount,
+                            'vat' => @$payment_invoice['vat'],
+                            'amount_before' => $amount_after,
+                            'notes' => $notes,
+                            'member_id' => @$member->id,
+                            'type' => $type_of_payment,
+                            'payment_type' => Constants::ONLINE_PAYMENT,
+                            'member_subscription_id' => $payment_invoice['subscription_id'],
+                            'online_subscription_id' => @$payment_invoice->id,
+                            'branch_setting_id' => $branchSettingId,
+                        ]);
+
+                        $balance->amount = round($amount_after + $paidAmount, 2);
+                        $balance->save();
+                    });
 
                     // Login new member
                     if(!@request()->session()->get('user')->id){
@@ -499,9 +526,6 @@ class SubscriptionFrontController extends GenericFrontController
     // Paymob payment verification using new payment architecture
     public function paymob_payment_verify(Request $request)
     {
-        // Log what Paymob sends for debugging
-        //\Log::info('Paymob callback received', ['data' => $request->all()]);
-
         // Extract IDs from Paymob callback
         // Paymob sends: "id" (transaction_id) and "order" (order_id as string)
         $transaction_id = $request->input('id'); // Paymob transaction ID
@@ -518,14 +542,6 @@ class SubscriptionFrontController extends GenericFrontController
             }])->where('transaction_id', $order_id)->first();
         }
 
-        // Log what we found
-        // \Log::info('Paymob - Payment invoice lookup', [
-        //     'transaction_id' => $transaction_id,
-        //     'order_id' => $order_id,
-        //     'invoice_found' => $payment_invoice ? 'yes' : 'no',
-        //     'invoice_id' => $payment_invoice ? $payment_invoice->id : null
-        // ]);
-
         if($payment_invoice){
             // Use PaymentServiceFactory to get Paymob service
             $paymentService = PaymentServiceFactory::make('Cakorinas');
@@ -533,15 +549,6 @@ class SubscriptionFrontController extends GenericFrontController
             // Verify payment with Paymob - pass all request data
             $verificationResult = $paymentService->verifyPayment($request->all());
 
-            // Log verification result for debugging
-            // \Log::info('Paymob verification result', [
-            //     'success' => $verificationResult['success'] ?? false,
-            //     'verified' => $verificationResult['verified'] ?? false,
-            //     'transaction_id' => $verificationResult['transaction_id'] ?? null,
-            //     'message' => $verificationResult['message'] ?? null,
-            //     'error_occurred' => $verificationResult['error_occurred'] ?? false
-            // ]);
-            
             if(@$verificationResult['raw_data']  &&  (@$verificationResult['raw_data']['success'] == "true")){
                 // Payment was successful
                 $payment_invoice->status = Constants::SUCCESS;
@@ -562,7 +569,6 @@ class SubscriptionFrontController extends GenericFrontController
                         'address' => $payment_invoice['address'],
                         'dob' => $payment_invoice['dob']
                     ]);
-                    //$member = $member->toArray();
                     $type_of_payment = Constants::CreateMember;
                 }
                 if($member){
@@ -587,32 +593,57 @@ class SubscriptionFrontController extends GenericFrontController
                     $payment_invoice->member_subscription_id = @$member_subscription->id;
                     $payment_invoice->save();
 
-                    // Update money box
-                    $amount_box = MoneyBox::orderBy('id', 'desc')->first();
-                    $amount_after = SubscriptionFrontController::amountAfter(@$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg', [
-                        'subscription' => @$payment_invoice->subscription->name,
-                        'member' => @$member->name,
-                        'amount_paid' => @$payment_invoice->amount,
-                        'amount_remaining' => 0,
-                    ]);
+                    // Update money box — balance kept in sw_gym_money_box_balances (locked, per
+                    // branch) so the Gymawy admin program's own running total stays in sync with
+                    // online payments instead of computing amount_before from the last ledger row.
+                    $branchSettingId = 1; // Cakorinas is single-branch; matches sw_gym_money_boxes.branch_setting_id default.
+                    $paidAmount = (float) @$payment_invoice->amount;
 
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
+                    DB::transaction(function () use ($payment_invoice, $member, $type_of_payment, $branchSettingId, $paidAmount) {
+                        $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
 
-                    MoneyBox::create([
-                        'operation' => Constants::Add,
-                        'amount' => @$payment_invoice->amount,
-                        'vat' => @$payment_invoice['vat'],
-                        'amount_before' => $amount_after,
-                        'notes' => $notes,
-                        'member_id' => @$member->id,
-                        'type' => $type_of_payment,
-                        'payment_type' => Constants::ONLINE_PAYMENT,
-                        'member_subscription_id' => $payment_invoice['subscription_id'],
-                        'online_subscription_id' => @$payment_invoice->id
-                    ]);
+                        if (!$balance) {
+                            $lastRow = MoneyBox::where('branch_setting_id', $branchSettingId)->orderBy('id', 'desc')->first();
+                            $seedAmount = $lastRow
+                                ? self::amountAfter($lastRow->amount, $lastRow->amount_before, (int) $lastRow->operation)
+                                : 0;
+                            try {
+                                MoneyBoxBalance::create(['branch_setting_id' => $branchSettingId, 'amount' => $seedAmount]);
+                            } catch (\Illuminate\Database\QueryException $e) {
+                                // Another concurrent request already created it — fall through and lock it below.
+                            }
+                            $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+                        }
+
+                        $amount_after = round((float) $balance->amount, 2);
+                        $notes = trans('sw.member_moneybox_add_msg', [
+                            'subscription' => @$payment_invoice->subscription->name,
+                            'member' => @$member->name,
+                            'amount_paid' => @$payment_invoice->amount,
+                            'amount_remaining' => 0,
+                        ]);
+
+                        if(@$payment_invoice->vat_percentage){
+                            $notes = $notes.' - '.trans('sw.vat_added');
+                        }
+
+                        MoneyBox::create([
+                            'operation' => Constants::Add,
+                            'amount' => @$payment_invoice->amount,
+                            'vat' => @$payment_invoice['vat'],
+                            'amount_before' => $amount_after,
+                            'notes' => $notes,
+                            'member_id' => @$member->id,
+                            'type' => $type_of_payment,
+                            'payment_type' => Constants::ONLINE_PAYMENT,
+                            'member_subscription_id' => $payment_invoice['subscription_id'],
+                            'online_subscription_id' => @$payment_invoice->id,
+                            'branch_setting_id' => $branchSettingId,
+                        ]);
+
+                        $balance->amount = round($amount_after + $paidAmount, 2);
+                        $balance->save();
+                    });
 
                     if(!@request()->session()->get('user')->id){
                         $auth = new FrontAuthFrontController();

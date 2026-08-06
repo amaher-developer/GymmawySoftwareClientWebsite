@@ -116,6 +116,19 @@ class GenericFrontController extends GenericController
         // Set the language on the mainSettings object for proper localization
         $this->mainSettings->lang = $this->lang;
 
+        // Apply branch timezone/country from DB settings (settings.app_config) instead of
+        // the unused APP_TIMEZONE/APP_COUNTRY_CODE env vars, so Carbon::now() and friends
+        // reflect the branch's real local time (e.g. Asia/Riyadh) rather than UTC.
+        $appConfig = $this->mainSettings->app_config ?? [];
+        if (!empty($appConfig['timezone'])) {
+            date_default_timezone_set($appConfig['timezone']);
+            config([
+                'app.timezone' => $appConfig['timezone'],
+                'app.timezone_db' => $appConfig['timezone_db'] ?? null,
+                'app.country_code' => $appConfig['country_code'] ?? null,
+            ]);
+        }
+
         View::share('mainSettings', $this->mainSettings);
         View::share('allBranches', $this->allBranches);
         View::share('selectedBranchId', $selectedBranchId);

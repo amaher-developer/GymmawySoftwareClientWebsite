@@ -13,6 +13,7 @@ use Modules\Dietplate\Models\Member;
 use Modules\Dietplate\Models\MemberSubscription;
 use Modules\Dietplate\Models\MemberSubscriptionOption;
 use Modules\Dietplate\Models\MoneyBox;
+use Modules\Dietplate\Models\MoneyBoxBalance;
 use Modules\Dietplate\Models\PaymentOnlineInvoice;
 use Modules\Dietplate\Models\Subscription;
 use Modules\Dietplate\Models\ReservationMember;
@@ -274,76 +275,99 @@ class SubscriptionFrontController extends GenericFrontController
 
     public function payment_verify(Request $request)
     {
-        $payment = new PaytabsPayment();
         $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
             $q->withTrashed();
         }])->where('payment_id', $request['payment_id'])->first();
 
-        if($payment_invoice){
-            $request['tran_ref'] = $payment_invoice->transaction_id;
-            $payment = $payment->verify($request);
-            if($payment['success']) $payment_invoice->status = Constants::SUCCESS; else $payment_invoice->status = Constants::FAILED;
+        if (!$payment_invoice) {
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
+
+        // Already processed by a concurrent call (browser return vs. Paytabs server notification
+        // can both hit this same route independently for the same payment).
+        if ($payment_invoice->member_subscription_id) {
+            return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+        }
+
+        $payment = new PaytabsPayment();
+        $request['tran_ref'] = $payment_invoice->transaction_id;
+        $payment = $payment->verify($request);
+
+        if (!$payment['success']) {
+            $payment_invoice->status = Constants::FAILED;
             $payment_invoice->response_code = $payment['process_data'];
             $payment_invoice->save();
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        }
 
-            if($payment['success']){
+        // Advisory lock — prevents concurrent browser-redirect and IPN from creating duplicates
+        $lockKey = 'mada_finalize_' . $payment_invoice->id;
+        DB::selectOne("SELECT GET_LOCK(?, 30) as locked", [$lockKey]);
+
+        try {
+            $member_subscription = null;
+
+            DB::transaction(function () use ($payment, $payment_invoice, &$member_subscription) {
+                // Re-fetch with exclusive row lock and re-check inside the lock
+                $payment_invoice = PaymentOnlineInvoice::with(['subscription' => function($q){
+                    $q->withTrashed();
+                }])->where('id', $payment_invoice->id)->lockForUpdate()->first();
+
+                if ($payment_invoice->member_subscription_id) {
+                    return;
+                }
+
+                $payment_invoice->status = Constants::SUCCESS;
+                $payment_invoice->response_code = $payment['process_data'];
+                $payment_invoice->save();
+
                 // add member and subscription to database and active it
                 $member = @(array)$this->current_user;
                 $type_of_payment = Constants::RenewMember;
                 if(!@$this->current_user->id){
                     // must generate code and make user id nullable
-                    $maxId = str_pad((Member::withTrashed()->max('code')+1), 14, 0, STR_PAD_LEFT);
-                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob']]);
+                    $branchSettingId = $this->mainSettings->id ?? 1;
+                    $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code')+1), 14, 0, STR_PAD_LEFT);
+                    $member = Member::create(['code' => $maxId, 'name' => $payment_invoice['name'], 'gender' => $payment_invoice['gender'], 'phone' =>  $payment_invoice['phone'], 'address' =>  $payment_invoice['address'] ,'dob' =>  $payment_invoice['dob'], 'branch_setting_id' => $branchSettingId]);
                     $type_of_payment = Constants::CreateMember;
                 }
 
-                if($member){
-                    $member_subscription =  MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
-                        'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
-                        'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
-
-                    $payment_invoice->member_subscription_id = @$member_subscription->id;
-                    $payment_invoice->save();
-
-                    $amount_box = MoneyBox::first();
-                    $amount_after = SubscriptionFrontController::amountAfter( @$amount_box->amount, @$amount_box->amount_before, (int)@$amount_box->operation);
-                    $notes = trans('sw.member_moneybox_add_msg',
-                        [
-                            'subscription' => @$payment_invoice->subscription->name,
-                            'member' => @$member['name'],
-                            'amount_paid' => @$payment_invoice->amount,
-                            'amount_remaining' => 0,
-                        ]);
-
-                    $discountVal = $this->calculateDiscountValue($payment_invoice->subscription);
-                    if ($discountVal > 0) {
-                        $notes = $notes.' - '.trans('sw.discount_msg', ['value' => $discountVal]);
-                    }
-
-                    if(@$payment_invoice->vat_percentage){
-                        $notes = $notes.' - '.trans('sw.vat_added');
-                    }
-
-                    MoneyBox::create(['operation' => Constants::Add, 'amount' => @$payment_invoice->amount, 'vat' => @$payment_invoice['vat'], 'amount_before' => $amount_after, 'notes' => $notes, 'member_id' => $member['id'], 'type' => $type_of_payment, 'payment_type' => $this->resolvePaymentType($payment_invoice), 'member_subscription_id' => $payment_invoice['subscription_id'], 'online_subscription_id' => @$payment_invoice->id]);
-
-                    if(!@$this->current_user->id){
-                        $auth = new AuthFrontController();
-                        $user = $auth->getSubscriptionInfo($maxId, $member['phone']);
-                        request()->session()->put('user', $user->member);
-                    }
-                    $this->sendSubscriptionNotification(@$member_subscription->id, @$payment_invoice['phone'], $type_of_payment);
-                    GymmawyNotificationService::notifyPayment();
-                    return \redirect()->route('invoice', ['id' => @$member_subscription->id]);
+                if(!$member){
+                    return;
                 }
+
+                $member = is_array($member) ? Member::find($member['id']) : $member;
+
+                $member_subscription = MemberSubscription::create(['subscription_id' => $payment_invoice['subscription_id'], 'member_id' => $member['id'], 'workouts' => @$payment_invoice['subscription']['workouts'],
+                    'amount_paid' => @$payment_invoice['amount'], 'vat' => @$payment_invoice['vat'], 'vat_percentage' => @$payment_invoice['vat_percentage'],
+                    'joining_date' => Carbon::now()->toDateTimeString(), 'expire_date' => Carbon::now()->addDays($payment_invoice['subscription']['period']), 'status' => Constants::Active, 'freeze_limit' =>  @$payment_invoice['subscription']['freeze_limit'], 'number_times_freeze' => @$payment_invoice['subscription']['number_times_freeze'], 'amount_before_discount' => @$payment_invoice['subscription']['price'], 'discount_value' => $this->calculateDiscountValue($payment_invoice->subscription), 'discount_type' => $this->getDiscountType($payment_invoice->subscription), 'payment_type' => $this->resolvePaymentType($payment_invoice)]);
+
+                $payment_invoice->member_subscription_id = $member_subscription->id;
+                $payment_invoice->save();
+
+                $this->createMoneyBoxEntry($payment_invoice, $member, $type_of_payment);
+
+                if(!@$this->current_user->id){
+                    $this->loginMemberAfterOnlinePayment($member['code'], $member['phone']);
+                }
+                $this->sendSubscriptionNotification($member_subscription->id, @$payment_invoice['phone'], $type_of_payment);
+            });
+
+            if ($member_subscription) {
+                GymmawyNotificationService::notifyPayment();
+                return \redirect()->route('invoice', ['id' => $member_subscription->id]);
             }
+
+            // Either already processed by a concurrent request, or member resolution failed.
+            $payment_invoice->refresh();
+            if ($payment_invoice->member_subscription_id) {
+                return \redirect()->route('invoice', ['id' => $payment_invoice->member_subscription_id]);
+            }
+
+            return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
+        } finally {
+            DB::selectOne("SELECT RELEASE_LOCK(?)", [$lockKey]);
         }
-
-        // :this process after payment successfully
-        // send member info. to system
-        // send membership info. to system
-
-        // redirect to infocie
-        return \redirect()->route('error-payment', ['payment_id' => @$request['payment_id']]);
     }
 
     // tabby
@@ -632,7 +656,8 @@ class SubscriptionFrontController extends GenericFrontController
             }
 
             if (!$member) {
-                $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $this->mainSettings->id ?? 1;
+                $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -640,6 +665,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
@@ -650,7 +676,7 @@ class SubscriptionFrontController extends GenericFrontController
             );
 
             $memberSubscription = MemberSubscription::create([
-                'branch_setting_id' => $this->mainSettings->id,
+                'branch_setting_id' => $this->mainSettings->id ?? 1,
                 'subscription_id' => $paymentInvoice->subscription_id,
                 'member_id'       => $member->id,
                 'workouts'        => $paymentInvoice->subscription->workouts,
@@ -685,41 +711,7 @@ class SubscriptionFrontController extends GenericFrontController
             $paymentInvoice->save();
 
             // 7️⃣ MoneyBox
-            $amountBox = MoneyBox::latest()->first();
-            $amountAfter = SubscriptionFrontController::amountAfter(
-                $amountBox->amount,
-                $amountBox->amount_before,
-                (int) $amountBox->operation
-            );
-
-            $notes = trans('sw.member_moneybox_add_msg', [
-                'subscription' => $paymentInvoice->subscription->name,
-                'member'       => $member->name,
-                'amount_paid'  => $paymentInvoice->amount,
-                'amount_remaining' => 0,
-            ]);
-
-            $discountVal = $this->calculateDiscountValue($paymentInvoice->subscription);
-            if ($discountVal > 0) {
-                $notes .= ' - ' . trans('sw.discount_msg', ['value' => $discountVal]);
-            }
-
-            if ($paymentInvoice->vat_percentage) {
-                $notes .= ' - ' . trans('sw.vat_added');
-            }
-
-            MoneyBox::create([
-                'operation' => Constants::Add,
-                'amount' => $paymentInvoice->amount,
-                'vat' => $paymentInvoice->vat,
-                'amount_before' => $amountAfter,
-                'notes' => $notes,
-                'member_id' => $member->id,
-                'type' => $typeOfPayment,
-                'payment_type' => $this->resolvePaymentType($paymentInvoice),
-                'member_subscription_id' => $memberSubscription->id,
-                'online_subscription_id' => $paymentInvoice->id,
-            ]);
+            $this->createMoneyBoxEntry($paymentInvoice, $member, $typeOfPayment);
 
             DB::commit();
 
@@ -1306,7 +1298,8 @@ class SubscriptionFrontController extends GenericFrontController
             }
 
             if (!$member) {
-                $maxId = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $this->mainSettings->id ?? 1;
+                $maxId = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -1314,6 +1307,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
@@ -1323,7 +1317,7 @@ class SubscriptionFrontController extends GenericFrontController
             );
 
             $memberSubscription = MemberSubscription::create([
-                'branch_setting_id' => $this->mainSettings->id,
+                'branch_setting_id' => $this->mainSettings->id ?? 1,
                 'subscription_id' => $paymentInvoice->subscription_id,
                 'member_id'       => $member->id,
                 'workouts'        => $paymentInvoice->subscription->workouts,
@@ -1521,7 +1515,8 @@ class SubscriptionFrontController extends GenericFrontController
             $generatedCode = null;
 
             if (!$member) {
-                $generatedCode = str_pad(((int)Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $this->mainSettings->id ?? 1;
+                $generatedCode = str_pad(((int)Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code' => $generatedCode,
                     'name' => $invoice->name,
@@ -1529,6 +1524,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone' => $invoice->phone,
                     'address' => $invoice->address,
                     'dob' => $invoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $type = Constants::CreateMember;
             }
@@ -1538,7 +1534,7 @@ class SubscriptionFrontController extends GenericFrontController
             $expire = (clone $joining)->addDays(max($periodDays, 0));
 
             $memberSubscription = MemberSubscription::create([
-                'branch_setting_id' => $this->mainSettings->id,
+                'branch_setting_id' => $this->mainSettings->id ?? 1,
                 'subscription_id' => $invoice->subscription_id,
                 'member_id' => $member->id,
                 'workouts' => $subscription->workouts ?? null,
@@ -1680,10 +1676,7 @@ class SubscriptionFrontController extends GenericFrontController
 
     protected function createMoneyBoxEntry(PaymentOnlineInvoice $invoice, Member $member, int $type): void
     {
-        $amountBox = MoneyBox::orderBy('id', 'desc')->first();
-        $amountBefore = $amountBox ? $amountBox->amount_before : 0;
-        $operation = $amountBox ? (int)$amountBox->operation : 0;
-        $amountAfter = self::amountAfter($invoice->amount, $amountBefore, $operation);
+        $branchSettingId = $this->mainSettings->id ?? 1;
 
         $notes = trans('sw.member_moneybox_add_msg', [
             'subscription' => optional($invoice->subscription)->name,
@@ -1701,18 +1694,51 @@ class SubscriptionFrontController extends GenericFrontController
             $notes .= ' - ' . trans('sw.vat_added');
         }
 
-        MoneyBox::create([
-            'operation' => Constants::Add,
-            'amount' => $invoice->amount,
-            'vat' => $invoice->vat,
-            'amount_before' => $amountAfter,
-            'notes' => $notes,
-            'member_id' => $member->id,
-            'type' => $type,
-            'payment_type' => $this->resolvePaymentType($invoice),
-            'member_subscription_id' => $invoice->member_subscription_id,
-            'online_subscription_id' => $invoice->id,
-        ]);
+        // The Gymawy admin program keeps its own running total per branch in
+        // sw_gym_money_box_balances and uses THAT (not the last money-box row) to
+        // compute amount_before for the next transaction it creates. Reading/writing
+        // that same table here — under the same row lock — keeps online payments in
+        // the running-balance chain instead of being silently skipped by the very
+        // next admin-side transaction.
+        DB::transaction(function () use ($invoice, $member, $type, $branchSettingId, $notes) {
+            $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+
+            if (!$balance) {
+                // First time this branch gets a balance row — bootstrap it from the real
+                // running total (last money-box row's ending balance) instead of 0, otherwise
+                // this transaction's amount_before would drop the entire prior history.
+                $lastRow = MoneyBox::where('branch_setting_id', $branchSettingId)->orderBy('id', 'desc')->first();
+                $seedAmount = $lastRow
+                    ? self::amountAfter($lastRow->amount, $lastRow->amount_before, (int) $lastRow->operation)
+                    : 0;
+
+                try {
+                    MoneyBoxBalance::create(['branch_setting_id' => $branchSettingId, 'amount' => $seedAmount]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Another concurrent request already created it — fall through and lock it below.
+                }
+                $balance = MoneyBoxBalance::where('branch_setting_id', $branchSettingId)->lockForUpdate()->first();
+            }
+
+            $amountBefore = round((float) $balance->amount, 2);
+
+            MoneyBox::create([
+                'operation' => Constants::Add,
+                'amount' => $invoice->amount,
+                'vat' => $invoice->vat,
+                'amount_before' => $amountBefore,
+                'notes' => $notes,
+                'member_id' => $member->id,
+                'type' => $type,
+                'payment_type' => $this->resolvePaymentType($invoice),
+                'member_subscription_id' => $invoice->member_subscription_id,
+                'online_subscription_id' => $invoice->id,
+                'branch_setting_id' => $branchSettingId,
+            ]);
+
+            $balance->amount = round($amountBefore + (float) $invoice->amount, 2);
+            $balance->save();
+        });
     }
 
     /**
@@ -1730,7 +1756,7 @@ class SubscriptionFrontController extends GenericFrontController
 
         foreach ($snapshots as $optionId => $priceSnapshot) {
             MemberSubscriptionOption::create([
-                'branch_setting_id' => $this->mainSettings->id,
+                'branch_setting_id' => $this->mainSettings->id ?? 1,
                 'member_subscription_id' => $memberSubscription->id,
                 'option_id' => (int) $optionId,
                 'price_snapshot' => (float) $priceSnapshot,
@@ -2036,7 +2062,8 @@ class SubscriptionFrontController extends GenericFrontController
                 $member = Member::where('phone', $paymentInvoice->phone)->first();
             }
             if (!$member) {
-                $maxId  = str_pad((Member::withTrashed()->max('code') + 1), 14, 0, STR_PAD_LEFT);
+                $branchSettingId = $this->mainSettings->id ?? 1;
+                $maxId  = str_pad((Member::withTrashed()->where('branch_setting_id', $branchSettingId)->max('code') + 1), 14, 0, STR_PAD_LEFT);
                 $member = Member::create([
                     'code'    => $maxId,
                     'name'    => $paymentInvoice->name,
@@ -2044,6 +2071,7 @@ class SubscriptionFrontController extends GenericFrontController
                     'phone'   => $paymentInvoice->phone,
                     'address' => $paymentInvoice->address,
                     'dob'     => $paymentInvoice->dob,
+                    'branch_setting_id' => $branchSettingId,
                 ]);
                 $typeOfPayment = Constants::CreateMember;
             }
@@ -2051,7 +2079,7 @@ class SubscriptionFrontController extends GenericFrontController
             $joiningDate = Carbon::parse($paymentInvoice->response_code['joining_date'] ?? now());
 
             $memberSubscription = MemberSubscription::create([
-                'branch_setting_id'      => $this->mainSettings->id,
+                'branch_setting_id'      => $this->mainSettings->id ?? 1,
                 'subscription_id'        => $paymentInvoice->subscription_id,
                 'member_id'              => $member->id,
                 'workouts'               => $paymentInvoice->subscription->workouts,
